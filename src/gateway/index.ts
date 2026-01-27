@@ -10,5 +10,7 @@
  * @see docs/03-architecture/c4-components/gateway.md
  */
 
-// Phase 2 will implement: Hono server, routes, middleware
-export {};
+export { app, createApp } from './server.js';
+export { setupWebSocket, broadcast, sendToUser, getConnectionCount } from './websocket.js';
+export * from './middleware/index.js';
+export * from './routes/index.js';

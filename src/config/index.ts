@@ -24,6 +24,11 @@ const configSchema = z.object({
   log: z.object({
     level: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   }),
+
+  // JWT Authentication
+  jwt: z.object({
+    secret: z.string().min(32, 'JWT secret must be at least 32 characters').default('development-secret-change-in-production-min-32-chars'),
+  }),
 });
 
 /**
@@ -55,6 +60,9 @@ export function loadConfig(): Config {
     },
     log: {
       level: process.env.LOG_LEVEL,
+    },
+    jwt: {
+      secret: process.env.JWT_SECRET,
     },
   };
 

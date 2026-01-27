@@ -2,14 +2,14 @@
  * Business Logic Services
  *
  * Core services that implement business logic:
- * - GuestService - Guest profile management
- * - ConversationService - Conversation handling
- * - TaskService - Task creation and management
- * - StaffService - Staff management
+ * - AuthService - Authentication and token management
+ * - GuestService - Guest profile management (Phase 5)
+ * - ConversationService - Conversation handling (Phase 3)
+ * - TaskService - Task creation and management (Phase 5)
+ * - StaffService - Staff management (Phase 6)
  *
  * Services coordinate between the database, AI engine,
  * and integrations to fulfill business requirements.
  */
 
-// Phase 3+ will implement: GuestService, ConversationService, etc.
-export {};
+export { AuthService } from './auth.js';
