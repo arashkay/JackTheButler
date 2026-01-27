@@ -16,6 +16,7 @@
 | [Architecture](03-architecture/) | How Jack is built | Engineering |
 | [Specifications](04-specs/) | Detailed technical specs and APIs | Engineering |
 | [Operations](05-operations/) | Deployment and runbooks | DevOps, SRE |
+| [Roadmap](06-roadmap/) | Phased delivery plan and release schedule | Everyone |
 
 ---
 
@@ -64,8 +65,12 @@ docs/
 │   ├── integrations/    # System integrations
 │   └── features/        # Feature specifications
 │
-└── 05-operations/       # Running Jack
-    └── runbooks/        # Operational procedures
+├── 05-operations/       # Running Jack
+│   └── runbooks/        # Operational procedures
+│
+└── 06-roadmap/          # Delivery plan
+    ├── index.md         # Roadmap overview
+    └── phase-*.md       # Detailed phase documents
 ```
 
 ---
@@ -76,6 +81,7 @@ docs/
 - **Product/Design?** Explore [Use Cases](02-use-cases/)
 - **Engineering?** Review the [Architecture](03-architecture/)
 - **Integrating a system?** Check [Integrations](04-specs/integrations/)
+- **Building Jack?** Follow the [Roadmap](06-roadmap/) for phased delivery
 
 ---
 
@@ -92,8 +98,9 @@ docs/
 
 | Section | Status |
 |---------|--------|
-| Vision | Draft |
-| Use Cases | Draft |
-| Architecture | Draft |
-| Specs | Planned |
-| Operations | Planned |
+| Vision | Complete |
+| Use Cases | Complete |
+| Architecture | Complete |
+| Specs | Complete |
+| Operations | Complete |
+| Roadmap | Complete |
