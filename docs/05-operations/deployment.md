@@ -1,392 +1,514 @@
-# Deployment Guide
+# Deployment
 
-Installation and deployment instructions for Jack The Butler.
+Deploying Jack The Butler to production environments.
 
 ---
 
-## Prerequisites
+## Overview
 
-### Required
+Jack The Butler is designed for **self-hosted deployment** on hotel infrastructure. Each hotel runs their own instance, keeping guest data on their own servers.
 
-- Docker 24+ and Docker Compose 2.20+
-- PostgreSQL 15+ (or use Docker)
-- Redis 7+ (or use Docker)
-- 4GB RAM minimum (8GB recommended)
-- 20GB disk space
+### Deployment Options
 
-### API Keys
+| Method | Complexity | Best For |
+|--------|------------|----------|
+| Docker (recommended) | Low | Most deployments |
+| Direct Node.js | Low | Custom environments |
+| Docker Compose | Medium | With local LLM (Ollama) |
 
-- **Anthropic API Key** - For Claude AI (primary)
-- **OpenAI API Key** - Optional, for fallback/embeddings
-- **Twilio Account** - For SMS channel
-- **WhatsApp Business API** - For WhatsApp channel
+---
+
+## Docker Deployment (Recommended)
+
+### One-Command Deploy
+
+```bash
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e JWT_SECRET=your-secure-secret-min-32-chars \
+  jackthebutler/jack:latest
+```
+
+That's it. Jack is now running at `http://localhost:3000`.
+
+### Configuration via Environment
+
+```bash
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  --env-file /path/to/.env \
+  jackthebutler/jack:latest
+```
+
+### Environment File
+
+```bash
+# /path/to/.env
+
+# Core
+NODE_ENV=production
+PORT=3000
+LOG_LEVEL=info
+
+# Database (stored in volume)
+DATABASE_PATH=/app/data/jack.db
+
+# Security (CHANGE THESE!)
+JWT_SECRET=generate-a-secure-random-string-min-32-chars
+ENCRYPTION_KEY=another-secure-random-string-32-chars
+
+# AI Provider
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Channels (configure as needed)
+WHATSAPP_PHONE_NUMBER_ID=123456789
+WHATSAPP_ACCESS_TOKEN=EAAxxxxxxx
+WHATSAPP_VERIFY_TOKEN=your-verify-token
+WHATSAPP_APP_SECRET=your-app-secret
+
+TWILIO_ACCOUNT_SID=ACxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxx
+TWILIO_PHONE_NUMBER=+1234567890
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=hotel@gmail.com
+SMTP_PASSWORD=app-specific-password
+```
 
 ---
 
 ## Docker Compose Deployment
 
-### 1. Clone Repository
+For deployments with additional services (like Ollama for local LLM):
 
-```bash
-git clone https://github.com/jackthebutler/jack.git
-cd jack
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your settings:
-
-```bash
-# Database
-DATABASE_URL=postgresql://jack:password@postgres:5432/jack
-REDIS_URL=redis://redis:6379
-
-# AI Providers
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...  # Optional
-
-# Channels
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_PHONE_NUMBER=+1...
-
-WHATSAPP_PHONE_NUMBER_ID=...
-WHATSAPP_ACCESS_TOKEN=...
-WHATSAPP_VERIFY_TOKEN=...
-
-# Security
-JWT_SECRET=your-secure-random-string
-ENCRYPTION_KEY=your-32-byte-key
-
-# Property
-DEFAULT_PROPERTY_NAME=The Grand Hotel
-DEFAULT_TIMEZONE=America/New_York
-```
-
-### 3. Start Services
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f gateway
-```
-
-### 4. Initialize Database
-
-```bash
-# Run migrations
-docker-compose exec gateway npm run db:migrate
-
-# Seed initial data (optional)
-docker-compose exec gateway npm run db:seed
-```
-
-### 5. Access Dashboard
-
-Open `http://localhost:3000` in your browser.
-
-Default admin credentials:
-- Email: `admin@hotel.com`
-- Password: `changeme`
-
-**Change the password immediately.**
-
----
-
-## Docker Compose Configuration
-
-### docker-compose.yml
+### `docker-compose.yml`
 
 ```yaml
 version: '3.8'
 
 services:
-  gateway:
-    image: jackthebutler/gateway:latest
+  jack:
+    image: jackthebutler/jack:latest
+    container_name: jack
+    restart: unless-stopped
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  channel-service:
-    image: jackthebutler/channel-service:latest
-    environment:
-      - GATEWAY_URL=http://gateway:3000
-      - REDIS_URL=${REDIS_URL}
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN}
-    depends_on:
-      - gateway
-      - redis
-    restart: unless-stopped
-
-  ai-engine:
-    image: jackthebutler/ai-engine:latest
-    environment:
-      - GATEWAY_URL=http://gateway:3000
-      - DATABASE_URL=${DATABASE_URL}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-    depends_on:
-      - gateway
-      - postgres
-    restart: unless-stopped
-
-  integration-service:
-    image: jackthebutler/integration-service:latest
-    environment:
-      - GATEWAY_URL=http://gateway:3000
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - gateway
-      - postgres
-    restart: unless-stopped
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=jack
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=jack
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - jack-data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      - ollama  # Optional
 
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
+  # Optional: Local LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jack-ollama
     restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
 
 volumes:
-  postgres_data:
-  redis_data:
+  jack-data:
+  ollama-data:
+```
+
+### Commands
+
+```bash
+# Start
+docker compose up -d
+
+# View logs
+docker compose logs -f jack
+
+# Stop
+docker compose down
+
+# Update
+docker compose pull
+docker compose up -d
 ```
 
 ---
 
-## Kubernetes Deployment
+## Direct Node.js Deployment
+
+For environments where Docker isn't available:
 
 ### Prerequisites
 
-- Kubernetes cluster 1.25+
-- kubectl configured
-- Helm 3.10+
-
-### 1. Add Helm Repository
-
 ```bash
-helm repo add jackthebutler https://charts.jackthebutler.com
-helm repo update
+# Install Node.js 22+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install pnpm
+npm install -g pnpm
 ```
 
-### 2. Create Namespace
+### Installation
 
 ```bash
-kubectl create namespace jack
+# Clone repository
+git clone https://github.com/jackthebutler/jack.git
+cd jack
+
+# Install dependencies
+pnpm install --frozen-lockfile
+
+# Build
+pnpm build
+
+# Configure
+cp .env.example .env
+nano .env  # Edit configuration
 ```
 
-### 3. Create Secrets
+### Running
 
 ```bash
-kubectl create secret generic jack-secrets \
-  --namespace jack \
-  --from-literal=database-url='postgresql://...' \
-  --from-literal=anthropic-api-key='sk-ant-...' \
-  --from-literal=jwt-secret='...'
-```
+# Start directly
+node dist/index.js
 
-### 4. Install Chart
-
-```bash
-helm install jack jackthebutler/jack \
-  --namespace jack \
-  --values values.yaml
-```
-
-### values.yaml
-
-```yaml
-global:
-  domain: jack.hotel.com
-
-gateway:
-  replicas: 3
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 2Gi
-
-aiEngine:
-  replicas: 2
-  resources:
-    requests:
-      cpu: 1000m
-      memory: 1Gi
-
-postgresql:
-  enabled: true
-  primary:
-    persistence:
-      size: 50Gi
-
-redis:
-  enabled: true
-  architecture: standalone
-
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
-  tls:
-    - secretName: jack-tls
-      hosts:
-        - jack.hotel.com
-```
-
-### 5. Verify Deployment
-
-```bash
-kubectl get pods -n jack
-kubectl get ingress -n jack
+# Or use PM2 for process management
+npm install -g pm2
+pm2 start dist/index.js --name jack
+pm2 save
+pm2 startup  # Auto-start on boot
 ```
 
 ---
 
-## Production Checklist
+## Reverse Proxy Setup
 
-### Security
+### Nginx
 
-- [ ] Change default admin password
-- [ ] Enable TLS for all endpoints
-- [ ] Configure firewall rules
-- [ ] Set up secrets management
-- [ ] Enable audit logging
-- [ ] Review CORS settings
+```nginx
+# /etc/nginx/sites-available/jack
+server {
+    listen 80;
+    server_name jack.yourhotel.com;
+    return 301 https://$server_name$request_uri;
+}
 
-### Performance
+server {
+    listen 443 ssl http2;
+    server_name jack.yourhotel.com;
 
-- [ ] Configure connection pooling
-- [ ] Set appropriate resource limits
-- [ ] Enable Redis persistence
-- [ ] Configure CDN for static assets
+    ssl_certificate /etc/letsencrypt/live/jack.yourhotel.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jack.yourhotel.com/privkey.pem;
 
-### Reliability
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
 
-- [ ] Set up database backups
-- [ ] Configure health checks
-- [ ] Set up monitoring
-- [ ] Configure alerting
-- [ ] Test failover procedures
+    # WebSocket support for chat
+    location /ws {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
+    }
+}
+```
 
-### Integration
+```bash
+# Enable site
+sudo ln -s /etc/nginx/sites-available/jack /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
-- [ ] Verify webhook URLs are accessible
-- [ ] Test PMS connectivity
-- [ ] Validate AI provider access
-- [ ] Confirm channel credentials
+### Caddy (Simpler)
+
+```caddyfile
+# /etc/caddy/Caddyfile
+jack.yourhotel.com {
+    reverse_proxy localhost:3000
+}
+```
+
+```bash
+sudo systemctl reload caddy
+```
 
 ---
 
-## Upgrading
+## SSL/TLS Certificates
 
-### Docker Compose
+### Let's Encrypt (Free)
 
 ```bash
-# Pull latest images
-docker-compose pull
+# Install certbot
+sudo apt install certbot python3-certbot-nginx
 
-# Restart with new images
-docker-compose up -d
+# Get certificate
+sudo certbot --nginx -d jack.yourhotel.com
+
+# Auto-renewal (added automatically)
+sudo certbot renew --dry-run
+```
+
+---
+
+## Data Persistence
+
+### Backup Strategy
+
+Jack stores all data in a single SQLite file, making backups simple:
+
+```bash
+# Manual backup
+docker exec jack sqlite3 /app/data/jack.db ".backup '/app/data/backup.db'"
+docker cp jack:/app/data/backup.db ./backups/jack-$(date +%Y%m%d).db
+
+# Automated daily backup
+cat > /etc/cron.daily/jack-backup << 'EOF'
+#!/bin/bash
+BACKUP_DIR=/backups/jack
+mkdir -p $BACKUP_DIR
+docker exec jack sqlite3 /app/data/jack.db ".backup '/app/data/backup.db'"
+docker cp jack:/app/data/backup.db $BACKUP_DIR/jack-$(date +%Y%m%d).db
+# Keep last 30 days
+find $BACKUP_DIR -name "*.db" -mtime +30 -delete
+EOF
+chmod +x /etc/cron.daily/jack-backup
+```
+
+### Restore from Backup
+
+```bash
+# Stop Jack
+docker stop jack
+
+# Restore database
+docker cp ./backups/jack-20240115.db jack:/app/data/jack.db
+
+# Start Jack
+docker start jack
+```
+
+---
+
+## Updating
+
+### Docker Update
+
+```bash
+# Pull latest image
+docker pull jackthebutler/jack:latest
+
+# Stop current container
+docker stop jack
+
+# Remove old container (data is preserved in volume)
+docker rm jack
+
+# Start new container
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  --env-file /path/to/.env \
+  jackthebutler/jack:latest
+
+# Run migrations (if needed)
+docker exec jack pnpm db:migrate
+```
+
+### Direct Node.js Update
+
+```bash
+cd /path/to/jack
+
+# Backup database
+cp data/jack.db data/jack.db.backup
+
+# Pull latest
+git pull
+
+# Install dependencies
+pnpm install --frozen-lockfile
+
+# Build
+pnpm build
 
 # Run migrations
-docker-compose exec gateway npm run db:migrate
+pnpm db:migrate
+
+# Restart
+pm2 restart jack
 ```
 
-### Kubernetes
+---
+
+## Health Monitoring
+
+### Health Check Endpoint
 
 ```bash
-# Update Helm repo
-helm repo update
+curl http://localhost:3000/health
 
-# Upgrade release
-helm upgrade jack jackthebutler/jack \
-  --namespace jack \
-  --values values.yaml
+# Response:
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "uptime": 86400,
+  "database": "connected",
+  "channels": {
+    "whatsapp": "connected",
+    "sms": "connected",
+    "email": "connected",
+    "webchat": "connected"
+  }
+}
 ```
+
+### Docker Health Check
+
+```bash
+docker inspect --format='{{.State.Health.Status}}' jack
+```
+
+### Simple Monitoring Script
+
+```bash
+#!/bin/bash
+# /usr/local/bin/check-jack.sh
+
+HEALTH=$(curl -s http://localhost:3000/health | jq -r '.status')
+
+if [ "$HEALTH" != "healthy" ]; then
+  echo "Jack is unhealthy, restarting..."
+  docker restart jack
+  # Send alert (optional)
+  # curl -X POST https://hooks.slack.com/... -d '{"text":"Jack restarted"}'
+fi
+```
+
+```bash
+# Run every 5 minutes
+echo "*/5 * * * * /usr/local/bin/check-jack.sh" | crontab -
+```
+
+---
+
+## Resource Requirements
+
+### Minimum
+
+| Resource | Requirement |
+|----------|-------------|
+| CPU | 1 core |
+| RAM | 512 MB |
+| Disk | 1 GB |
+
+### Recommended
+
+| Resource | Requirement |
+|----------|-------------|
+| CPU | 2 cores |
+| RAM | 1 GB |
+| Disk | 10 GB |
+
+### With Local LLM (Ollama)
+
+| Resource | Requirement |
+|----------|-------------|
+| CPU | 4+ cores |
+| RAM | 8+ GB |
+| Disk | 20+ GB |
+| GPU | Optional (faster inference) |
+
+---
+
+## Security Checklist
+
+- [ ] Change default JWT_SECRET and ENCRYPTION_KEY
+- [ ] Enable HTTPS with valid SSL certificate
+- [ ] Configure firewall (only expose ports 80, 443)
+- [ ] Set up regular backups
+- [ ] Keep Docker/Node.js updated
+- [ ] Review channel webhook secrets
+- [ ] Enable rate limiting
+- [ ] Set LOG_LEVEL=info in production
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Gateway Won't Start
+### Container Won't Start
 
 ```bash
 # Check logs
-docker-compose logs gateway
+docker logs jack
 
-# Common causes:
-# - Database not ready: wait and retry
-# - Missing environment variables: check .env
-# - Port already in use: change port in docker-compose.yml
+# Common issues:
+# - Missing environment variables
+# - Port already in use
+# - Permission issues on data volume
 ```
 
-#### Database Connection Failed
+### Database Errors
 
 ```bash
-# Test connection
-docker-compose exec gateway npm run db:test
+# Check database integrity
+docker exec jack sqlite3 /app/data/jack.db "PRAGMA integrity_check"
 
-# Check PostgreSQL is running
-docker-compose ps postgres
-
-# Check connection string
-echo $DATABASE_URL
+# If corrupted, restore from backup
+docker stop jack
+docker cp ./backups/latest.db jack:/app/data/jack.db
+docker start jack
 ```
 
-#### Webhooks Not Received
+### High Memory Usage
 
 ```bash
-# Verify webhook URL is publicly accessible
-curl https://your-domain.com/webhooks/whatsapp
+# Check memory
+docker stats jack
 
-# Check ngrok if developing locally
-ngrok http 3000
+# SQLite is memory efficient, high usage usually means:
+# - Large conversation history (consider archiving)
+# - Memory leak (update to latest version)
+```
+
+### Webhook Not Receiving
+
+```bash
+# Check if port is accessible
+curl -I https://jack.yourhotel.com/health
+
+# Verify webhook configuration in provider dashboard
+# Check firewall rules
+sudo ufw status
 ```
 
 ---
 
 ## Related
 
+- [Local Development](local-development.md) - Development setup
 - [Configuration](configuration.md) - All configuration options
-- [Architecture](../03-architecture/) - System design
-- [Runbooks](runbooks/) - Operational procedures
+- [Tech Stack](../03-architecture/tech-stack.md) - Technology choices

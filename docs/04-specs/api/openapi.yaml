@@ -1,0 +1,982 @@
+openapi: 3.1.0
+info:
+  title: Jack The Butler API
+  description: |
+    REST API for Jack The Butler - AI-powered hospitality assistant.
+
+    ## Authentication
+
+    All endpoints require JWT authentication via Bearer token:
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    Obtain tokens via `POST /auth/login`.
+
+    ## Rate Limiting
+
+    - 100 requests per minute per user
+    - Rate limit headers included in responses
+
+  version: 1.0.0
+  contact:
+    name: Jack The Butler
+    url: https://jackthebutler.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.jackthebutler.com/v1
+    description: Production
+  - url: https://api.staging.jackthebutler.com/v1
+    description: Staging
+  - url: http://localhost:3000/v1
+    description: Local development
+
+tags:
+  - name: auth
+    description: Authentication
+  - name: conversations
+    description: Guest conversations
+  - name: guests
+    description: Guest profiles
+  - name: tasks
+    description: Service tasks
+  - name: properties
+    description: Property management
+
+paths:
+  # ============================================
+  # AUTH
+  # ============================================
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      description: Authenticate staff user and receive JWT token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: staff@hotel.com
+                password:
+                  type: string
+                  format: password
+                  example: securepassword
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # CONVERSATIONS
+  # ============================================
+  /conversations:
+    get:
+      tags: [conversations]
+      summary: List conversations
+      operationId: listConversations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [active, escalated, resolved]
+        - name: assignedTo
+          in: query
+          schema:
+            type: string
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [whatsapp, sms, email, webchat]
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConversationSummary'
+                  cursor:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /conversations/{id}:
+    get:
+      tags: [conversations]
+      summary: Get conversation
+      operationId: getConversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /conversations/{id}/messages:
+    get:
+      tags: [conversations]
+      summary: Get conversation messages
+      operationId: getMessages
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+        - $ref: '#/components/parameters/limit'
+        - name: before
+          in: query
+          schema:
+            type: string
+        - name: after
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+
+    post:
+      tags: [conversations]
+      summary: Send message
+      description: Send a message as staff member
+      operationId: sendMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  example: Hi Sarah, I can help with that...
+                contentType:
+                  type: string
+                  enum: [text, image]
+                  default: text
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /conversations/{id}/escalate:
+    post:
+      tags: [conversations]
+      summary: Escalate conversation
+      operationId: escalateConversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                assignTo:
+                  type: string
+                  description: Staff ID to assign to
+      responses:
+        '200':
+          description: Conversation escalated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  /conversations/{id}/resolve:
+    post:
+      tags: [conversations]
+      summary: Resolve conversation
+      operationId: resolveConversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resolution:
+                  type: string
+                feedback:
+                  type: object
+                  properties:
+                    rating:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                    comment:
+                      type: string
+      responses:
+        '200':
+          description: Conversation resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  # ============================================
+  # GUESTS
+  # ============================================
+  /guests:
+    get:
+      tags: [guests]
+      summary: Search guests
+      operationId: searchGuests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Search by name, email, or phone
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+            format: email
+        - name: phone
+          in: query
+          schema:
+            type: string
+        - name: roomNumber
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: List of guests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GuestSummary'
+
+  /guests/{id}:
+    get:
+      tags: [guests]
+      summary: Get guest profile
+      operationId: getGuest
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guestId'
+      responses:
+        '200':
+          description: Guest profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Guest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /guests/{id}/preferences:
+    get:
+      tags: [guests]
+      summary: Get guest preferences
+      operationId: getGuestPreferences
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guestId'
+      responses:
+        '200':
+          description: Guest preferences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preferences:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Preference'
+
+    patch:
+      tags: [guests]
+      summary: Update guest preferences
+      operationId: updateGuestPreferences
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferences:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PreferenceInput'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preferences:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Preference'
+
+  # ============================================
+  # TASKS
+  # ============================================
+  /tasks:
+    get:
+      tags: [tasks]
+      summary: List tasks
+      operationId: listTasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, assigned, in_progress, completed, cancelled]
+        - name: department
+          in: query
+          schema:
+            type: string
+            enum: [housekeeping, maintenance, concierge, front_desk, f&b]
+        - name: assignedTo
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [urgent, high, standard, low]
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  cursor:
+                    type: string
+
+    post:
+      tags: [tasks]
+      summary: Create task
+      operationId: createTask
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tasks/{id}:
+    get:
+      tags: [tasks]
+      summary: Get task
+      operationId: getTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [tasks]
+      summary: Update task
+      operationId: updateTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, assigned, in_progress, completed, cancelled]
+                assignedTo:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  # ============================================
+  # WEBHOOKS
+  # ============================================
+  /webhooks/whatsapp:
+    get:
+      tags: [webhooks]
+      summary: WhatsApp webhook verification
+      operationId: verifyWhatsApp
+      parameters:
+        - name: hub.mode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification challenge
+
+    post:
+      tags: [webhooks]
+      summary: WhatsApp webhook
+      operationId: whatsappWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received
+
+  /webhooks/twilio/sms:
+    post:
+      tags: [webhooks]
+      summary: Twilio SMS webhook
+      operationId: twilioSmsWebhook
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received
+          content:
+            application/xml:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    conversationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Conversation ID
+
+    guestId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Guest ID
+
+    taskId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Task ID
+
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 50
+        maximum: 100
+
+    cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+      description: Pagination cursor
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        refreshToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        propertyId:
+          type: string
+
+    ConversationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        guestId:
+          type: string
+        guestName:
+          type: string
+        roomNumber:
+          type: string
+        channel:
+          type: string
+        state:
+          type: string
+        lastMessage:
+          $ref: '#/components/schemas/MessageSummary'
+        messageCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        guestId:
+          type: string
+        reservationId:
+          type: string
+        channel:
+          type: string
+        channelId:
+          type: string
+        state:
+          type: string
+        assignedTo:
+          type: string
+        currentIntent:
+          type: string
+        metadata:
+          type: object
+        guest:
+          $ref: '#/components/schemas/GuestSummary'
+        reservation:
+          $ref: '#/components/schemas/ReservationSummary'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        senderType:
+          type: string
+          enum: [guest, ai, staff]
+        senderId:
+          type: string
+        content:
+          type: string
+        contentType:
+          type: string
+        intent:
+          type: string
+        confidence:
+          type: number
+        deliveryStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    MessageSummary:
+      type: object
+      properties:
+        content:
+          type: string
+        direction:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    GuestSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        loyaltyTier:
+          type: string
+
+    Guest:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        language:
+          type: string
+        loyaltyTier:
+          type: string
+        preferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Preference'
+        stayCount:
+          type: integer
+        totalRevenue:
+          type: number
+        currentStay:
+          $ref: '#/components/schemas/ReservationSummary'
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Preference:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        key:
+          type: string
+        value:
+          type: string
+        source:
+          type: string
+        confidence:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+
+    PreferenceInput:
+      type: object
+      required: [category, key, value]
+      properties:
+        category:
+          type: string
+          enum: [room, dining, communication, amenity, service, accessibility]
+        key:
+          type: string
+        value:
+          type: string
+        source:
+          type: string
+          enum: [stated, staff]
+          default: staff
+
+    ReservationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        confirmationNumber:
+          type: string
+        roomNumber:
+          type: string
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        status:
+          type: string
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        department:
+          type: string
+        roomNumber:
+          type: string
+        description:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+        priority:
+          type: string
+        status:
+          type: string
+        assignedTo:
+          type: string
+        conversationId:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TaskInput:
+      type: object
+      required: [type, department, description]
+      properties:
+        type:
+          type: string
+          enum: [housekeeping, maintenance, concierge, room_service]
+        department:
+          type: string
+        roomNumber:
+          type: string
+        description:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              item:
+                type: string
+              quantity:
+                type: integer
+        priority:
+          type: string
+          enum: [urgent, high, standard, low]
+          default: standard
+        conversationId:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
