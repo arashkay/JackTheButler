@@ -9,6 +9,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { healthRoutes } from './routes/health.js';
 import { apiRoutes } from './routes/api.js';
+import { webhookRoutes } from './routes/webhooks/index.js';
 import { errorHandler, requestLogger } from './middleware/index.js';
 
 /**
@@ -41,6 +42,9 @@ export function createApp() {
   // Health check routes (no auth required)
   app.route('/health', healthRoutes);
 
+  // Webhook routes (no auth, uses signature verification)
+  app.route('/webhooks', webhookRoutes);
+
   // API routes
   app.route('/api/v1', apiRoutes);
 
@@ -48,7 +52,7 @@ export function createApp() {
   app.get('/', (c) => {
     return c.json({
       name: 'Jack The Butler',
-      version: '0.5.0',
+      version: '0.6.0',
       status: 'running',
       docs: '/api/v1',
       health: '/health',

@@ -13,23 +13,27 @@ export interface InboundMessage {
   /** Unique message ID */
   id: string;
   /** Existing conversation ID if known */
-  conversationId?: string;
+  conversationId?: string | undefined;
   /** Source channel */
   channel: ChannelType;
   /** Channel-specific identifier (phone, email, session ID) */
   channelId: string;
+  /** Channel's message ID (e.g., WhatsApp message ID) */
+  channelMessageId?: string | undefined;
   /** Message content */
   content: string;
   /** Content type */
   contentType: ContentType;
   /** When the message was sent */
   timestamp: Date;
+  /** Additional metadata */
+  metadata?: Record<string, unknown> | undefined;
   /** Original channel payload for reference */
   raw?: unknown;
 }
 
 /**
- * Outbound message to send
+ * Outbound message from the pipeline
  */
 export interface OutboundMessage {
   /** Target conversation */
@@ -39,7 +43,7 @@ export interface OutboundMessage {
   /** Content type */
   contentType: ContentType;
   /** Additional metadata */
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 /**

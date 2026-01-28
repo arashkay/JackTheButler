@@ -2,14 +2,16 @@
  * Message Processor
  *
  * Central pipeline for processing incoming messages:
- * 1. Find or create conversation
- * 2. Save inbound message
- * 3. Generate response
- * 4. Save outbound message
- * 5. Return response for delivery
+ * 1. Identify guest (for phone-based channels)
+ * 2. Find or create conversation
+ * 3. Save inbound message
+ * 4. Generate response
+ * 5. Save outbound message
+ * 6. Return response for delivery
  */
 
 import { ConversationService, conversationService } from '@/services/conversation.js';
+import { GuestService, guestService } from '@/services/guest.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
@@ -21,6 +23,7 @@ const log = createLogger('processor');
 export class MessageProcessor {
   constructor(
     private conversationSvc: ConversationService = conversationService,
+    private guestSvc: GuestService = guestService,
     private responder: Responder = defaultResponder
   ) {}
 
@@ -35,12 +38,24 @@ export class MessageProcessor {
       'Processing inbound message'
     );
 
-    // 1. Find or create conversation
-    const conversation = await this.conversationSvc.findOrCreate(inbound.channel, inbound.channelId);
+    // 1. Identify guest (for phone-based channels)
+    let guestId: string | undefined;
+    if (inbound.channel === 'whatsapp' || inbound.channel === 'sms') {
+      try {
+        const guest = await this.guestSvc.findOrCreateByPhone(inbound.channelId);
+        guestId = guest.id;
+        log.debug({ guestId, phone: inbound.channelId }, 'Guest identified by phone');
+      } catch (error) {
+        log.warn({ error, phone: inbound.channelId }, 'Failed to identify guest by phone');
+      }
+    }
 
-    log.debug({ conversationId: conversation.id }, 'Conversation resolved');
+    // 2. Find or create conversation (with guest link)
+    const conversation = await this.conversationSvc.findOrCreate(inbound.channel, inbound.channelId, guestId);
 
-    // 2. Save inbound message
+    log.debug({ conversationId: conversation.id, guestId: conversation.guestId }, 'Conversation resolved');
+
+    // 3. Save inbound message
     const savedInbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'inbound',
       senderType: 'guest',
@@ -59,12 +74,12 @@ export class MessageProcessor {
       timestamp: new Date(),
     });
 
-    // 3. Generate response
+    // 4. Generate response
     const response = await this.responder.generate(conversation, inbound);
 
     log.debug({ conversationId: conversation.id, intent: response.intent }, 'Response generated');
 
-    // 4. Save outbound message
+    // 5. Save outbound message
     const savedOutbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'outbound',
       senderType: 'ai',
@@ -91,7 +106,7 @@ export class MessageProcessor {
       'Message processed'
     );
 
-    // 5. Return response for delivery
+    // 6. Return response for delivery
     const result: OutboundMessage = {
       conversationId: conversation.id,
       content: response.content,
@@ -117,3 +132,10 @@ export class MessageProcessor {
  * Default processor instance
  */
 export const messageProcessor = new MessageProcessor();
+
+/**
+ * Get the message processor
+ */
+export function getProcessor(): MessageProcessor {
+  return messageProcessor;
+}

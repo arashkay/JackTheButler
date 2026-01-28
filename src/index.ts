@@ -11,7 +11,7 @@ import { closeDatabase, isDatabaseHealthy } from '@/db/index.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
 
 const APP_NAME = 'Jack The Butler';
-const VERSION = '0.4.0';
+const VERSION = '0.6.0';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   server.listen(config.port, () => {
     logger.info({ port: config.port }, 'HTTP server listening');
     logger.info({ paths: ['/ws', '/chat'] }, 'WebSocket servers ready');
-    logger.info('Ready! (Phase 3 - Pipeline)');
+    logger.info('Ready! (Phase 5 - Channels)');
   });
 
   // Graceful shutdown

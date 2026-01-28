@@ -44,7 +44,7 @@ export class ConversationService {
   /**
    * Find an active conversation or create a new one
    */
-  async findOrCreate(channelType: ChannelType, channelId: string): Promise<Conversation> {
+  async findOrCreate(channelType: ChannelType, channelId: string, guestId?: string): Promise<Conversation> {
     // Find existing active conversation
     const [existing] = await db
       .select()
@@ -59,6 +59,15 @@ export class ConversationService {
       .limit(1);
 
     if (existing) {
+      // Update guest if not already linked
+      if (guestId && !existing.guestId) {
+        await db
+          .update(conversations)
+          .set({ guestId, updatedAt: new Date().toISOString() })
+          .where(eq(conversations.id, existing.id));
+        log.debug({ conversationId: existing.id, guestId }, 'Linked guest to conversation');
+        return this.findById(existing.id) as Promise<Conversation>;
+      }
       log.debug({ conversationId: existing.id }, 'Found existing conversation');
       return existing;
     }
@@ -71,13 +80,14 @@ export class ConversationService {
       id,
       channelType,
       channelId,
+      guestId: guestId ?? null,
       state: 'active',
       metadata: '{}',
       createdAt: now,
       updatedAt: now,
     });
 
-    log.info({ conversationId: id, channelType, channelId }, 'Created new conversation');
+    log.info({ conversationId: id, channelType, channelId, guestId }, 'Created new conversation');
 
     // Emit event
     events.emit({

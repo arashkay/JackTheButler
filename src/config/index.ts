@@ -44,6 +44,14 @@ const configSchema = z.object({
     maxTokens: z.coerce.number().int().min(1).max(8192).default(1024),
     temperature: z.coerce.number().min(0).max(2).default(0.7),
   }),
+
+  // WhatsApp Configuration
+  whatsapp: z.object({
+    accessToken: z.string().optional(),
+    phoneNumberId: z.string().optional(),
+    verifyToken: z.string().optional(),
+    appSecret: z.string().optional(),
+  }),
 });
 
 /**
@@ -88,6 +96,12 @@ export function loadConfig(): Config {
       embeddingModel: process.env.AI_EMBEDDING_MODEL,
       maxTokens: process.env.AI_MAX_TOKENS,
       temperature: process.env.AI_TEMPERATURE,
+    },
+    whatsapp: {
+      accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+      verifyToken: process.env.WHATSAPP_VERIFY_TOKEN,
+      appSecret: process.env.WHATSAPP_APP_SECRET,
     },
   };
 

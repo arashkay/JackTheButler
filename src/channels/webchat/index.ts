@@ -44,7 +44,7 @@ export class WebChatAdapter implements ChannelAdapter {
 
     if (!session || session.readyState !== WebSocket.OPEN) {
       return {
-        success: false,
+        status: 'failed',
         error: 'Session not found or closed',
       };
     }
@@ -59,7 +59,7 @@ export class WebChatAdapter implements ChannelAdapter {
     session.send(JSON.stringify(outgoing));
 
     return {
-      success: true,
+      status: 'sent',
       channelMessageId: `ws_${Date.now()}`,
     };
   }
