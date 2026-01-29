@@ -59,6 +59,7 @@ This roadmap defines a **phased, incremental build approach** where each release
 | 8b | 0.9.5 | **Admin Console** | Integration UI, automation UI | Admin can configure |
 | 9 | 1.0.0 | **Launch** | Production hardening | Go live |
 | **10** | **1.1.0** | **Kernel** | Core/Extension separation, Task Router, Autonomy | **L2 Autonomy** |
+| **11** | **1.2.0** | **Tools** | Built-in tools for hotel onboarding | **Self-service setup** |
 
 ---
 
@@ -80,6 +81,7 @@ Phase 7 (Integration)  → Guest data from PMS visible
 Phase 8 (Polish)       → All P0 use cases pass
 Phase 9 (Launch)       → Production deployment works
 Phase 10 (Kernel)      → Tasks auto-created from requests
+Phase 11 (Tools)       → Site scraper imports knowledge base
 ```
 
 ### Implementation Rules
@@ -106,6 +108,7 @@ Phase 10 (Kernel)      → Tasks auto-created from requests
 | [Phase 8: Polish](phase-8-polish.md) | Multi-channel, automation |
 | [Phase 9: Launch](phase-9-launch.md) | Production readiness |
 | [Phase 10: Extension Architecture](phase-10-extensions.md) | Core/Extension separation |
+| [Phase 11: Tools](phase-11-tools.md) | Built-in tools for onboarding |
 
 ### Phase 10 Sub-Phases
 
@@ -116,6 +119,12 @@ Phase 10 (Kernel)      → Tasks auto-created from requests
 | [Phase 10.3: Extension Consolidation](phase-10-3-extension-consolidation.md) | Manifest-based extensions |
 | [Phase 10.4: Autonomy Settings](phase-10-4-autonomy-settings.md) | Configurable autonomy levels |
 | [Phase 10.5: Recovery Engine](phase-10-5-recovery-engine.md) | Post-stay review recovery |
+
+### Phase 11 Sub-Phases
+
+| Document | Description |
+|----------|-------------|
+| [Phase 11.1: Site Scraper](phase-11-1-site-scraper.md) | Auto-import knowledge base from hotel websites |
 
 ---
 
@@ -170,6 +179,11 @@ Phase 10 (Kernel)      → Tasks auto-created from requests
                     ┌────────────────▼──────────────┐
                     │   Phase 10: Extension Arch    │
                     │    Kernel, Task Router, L2    │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │       Phase 11: Tools         │
+                    │  Site Scraper, CSV Import     │
                     └───────────────────────────────┘
 ```
 
@@ -192,6 +206,7 @@ Phase 10 (Kernel)      → Tasks auto-created from requests
 | 0.9.0 | "All features working" | **Feature complete** |
 | 1.0.0 | "Production ready" | **Launch ready** |
 | 1.1.0 | "Tasks auto-created, autonomy configurable" | **L2 Autonomy** |
+| 1.2.0 | "Scrape website to populate knowledge base" | **Self-service onboarding** |
 
 ---
 

@@ -55,7 +55,7 @@ Phase 10 restructures Jack for **progressive autonomy**. The goal is to move fro
 - Staff can set what requires approval vs. auto-execute
 - Approval queue shows pending items for L1 actions
 
-### After Phase 10.5
+### After Phase 10.5 (Not Implemented)
 - Low NPS survey triggers recovery case
 - Dashboard → Recovery shows cases
 - Staff can send recovery offers to unhappy guests
