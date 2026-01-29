@@ -1,16 +1,27 @@
 /**
  * WhatsApp Channel Integration
  *
- * Factory and exports for WhatsApp provider integrations.
+ * @deprecated Import from '@/extensions/channels/whatsapp' instead.
+ * This file is kept for backward compatibility.
+ *
+ * @module integrations/channels/whatsapp
  */
 
 import type { ConnectionTestResult } from '@/integrations/core/types.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
-import { MetaWhatsAppProvider, createMetaWhatsAppProvider, type MetaWhatsAppConfig } from './meta.js';
+import {
+  MetaWhatsAppProvider,
+  createMetaWhatsAppProvider,
+  type MetaWhatsAppConfig,
+} from '@/extensions/channels/whatsapp/meta.js';
 
-export { MetaWhatsAppProvider, createMetaWhatsAppProvider, type MetaWhatsAppConfig } from './meta.js';
+export {
+  MetaWhatsAppProvider,
+  createMetaWhatsAppProvider,
+  type MetaWhatsAppConfig,
+} from '@/extensions/channels/whatsapp/meta.js';
 
 const log = createLogger('integrations:channels:whatsapp');
 
