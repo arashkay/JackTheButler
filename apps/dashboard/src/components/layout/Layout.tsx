@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
+  Home,
   MessageSquare,
   ClipboardList,
   Bell,
@@ -87,7 +88,8 @@ export function Layout() {
   const navSections: NavSection[] = [
     {
       items: [
-        { path: '/', label: 'Inbox', icon: <MessageSquare size={20} /> },
+        { path: '/', label: 'Home', icon: <Home size={20} /> },
+        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} /> },
         { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} /> },
         { path: '/approvals', label: 'Approvals', icon: <Bell size={20} /> },
       ],

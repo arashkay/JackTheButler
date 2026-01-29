@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 const variants = {
   success: 'text-green-600 bg-green-50',
@@ -8,26 +9,43 @@ const variants = {
   default: 'text-muted-foreground bg-muted',
 };
 
-interface StatsCardProps {
+interface StatItemProps {
   label: string;
   value: number | string;
   icon: LucideIcon;
   variant?: keyof typeof variants;
 }
 
-export function StatsCard({ label, value, icon: Icon, variant = 'default' }: StatsCardProps) {
+function StatItem({ label, value, icon: Icon, variant = 'default' }: StatItemProps) {
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-card border">
+    <div className="flex-1 flex items-center gap-3 px-4 py-3">
       <div className={cn('p-2 rounded-lg', variants[variant])}>
-        <Icon className="w-5 h-5" />
+        <Icon className="w-4 h-4" />
       </div>
       <div>
-        <p className="text-2xl font-semibold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-xl font-semibold">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
   );
 }
+
+interface StatsBarProps {
+  items: StatItemProps[];
+}
+
+export function StatsBar({ items }: StatsBarProps) {
+  return (
+    <Card className="flex divide-x">
+      {items.map((item, index) => (
+        <StatItem key={index} {...item} />
+      ))}
+    </Card>
+  );
+}
+
+// Keep old exports for backwards compatibility during migration
+export { StatItem as StatsCard };
 
 interface StatsGridProps {
   children: React.ReactNode;

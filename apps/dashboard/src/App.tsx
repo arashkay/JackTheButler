@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoginPage } from '@/pages/Login';
 import { Layout } from '@/components/layout/Layout';
+import { HomePage } from '@/pages/home/Home';
 import { ConversationsPage } from '@/pages/inbox/Conversations';
 import { TasksPage } from '@/pages/tasks/Tasks';
 import { ExtensionsPage } from '@/pages/settings/extensions/Extensions';
@@ -16,7 +17,8 @@ export function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<Layout />}>
-          <Route path="/" element={<ConversationsPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/inbox" element={<ConversationsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/settings/extensions" element={<ExtensionsPage />} />
           <Route path="/settings/extensions/:extensionId" element={<ExtensionEditPage />} />

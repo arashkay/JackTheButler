@@ -18,7 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageContainer, PageHeader, StatsCard, StatsGrid, EmptyState } from '@/components';
+import { PageContainer, PageHeader, StatsBar, EmptyState } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -406,11 +406,13 @@ export function ApprovalsPage() {
       </PageHeader>
 
       {/* Stats */}
-      <StatsGrid columns={3}>
-        <StatsCard label="Pending" value={stats.pending} icon={Clock} variant="warning" />
-        <StatsCard label="Approved Today" value={stats.approvedToday} icon={CheckCircle2} variant="success" />
-        <StatsCard label="Rejected Today" value={stats.rejectedToday} icon={XCircle} variant="error" />
-      </StatsGrid>
+      <StatsBar
+        items={[
+          { label: 'Pending', value: stats.pending, icon: Clock, variant: 'warning' },
+          { label: 'Approved Today', value: stats.approvedToday, icon: CheckCircle2, variant: 'success' },
+          { label: 'Rejected Today', value: stats.rejectedToday, icon: XCircle, variant: 'error' },
+        ]}
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

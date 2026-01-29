@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { validateBody, requireAuth, authRateLimit, getClientIp } from '../middleware/index.js';
+import { validateBody, requireAuth, getClientIp } from '../middleware/index.js';
 import { AuthService } from '@/services/auth.js';
 import { logAuthEvent } from '@/services/audit.js';
 
@@ -18,9 +18,6 @@ type Variables = {
 
 const auth = new Hono<{ Variables: Variables }>();
 const authService = new AuthService();
-
-// Apply rate limiting to all auth routes (10 req/min per IP)
-auth.use('*', authRateLimit);
 
 /**
  * Login schema

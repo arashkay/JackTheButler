@@ -22,7 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { PageContainer, PageHeader, StatsCard, StatsGrid, SearchInput, EmptyState } from '@/components';
+import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
 
 type TriggerType = 'time_based' | 'event_based';
 type ActionType = 'send_message' | 'create_task' | 'notify_staff' | 'webhook';
@@ -217,12 +217,14 @@ export function AutomationsPage() {
 
       {/* Stats */}
       {!isLoading && !error && (
-        <StatsGrid>
-          <StatsCard label="Active" value={stats.active} icon={Play} variant="success" />
-          <StatsCard label="Inactive" value={stats.inactive} icon={Pause} variant="warning" />
-          <StatsCard label="Errors" value={stats.errors} icon={AlertCircle} variant="error" />
-          <StatsCard label="Total" value={stats.total} icon={Zap} variant="default" />
-        </StatsGrid>
+        <StatsBar
+          items={[
+            { label: 'Active', value: stats.active, icon: Play, variant: 'success' },
+            { label: 'Inactive', value: stats.inactive, icon: Pause, variant: 'warning' },
+            { label: 'Errors', value: stats.errors, icon: AlertCircle, variant: 'error' },
+            { label: 'Total', value: stats.total, icon: Zap, variant: 'default' },
+          ]}
+        />
       )}
 
       {/* Filters */}

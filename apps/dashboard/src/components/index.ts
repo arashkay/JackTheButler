@@ -4,7 +4,7 @@ export { PageContainer } from './layout/PageContainer';
 export { PageHeader } from './layout/PageHeader';
 
 // Data display
-export { StatsCard, StatsGrid } from './shared/StatsCard';
+export { StatsBar, StatsCard, StatsGrid } from './shared/StatsCard';
 export { EmptyState } from './shared/EmptyState';
 
 // Form components

@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExtensionIcon, CategoryIcon } from '@/components';
-import { PageContainer, PageHeader, StatsCard, StatsGrid, SearchInput, EmptyState } from '@/components';
+import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -180,12 +180,14 @@ export function ExtensionsPage() {
 
       {/* Stats */}
       {!isLoading && !error && (
-        <StatsGrid>
-          <StatsCard label="Connected" value={stats.connected} icon={CheckCircle2} variant="success" />
-          <StatsCard label="Ready to Test" value={stats.configured} icon={Zap} variant="warning" />
-          <StatsCard label="Errors" value={stats.errors} icon={AlertCircle} variant="error" />
-          <StatsCard label="Total" value={stats.total} icon={Settings2} variant="default" />
-        </StatsGrid>
+        <StatsBar
+          items={[
+            { label: 'Connected', value: stats.connected, icon: CheckCircle2, variant: 'success' },
+            { label: 'Ready to Test', value: stats.configured, icon: Zap, variant: 'warning' },
+            { label: 'Errors', value: stats.errors, icon: AlertCircle, variant: 'error' },
+            { label: 'Total', value: stats.total, icon: Settings2, variant: 'default' },
+          ]}
+        />
       )}
 
       {/* Search */}
