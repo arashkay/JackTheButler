@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoginPage } from '@/pages/Login';
-import { Layout } from '@/pages/Layout';
-import { ConversationsPage } from '@/pages/Conversations';
-import { TasksPage } from '@/pages/Tasks';
-import { IntegrationsPage } from '@/pages/Integrations';
-import { IntegrationEditPage } from '@/pages/IntegrationEdit';
-import { AutomationsPage } from '@/pages/Automations';
-import { AutomationEditPage } from '@/pages/AutomationEdit';
-import { AutonomyPage } from '@/pages/settings/Autonomy';
-import { ApprovalsPage } from '@/pages/Approvals';
+import { Layout } from '@/components/layout/Layout';
+import { ConversationsPage } from '@/pages/inbox/Conversations';
+import { TasksPage } from '@/pages/tasks/Tasks';
+import { ExtensionsPage } from '@/pages/settings/extensions/Extensions';
+import { ExtensionEditPage } from '@/pages/settings/extensions/ExtensionEdit';
+import { AutomationsPage } from '@/pages/settings/automations/Automations';
+import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit';
+import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
+import { ApprovalsPage } from '@/pages/approvals/Approvals';
 
 export function App() {
   return (
@@ -18,8 +18,8 @@ export function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<ConversationsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/settings/integrations" element={<IntegrationsPage />} />
-          <Route path="/settings/integrations/:integrationId" element={<IntegrationEditPage />} />
+          <Route path="/settings/extensions" element={<ExtensionsPage />} />
+          <Route path="/settings/extensions/:extensionId" element={<ExtensionEditPage />} />
           <Route path="/settings/automations" element={<AutomationsPage />} />
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />

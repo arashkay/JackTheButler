@@ -14,8 +14,8 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { IntegrationIcon, CategoryIcon } from '@/components/IntegrationIcon';
+import { ExtensionIcon, CategoryIcon } from '@/components';
+import { PageContainer, PageHeader, StatsCard, StatsGrid, SearchInput, EmptyState } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -79,19 +79,19 @@ function StatusIndicator({ status }: { status: IntegrationStatus }) {
   );
 }
 
-function IntegrationCard({ integration }: { integration: Integration }) {
+function ExtensionCard({ integration }: { integration: Integration }) {
   const activeProvider = integration.providers.find(
     (p) => p.id === integration.activeProvider || p.enabled
   );
 
   return (
-    <Link to={`/settings/integrations/${integration.id}`}>
+    <Link to={`/settings/extensions/${integration.id}`}>
       <Card className="card-hover cursor-pointer group">
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="p-2.5 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors">
-                <IntegrationIcon id={integration.id} size="lg" />
+                <ExtensionIcon id={integration.id} size="lg" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
                 </div>
                 {activeProvider ? (
                   <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <IntegrationIcon id={activeProvider.id} size="sm" />
+                    <ExtensionIcon id={activeProvider.id} size="sm" />
                     {activeProvider.name}
                   </p>
                 ) : (
@@ -130,38 +130,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
   );
 }
 
-function StatsCard({
-  label,
-  value,
-  icon: Icon,
-  variant,
-}: {
-  label: string;
-  value: number;
-  icon: typeof CheckCircle2;
-  variant: 'success' | 'warning' | 'error' | 'default';
-}) {
-  const colors = {
-    success: 'text-green-600 bg-green-50',
-    warning: 'text-yellow-600 bg-yellow-50',
-    error: 'text-red-600 bg-red-50',
-    default: 'text-muted-foreground bg-muted',
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-card border">
-      <div className={cn('p-2 rounded-lg', colors[variant])}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-export function IntegrationsPage() {
+export function ExtensionsPage() {
   const [search, setSearch] = useState('');
 
   const { data, isLoading, error } = useQuery({
@@ -206,33 +175,25 @@ export function IntegrationsPage() {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Extensions</h1>
-        <p className="text-muted-foreground">
-          Connect and manage AI providers, channels, and hotel systems
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader description="Connect and manage AI providers, channels, and hotel systems" />
 
       {/* Stats */}
       {!isLoading && !error && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsGrid>
           <StatsCard label="Connected" value={stats.connected} icon={CheckCircle2} variant="success" />
           <StatsCard label="Ready to Test" value={stats.configured} icon={Zap} variant="warning" />
           <StatsCard label="Errors" value={stats.errors} icon={AlertCircle} variant="error" />
           <StatsCard label="Total" value={stats.total} icon={Settings2} variant="default" />
-        </div>
+        </StatsGrid>
       )}
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search extensions..."
+      <div className="max-w-md">
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 max-w-md"
+          onChange={setSearch}
+          placeholder="Search extensions..."
         />
       </div>
 
@@ -242,17 +203,17 @@ export function IntegrationsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : error ? (
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load extensions</p>
-          <p className="text-muted-foreground">Please try again later</p>
-        </Card>
+        <EmptyState
+          icon={AlertCircle}
+          title="Failed to load extensions"
+          description="Please try again later"
+        />
       ) : filteredIntegrations.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium">No extensions found</p>
-          <p className="text-muted-foreground">Try a different search term</p>
-        </Card>
+        <EmptyState
+          icon={Search}
+          title="No extensions found"
+          description="Try a different search term"
+        />
       ) : (
         <div className="space-y-10">
           {sortedCategories.map((category) => (
@@ -266,13 +227,13 @@ export function IntegrationsPage() {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {grouped[category].map((integration) => (
-                  <IntegrationCard key={integration.id} integration={integration} />
+                  <ExtensionCard key={integration.id} integration={integration} />
                 ))}
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

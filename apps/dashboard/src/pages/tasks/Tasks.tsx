@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ListTodo, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { PageContainer, PageHeader, EmptyState } from '@/components';
 
 type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 type TaskSource = 'manual' | 'auto' | 'automation';
@@ -90,9 +93,8 @@ export function TasksPage() {
   const tasks = data?.tasks || [];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Tasks</h1>
+    <PageContainer>
+      <PageHeader>
         <div className="flex gap-4">
           <div className="flex gap-1">
             {sourceFilters.map((s) => (
@@ -127,65 +129,71 @@ export function TasksPage() {
             ))}
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       {isLoading ? (
-        <div className="text-gray-500">Loading...</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       ) : tasks.length === 0 ? (
-        <div className="text-gray-500">No tasks found</div>
+        <EmptyState
+          icon={ListTodo}
+          title="No tasks found"
+          description="Tasks will appear here when created by guests or staff"
+        />
       ) : (
-        <div className="bg-white rounded-lg border">
+        <Card>
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Type</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Description</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Room</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Source</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Priority</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Status</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Assigned</th>
-                <th className="text-left p-3 text-sm font-medium text-gray-600">Actions</th>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Type</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Description</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Room</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Source</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Priority</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Assigned</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {tasks.map((task) => (
-                <tr key={task.id} className="border-b last:border-0 hover:bg-gray-50">
+                <tr key={task.id} className="border-b last:border-0 hover:bg-muted/50">
                   <td className="p-3">
                     <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
-                    <div className="text-xs text-gray-500">{task.department}</div>
+                    <div className="text-xs text-muted-foreground">{task.department}</div>
                   </td>
-                  <td className="p-3 text-sm text-gray-900 max-w-xs truncate">
+                  <td className="p-3 text-sm text-foreground max-w-xs truncate">
                     {task.description}
                   </td>
-                  <td className="p-3 text-sm text-gray-600">
+                  <td className="p-3 text-sm text-muted-foreground">
                     {task.roomNumber || '-'}
                   </td>
                   <td className="p-3">
                     <span className={cn('text-xs px-2 py-1 rounded', sourceColors[task.source])}>
-                      {task.source === 'auto' ? '⚡ Auto' : task.source === 'automation' ? '🤖 Rule' : 'Manual'}
+                      {task.source === 'auto' ? 'Auto' : task.source === 'automation' ? 'Rule' : 'Manual'}
                     </span>
                     {task.conversationId && (
                       <a
                         href={`/conversations/${task.conversationId}`}
-                        className="ml-2 text-xs text-blue-600 hover:underline"
+                        className="ml-2 text-xs text-primary hover:underline"
                         title="View conversation"
                       >
-                        💬
+                        View
                       </a>
                     )}
                   </td>
                   <td className="p-3">
-                    <span className={cn('text-xs px-2 py-1 rounded', priorityColors[task.priority])}>
+                    <span className={cn('text-xs px-2 py-1 rounded capitalize', priorityColors[task.priority])}>
                       {task.priority}
                     </span>
                   </td>
                   <td className="p-3">
-                    <span className={cn('text-xs px-2 py-1 rounded', statusColors[task.status])}>
+                    <span className={cn('text-xs px-2 py-1 rounded capitalize', statusColors[task.status])}>
                       {task.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="p-3 text-sm text-gray-600">
+                  <td className="p-3 text-sm text-muted-foreground">
                     {task.assignedName || '-'}
                   </td>
                   <td className="p-3">
@@ -193,7 +201,7 @@ export function TasksPage() {
                       <button
                         onClick={() => claimMutation.mutate(task.id)}
                         disabled={claimMutation.isPending}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-primary hover:text-primary/80"
                       >
                         Claim
                       </button>
@@ -212,8 +220,8 @@ export function TasksPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

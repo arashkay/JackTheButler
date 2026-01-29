@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { ConversationList } from '@/components/ConversationList';
-import { ConversationView } from '@/components/ConversationView';
+import { ConversationList, ConversationView } from '@/components';
 
 type ConversationState = 'new' | 'active' | 'escalated' | 'resolved' | 'closed';
 

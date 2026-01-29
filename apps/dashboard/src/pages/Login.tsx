@@ -29,8 +29,10 @@ export function LoginPage() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-md w-full max-w-sm p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Jack The Butler</h1>
-          <p className="text-gray-600 text-sm">Staff Dashboard</p>
+          <div className="flex justify-center mb-3">
+            <img src="/logo.svg" alt="Butler" className="w-12 h-12" />
+          </div>
+          <h1 className="text-xl font-semibold text-gray-900">Time to wow some guests</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

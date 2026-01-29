@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { PageContainer, PageHeader, EmptyState } from '@/components';
 
 type AutonomyLevel = 'L1' | 'L2';
 
@@ -222,51 +223,46 @@ export function AutonomyPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <PageContainer>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </PageContainer>
     );
   }
 
   if (error || !settings) {
     return (
-      <div className="p-6">
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load autonomy settings</p>
-          <p className="text-muted-foreground">Please try again later</p>
-        </Card>
-      </div>
+      <PageContainer>
+        <EmptyState
+          icon={AlertCircle}
+          title="Failed to load autonomy settings"
+          description="Please try again later"
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Autonomy Settings</h1>
-          <p className="text-muted-foreground">
-            Control how autonomous Jack is for different actions
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => resetMutation.mutate()}
-            disabled={resetMutation.isPending}
-          >
-            <RefreshCw className={cn('w-4 h-4 mr-2', resetMutation.isPending && 'animate-spin')} />
-            Reset to Defaults
-          </Button>
-          <Button
-            onClick={() => settings && saveMutation.mutate(settings)}
-            disabled={!hasChanges || saveMutation.isPending}
-          >
-            {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader description="Control how autonomous Jack is for different actions">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => resetMutation.mutate()}
+          disabled={resetMutation.isPending}
+        >
+          <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', resetMutation.isPending && 'animate-spin')} />
+          Reset to Defaults
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => settings && saveMutation.mutate(settings)}
+          disabled={!hasChanges || saveMutation.isPending}
+        >
+          {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </PageHeader>
 
       {/* Global Level */}
       <Card>
@@ -474,6 +470,6 @@ export function AutonomyPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PageContainer, PageHeader, StatsCard, StatsGrid, EmptyState } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -359,36 +360,6 @@ function Label({ children, className }: { children: React.ReactNode; className?:
   return <div className={cn('font-medium text-gray-700', className)}>{children}</div>;
 }
 
-function StatsCard({
-  label,
-  value,
-  icon: Icon,
-  variant,
-}: {
-  label: string;
-  value: number;
-  icon: typeof Clock;
-  variant: 'warning' | 'success' | 'error';
-}) {
-  const colors = {
-    warning: 'text-yellow-600 bg-yellow-50',
-    success: 'text-green-600 bg-green-50',
-    error: 'text-red-600 bg-red-50',
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-card border">
-      <div className={cn('p-2 rounded-lg', colors[variant])}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
-
 export function ApprovalsPage() {
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<ApprovalStatus | 'all'>('pending');
@@ -427,36 +398,19 @@ export function ApprovalsPage() {
   const stats = data?.stats || { pending: 0, approvedToday: 0, rejectedToday: 0 };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Approvals</h1>
-          {stats.pending > 0 && (
-            <Badge className="bg-yellow-100 text-yellow-700">{stats.pending} pending</Badge>
-          )}
-        </div>
-        <p className="text-muted-foreground">
-          Review and approve AI-generated responses and actions
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader description="Review and approve AI-generated responses and actions">
+        {stats.pending > 0 && (
+          <Badge className="bg-yellow-100 text-yellow-700">{stats.pending} pending</Badge>
+        )}
+      </PageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <StatsGrid columns={3}>
         <StatsCard label="Pending" value={stats.pending} icon={Clock} variant="warning" />
-        <StatsCard
-          label="Approved Today"
-          value={stats.approvedToday}
-          icon={CheckCircle2}
-          variant="success"
-        />
-        <StatsCard
-          label="Rejected Today"
-          value={stats.rejectedToday}
-          icon={XCircle}
-          variant="error"
-        />
-      </div>
+        <StatsCard label="Approved Today" value={stats.approvedToday} icon={CheckCircle2} variant="success" />
+        <StatsCard label="Rejected Today" value={stats.rejectedToday} icon={XCircle} variant="error" />
+      </StatsGrid>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -527,23 +481,17 @@ export function ApprovalsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : error ? (
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load approvals</p>
-          <p className="text-muted-foreground">Please try again later</p>
-        </Card>
+        <EmptyState
+          icon={AlertCircle}
+          title="Failed to load approvals"
+          description="Please try again later"
+        />
       ) : items.length === 0 ? (
-        <Card className="p-8 text-center">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <p className="text-lg font-medium">
-            {filterStatus === 'pending' ? 'No pending approvals' : 'No items found'}
-          </p>
-          <p className="text-muted-foreground">
-            {filterStatus === 'pending'
-              ? 'All caught up! Check back later.'
-              : 'Try changing your filters.'}
-          </p>
-        </Card>
+        <EmptyState
+          icon={CheckCircle2}
+          title={filterStatus === 'pending' ? 'No pending approvals' : 'No items found'}
+          description={filterStatus === 'pending' ? 'All caught up! Check back later.' : 'Try changing your filters.'}
+        />
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
@@ -556,6 +504,6 @@ export function ApprovalsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

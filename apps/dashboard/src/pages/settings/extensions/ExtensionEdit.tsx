@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { IntegrationIcon } from '@/components/IntegrationIcon';
+import { ExtensionIcon } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -119,11 +119,11 @@ function Toast({
 
 function ConfigForm({
   provider,
-  integrationId,
+  extensionId,
   onSaved,
 }: {
   provider: Provider;
-  integrationId: string;
+  extensionId: string;
   onSaved: () => void;
 }) {
   const queryClient = useQueryClient();
@@ -143,9 +143,9 @@ function ConfigForm({
 
   const saveMutation = useMutation({
     mutationFn: (data: { enabled: boolean; config: Record<string, string | boolean> }) =>
-      api.put(`/integrations/${integrationId}/providers/${provider.id}`, data),
+      api.put(`/integrations/${extensionId}/providers/${provider.id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integration', integrationId] });
+      queryClient.invalidateQueries({ queryKey: ['integration', extensionId] });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       onSaved();
     },
@@ -257,10 +257,10 @@ function ConfigForm({
 
 function ConnectionStatus({
   provider,
-  integrationId,
+  extensionId,
 }: {
   provider: Provider;
-  integrationId: string;
+  extensionId: string;
 }) {
   const queryClient = useQueryClient();
   const config = statusConfig[provider.status] || statusConfig.not_configured;
@@ -269,20 +269,20 @@ function ConnectionStatus({
   const testMutation = useMutation({
     mutationFn: () =>
       api.post<{ success: boolean; message: string; latencyMs: number | null }>(
-        `/integrations/${integrationId}/providers/${provider.id}/test`,
+        `/integrations/${extensionId}/providers/${provider.id}/test`,
         {}
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integration', integrationId] });
+      queryClient.invalidateQueries({ queryKey: ['integration', extensionId] });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
   });
 
   const toggleMutation = useMutation({
     mutationFn: (enabled: boolean) =>
-      api.post(`/integrations/${integrationId}/providers/${provider.id}/toggle`, { enabled }),
+      api.post(`/integrations/${extensionId}/providers/${provider.id}/toggle`, { enabled }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integration', integrationId] });
+      queryClient.invalidateQueries({ queryKey: ['integration', extensionId] });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
   });
@@ -384,11 +384,11 @@ function ConnectionStatus({
   );
 }
 
-function ActivityLogs({ integrationId, providerId }: { integrationId: string; providerId: string }) {
+function ActivityLogs({ extensionId, providerId }: { extensionId: string; providerId: string }) {
   const { data, isLoading } = useQuery({
-    queryKey: ['integration-logs', integrationId, providerId],
+    queryKey: ['integration-logs', extensionId, providerId],
     queryFn: () =>
-      api.get<{ logs: LogEntry[] }>(`/integrations/${integrationId}/logs?providerId=${providerId}&limit=10`),
+      api.get<{ logs: LogEntry[] }>(`/integrations/${extensionId}/logs?providerId=${providerId}&limit=10`),
   });
 
   const logs = data?.logs || [];
@@ -436,22 +436,22 @@ function ActivityLogs({ integrationId, providerId }: { integrationId: string; pr
   );
 }
 
-export function IntegrationEditPage() {
-  const { integrationId } = useParams<{ integrationId: string }>();
+export function ExtensionEditPage() {
+  const { extensionId } = useParams<{ extensionId: string }>();
   const queryClient = useQueryClient();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['integration', integrationId],
-    queryFn: () => api.get<Integration>(`/integrations/${integrationId}`),
-    enabled: !!integrationId,
+    queryKey: ['integration', extensionId],
+    queryFn: () => api.get<Integration>(`/integrations/${extensionId}`),
+    enabled: !!extensionId,
   });
 
   const deleteMutation = useMutation({
     mutationFn: (providerId: string) =>
-      api.delete(`/integrations/${integrationId}/providers/${providerId}`),
+      api.delete(`/integrations/${extensionId}/providers/${providerId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integration', integrationId] });
+      queryClient.invalidateQueries({ queryKey: ['integration', extensionId] });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
   });
@@ -478,13 +478,13 @@ export function IntegrationEditPage() {
 
   if (error || !integration) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-6 ">
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
           <p className="text-lg font-medium">Failed to load extension</p>
           <p className="text-muted-foreground mb-4">Please try again later</p>
           <Button variant="outline" asChild>
-            <Link to="/settings/integrations">
+            <Link to="/settings/extensions">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Extensions
             </Link>
@@ -495,10 +495,10 @@ export function IntegrationEditPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-6  space-y-6">
       {/* Back Link */}
       <Link
-        to="/settings/integrations"
+        to="/settings/extensions"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -508,7 +508,7 @@ export function IntegrationEditPage() {
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="p-3 rounded-xl bg-muted/50">
-          <IntegrationIcon id={integration.id} size="xl" />
+          <ExtensionIcon id={integration.id} size="xl" />
         </div>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -536,7 +536,7 @@ export function IntegrationEditPage() {
                   onClick={() => setSelectedProviderId(provider.id)}
                   className="gap-2"
                 >
-                  <IntegrationIcon id={provider.id} size="sm" />
+                  <ExtensionIcon id={provider.id} size="sm" />
                   {provider.name}
                   {provider.enabled && (
                     <span className="w-2 h-2 rounded-full bg-green-500" />
@@ -555,7 +555,7 @@ export function IntegrationEditPage() {
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
                 <div className="p-2.5 rounded-lg bg-muted/50">
-                  <IntegrationIcon id={selectedProvider.id} size="lg" />
+                  <ExtensionIcon id={selectedProvider.id} size="lg" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <h2 className="font-semibold">{selectedProvider.name}</h2>
@@ -583,7 +583,7 @@ export function IntegrationEditPage() {
                 <CardTitle className="text-base">Connection Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <ConnectionStatus provider={selectedProvider} integrationId={integrationId!} />
+                <ConnectionStatus provider={selectedProvider} extensionId={extensionId!} />
               </CardContent>
             </Card>
           )}
@@ -597,7 +597,7 @@ export function IntegrationEditPage() {
               <ConfigForm
                 key={selectedProvider.id}
                 provider={selectedProvider}
-                integrationId={integrationId!}
+                extensionId={extensionId!}
                 onSaved={() => {}}
               />
             </CardContent>
@@ -613,7 +613,7 @@ export function IntegrationEditPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ActivityLogs integrationId={integrationId!} providerId={selectedProvider.id} />
+                <ActivityLogs extensionId={extensionId!} providerId={selectedProvider.id} />
               </CardContent>
             </Card>
           )}

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import {
   Search,
   Plus,
-  CheckCircle2,
   AlertCircle,
   Clock,
   Zap,
@@ -22,8 +21,8 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { PageContainer, PageHeader, StatsCard, StatsGrid, SearchInput, EmptyState } from '@/components';
 
 type TriggerType = 'time_based' | 'event_based';
 type ActionType = 'send_message' | 'create_task' | 'notify_staff' | 'webhook';
@@ -168,37 +167,6 @@ function RuleCard({ rule, onToggle }: { rule: AutomationRule; onToggle: (enabled
   );
 }
 
-function StatsCard({
-  label,
-  value,
-  icon: Icon,
-  variant,
-}: {
-  label: string;
-  value: number;
-  icon: typeof CheckCircle2;
-  variant: 'success' | 'warning' | 'error' | 'default';
-}) {
-  const colors = {
-    success: 'text-green-600 bg-green-50',
-    warning: 'text-yellow-600 bg-yellow-50',
-    error: 'text-red-600 bg-red-50',
-    default: 'text-muted-foreground bg-muted',
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-card border">
-      <div className={cn('p-2 rounded-lg', colors[variant])}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
-
 export function AutomationsPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | TriggerType>('all');
@@ -237,42 +205,33 @@ export function AutomationsPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Automations</h1>
-          <p className="text-muted-foreground">
-            Automate guest communication and staff workflows
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader description="Automate guest communication and staff workflows">
         <Link to="/settings/automations/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button size="sm">
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Rule
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       {/* Stats */}
       {!isLoading && !error && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsGrid>
           <StatsCard label="Active" value={stats.active} icon={Play} variant="success" />
           <StatsCard label="Inactive" value={stats.inactive} icon={Pause} variant="warning" />
           <StatsCard label="Errors" value={stats.errors} icon={AlertCircle} variant="error" />
           <StatsCard label="Total" value={stats.total} icon={Zap} variant="default" />
-        </div>
+        </StatsGrid>
       )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search automations..."
+        <div className="flex-1 max-w-md">
+          <SearchInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            onChange={setSearch}
+            placeholder="Search automations..."
           />
         </div>
         <div className="flex gap-2">
@@ -308,35 +267,32 @@ export function AutomationsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : error ? (
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load automations</p>
-          <p className="text-muted-foreground">Please try again later</p>
-        </Card>
+        <EmptyState
+          icon={AlertCircle}
+          title="Failed to load automations"
+          description="Please try again later"
+        />
       ) : filteredRules.length === 0 ? (
-        <Card className="p-8 text-center">
-          {rules.length === 0 ? (
-            <>
-              <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-lg font-medium">No automation rules yet</p>
-              <p className="text-muted-foreground mb-4">
-                Create your first rule to automate guest communication
-              </p>
-              <Link to="/settings/automations/new">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Rule
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-lg font-medium">No rules found</p>
-              <p className="text-muted-foreground">Try a different search term or filter</p>
-            </>
-          )}
-        </Card>
+        rules.length === 0 ? (
+          <EmptyState
+            icon={Zap}
+            title="No automation rules yet"
+            description="Create your first rule to automate guest communication"
+          >
+            <Link to="/settings/automations/new">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Rule
+              </Button>
+            </Link>
+          </EmptyState>
+        ) : (
+          <EmptyState
+            icon={Search}
+            title="No rules found"
+            description="Try a different search term or filter"
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredRules.map((rule) => (
@@ -350,6 +306,6 @@ export function AutomationsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
