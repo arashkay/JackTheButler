@@ -5,7 +5,66 @@ All notable changes to Jack The Butler are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-01-29
+
+### Added - Phase 9: Launch Preparation
+
+#### 1.0.0-rc.1: Performance Optimization
+- Added database indexes for common query patterns:
+  - `conversations.reservationId` for guest-reservation joins
+  - `conversations.lastMessageAt` for sorting by activity
+  - `tasks.priority` for priority filtering
+  - `tasks.createdAt` for chronological sorting
+- Created `response_cache` table for AI response caching
+- Implemented `ResponseCacheService` with:
+  - Query normalization and hashing
+  - TTL-based expiration (default 1 hour)
+  - LRU eviction when max entries reached
+  - Automatic cache bypass for personal/time-sensitive queries
+- Integrated response caching into `AIResponder` for FAQ-type queries
+- Created `audit_log` table for security event tracking
+- Added load testing script (`scripts/load-test.ts`)
+
+#### 1.0.0-rc.2: Security Hardening
+- Added security headers middleware with CSP, X-Frame-Options, HSTS, etc.
+- Implemented rate limiting middleware:
+  - Auth endpoints: 10 requests/minute per IP
+  - API endpoints: 100 requests/minute per IP
+- Created audit logging service (`AuditService`) with:
+  - Event recording for security-relevant actions
+  - Query capabilities by actor, action, resource, and time range
+  - Helper functions for auth and config change logging
+- Integrated audit logging into auth routes (login, logout, failed attempts)
+- Rate limiting automatically bypassed in test environment
+
+#### 1.0.0-rc.3: Monitoring & Alerting
+- Created metrics collection module (`src/monitoring/`) with:
+  - `Counter` class for monotonically increasing values
+  - `Gauge` class for values that go up or down
+  - `Histogram` class for value distributions with percentiles
+- Added application metrics:
+  - Counters: messagesReceived, messagesSent, aiRequests, aiCacheHits, tasksCreated, tasksCompleted, errors, authAttempts, authFailures
+  - Histograms: messageProcessingTime, aiResponseTime, dbQueryTime, httpRequestTime
+  - Gauges: activeConversations, pendingTasks, connectedWebSockets
+- Enhanced health endpoints:
+  - `GET /health/info` - System info (version, uptime, memory usage)
+  - `GET /health/metrics` - Application metrics
+- Integrated metrics into HTTP request logger and AI responder
+
+#### 1.0.0-rc.4: Documentation
+- Created user guide documentation:
+  - `docs/user-guide/getting-started.md` - Quick start guide
+  - `docs/user-guide/configuration.md` - Configuration reference
+  - `docs/user-guide/dashboard-guide.md` - Staff dashboard usage
+  - `docs/user-guide/troubleshooting.md` - Common issues and solutions
+- Created API reference:
+  - `docs/api-reference/rest-api.md` - REST API endpoints
+
+#### 1.0.0-rc.5: Release Preparation
+- Version bump to 1.0.0
+- Updated all version references across codebase
+- All 142 tests passing
+- Production ready
 
 ### Added - Phase 8b: Admin Console
 

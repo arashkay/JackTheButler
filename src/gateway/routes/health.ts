@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { isDatabaseHealthy } from '@/db/index.js';
 import { scheduler } from '@/services/scheduler.js';
+import { getMetrics } from '@/monitoring/index.js';
 
 const health = new Hono();
 
@@ -56,12 +57,49 @@ health.get('/', (c) => {
 
   return c.json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
-    version: '0.8.0',
+    version: '1.0.0',
     uptime: process.uptime(),
     checks: {
       database: dbHealthy ? 'ok' : 'error',
     },
     scheduler: schedulerStatus,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
+ * System info endpoint
+ * Returns version, uptime, memory usage, and basic stats
+ */
+health.get('/info', (c) => {
+  const memUsage = process.memoryUsage();
+
+  return c.json({
+    name: 'Jack The Butler',
+    version: '1.0.0',
+    nodeVersion: process.version,
+    platform: process.platform,
+    uptime: process.uptime(),
+    memory: {
+      rss: Math.round(memUsage.rss / 1024 / 1024), // MB
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024), // MB
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024), // MB
+      external: Math.round(memUsage.external / 1024 / 1024), // MB
+    },
+    scheduler: scheduler.getStatus(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
+ * Metrics endpoint
+ * Returns application metrics (counters, histograms, gauges)
+ */
+health.get('/metrics', (c) => {
+  const allMetrics = getMetrics();
+
+  return c.json({
+    ...allMetrics,
     timestamp: new Date().toISOString(),
   });
 });

@@ -6,11 +6,10 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { secureHeaders } from 'hono/secure-headers';
 import { healthRoutes } from './routes/health.js';
 import { apiRoutes } from './routes/api.js';
 import { webhookRoutes } from './routes/webhooks/index.js';
-import { errorHandler, requestLogger } from './middleware/index.js';
+import { errorHandler, requestLogger, securityHeaders, apiRateLimit } from './middleware/index.js';
 
 /**
  * Create and configure the Hono app
@@ -18,8 +17,8 @@ import { errorHandler, requestLogger } from './middleware/index.js';
 export function createApp() {
   const app = new Hono();
 
-  // Security headers
-  app.use('*', secureHeaders());
+  // Security headers (CSP, X-Frame-Options, HSTS, etc.)
+  app.use('*', securityHeaders);
 
   // CORS - allow all origins in development
   app.use(
@@ -45,6 +44,9 @@ export function createApp() {
   // Webhook routes (no auth, uses signature verification)
   app.route('/webhooks', webhookRoutes);
 
+  // API rate limiting (100 req/min per IP)
+  app.use('/api/*', apiRateLimit);
+
   // API routes
   app.route('/api/v1', apiRoutes);
 
@@ -52,7 +54,7 @@ export function createApp() {
   app.get('/', (c) => {
     return c.json({
       name: 'Jack The Butler',
-      version: '0.8.0',
+      version: '1.0.0',
       status: 'running',
       docs: '/api/v1',
       health: '/health',

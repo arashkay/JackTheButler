@@ -14,6 +14,8 @@ import { KnowledgeService, type KnowledgeSearchResult } from './knowledge/index.
 import { IntentClassifier, type ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
+import { getResponseCache, type ResponseCacheService } from './cache.js';
+import { metrics } from '@/monitoring/index.js';
 
 const log = createLogger('ai:responder');
 
@@ -47,6 +49,10 @@ export interface AIResponderConfig {
   maxContextMessages?: number | undefined;
   maxKnowledgeResults?: number | undefined;
   minKnowledgeSimilarity?: number | undefined;
+  /** Enable response caching for FAQ-type queries */
+  enableCache?: boolean | undefined;
+  /** Cache TTL in seconds (default: 3600) */
+  cacheTtlSeconds?: number | undefined;
 }
 
 /**
@@ -57,6 +63,7 @@ export class AIResponder implements Responder {
   private knowledge: KnowledgeService;
   private classifier: IntentClassifier;
   private conversationService: ConversationService;
+  private cache: ResponseCacheService | null;
   private maxContextMessages: number;
   private maxKnowledgeResults: number;
   private minKnowledgeSimilarity: number;
@@ -70,7 +77,12 @@ export class AIResponder implements Responder {
     this.maxKnowledgeResults = config.maxKnowledgeResults ?? 3;
     this.minKnowledgeSimilarity = config.minKnowledgeSimilarity ?? 0.3;
 
-    log.info({ provider: config.provider.name }, 'AI responder initialized');
+    // Initialize cache if enabled
+    this.cache = config.enableCache !== false
+      ? getResponseCache({ ttlSeconds: config.cacheTtlSeconds ?? 3600 })
+      : null;
+
+    log.info({ provider: config.provider.name, cacheEnabled: !!this.cache }, 'AI responder initialized');
   }
 
   /**
@@ -89,6 +101,37 @@ export class AIResponder implements Responder {
       'Generating AI response'
     );
 
+    // Check cache for simple queries (no guest context = FAQ-style)
+    const canUseCache = this.cache !== null && !guestContext?.guest;
+    if (canUseCache && this.cache) {
+      const cached = await this.cache.get(message.content);
+      if (cached) {
+        const duration = Date.now() - startTime;
+        metrics.aiCacheHits.inc();
+        metrics.aiResponseTime.observe(duration);
+
+        log.info(
+          {
+            conversationId: conversation.id,
+            intent: cached.intent,
+            cached: true,
+            duration,
+          },
+          'AI response from cache'
+        );
+
+        return {
+          content: cached.response,
+          confidence: 0.9,
+          intent: cached.intent ?? 'general_inquiry',
+          metadata: {
+            cached: true,
+            cachedAt: cached.createdAt,
+          },
+        };
+      }
+    }
+
     // 1. Classify intent
     const classification = await this.classifier.classify(message.content);
 
@@ -105,6 +148,7 @@ export class AIResponder implements Responder {
     const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext);
 
     // 5. Generate response
+    metrics.aiRequests.inc();
     const response = await this.provider.complete({
       messages,
       maxTokens: 500,
@@ -112,6 +156,7 @@ export class AIResponder implements Responder {
     });
 
     const duration = Date.now() - startTime;
+    metrics.aiResponseTime.observe(duration);
 
     log.info(
       {
@@ -125,6 +170,13 @@ export class AIResponder implements Responder {
       },
       'AI response generated'
     );
+
+    // Cache the response for FAQ-style queries
+    if (canUseCache && this.cache && classification.confidence > 0.7) {
+      this.cache.set(message.content, response.content, classification.intent).catch((err) => {
+        log.error({ err }, 'Failed to cache response');
+      });
+    }
 
     return {
       content: response.content,
@@ -268,6 +320,13 @@ export class AIResponder implements Responder {
    */
   getClassifier(): IntentClassifier {
     return this.classifier;
+  }
+
+  /**
+   * Get the response cache (for external use)
+   */
+  getCache(): ResponseCacheService | null {
+    return this.cache;
   }
 }
 

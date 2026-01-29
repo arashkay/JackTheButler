@@ -6,8 +6,9 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { validateBody, requireAuth } from '../middleware/index.js';
+import { validateBody, requireAuth, authRateLimit, getClientIp } from '../middleware/index.js';
 import { AuthService } from '@/services/auth.js';
+import { logAuthEvent } from '@/services/audit.js';
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -17,6 +18,9 @@ type Variables = {
 
 const auth = new Hono<{ Variables: Variables }>();
 const authService = new AuthService();
+
+// Apply rate limiting to all auth routes (10 req/min per IP)
+auth.use('*', authRateLimit);
 
 /**
  * Login schema
@@ -39,10 +43,21 @@ const refreshSchema = z.object({
  */
 auth.post('/login', validateBody(loginSchema), async (c) => {
   const { email, password } = c.get('validatedBody') as z.infer<typeof loginSchema>;
+  const ip = getClientIp(c);
+  const userAgent = c.req.header('user-agent');
 
-  const tokens = await authService.login(email, password);
+  try {
+    const tokens = await authService.login(email, password);
 
-  return c.json(tokens);
+    // Log successful login (userId not available from TokenPair, so we log email)
+    logAuthEvent('login', undefined, { email }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
+
+    return c.json(tokens);
+  } catch (error) {
+    // Log failed login attempt
+    logAuthEvent('login_failed', undefined, { email, reason: (error as Error).message }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
+    throw error;
+  }
 });
 
 /**
@@ -74,6 +89,13 @@ auth.get('/me', requireAuth, async (c) => {
  * Invalidate refresh token (future: add to blacklist)
  */
 auth.post('/logout', requireAuth, async (c) => {
+  const userId = c.get('userId');
+  const ip = getClientIp(c);
+  const userAgent = c.req.header('user-agent');
+
+  // Log logout event
+  logAuthEvent('logout', userId, {}, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
+
   // In a production system, we would add the token to a blacklist
   // For now, just return success
   return c.json({ message: 'Logged out successfully' });

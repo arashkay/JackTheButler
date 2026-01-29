@@ -234,6 +234,8 @@ export const conversations = sqliteTable(
     index('idx_conversations_channel').on(table.channelType, table.channelId),
     index('idx_conversations_state').on(table.state),
     index('idx_conversations_assigned').on(table.assignedTo),
+    index('idx_conversations_reservation').on(table.reservationId),
+    index('idx_conversations_last_message').on(table.lastMessageAt),
   ]
 );
 
@@ -343,6 +345,8 @@ export const tasks = sqliteTable(
     index('idx_tasks_department').on(table.department, table.status),
     index('idx_tasks_assigned').on(table.assignedTo),
     index('idx_tasks_room').on(table.roomNumber),
+    index('idx_tasks_priority').on(table.priority),
+    index('idx_tasks_created').on(table.createdAt),
   ]
 );
 
@@ -599,3 +603,91 @@ export type NewIntegrationConfig = typeof integrationConfigs.$inferInsert;
 
 export type IntegrationLog = typeof integrationLogs.$inferSelect;
 export type NewIntegrationLog = typeof integrationLogs.$inferInsert;
+
+// ===================
+// Audit Log
+// ===================
+
+/**
+ * Audit log for tracking security-relevant events
+ */
+export const auditLog = sqliteTable(
+  'audit_log',
+  {
+    id: text('id').primaryKey(),
+
+    // Actor information
+    // Type: user, system, api, webhook
+    actorType: text('actor_type').notNull(),
+    actorId: text('actor_id'),
+
+    // Action performed
+    action: text('action').notNull(),
+
+    // Resource affected
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id'),
+
+    // Details (JSON object)
+    details: text('details'),
+
+    // Request context
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_audit_created').on(table.createdAt),
+    index('idx_audit_actor').on(table.actorType, table.actorId),
+    index('idx_audit_resource').on(table.resourceType, table.resourceId),
+    index('idx_audit_action').on(table.action),
+  ]
+);
+
+export type AuditLogEntry = typeof auditLog.$inferSelect;
+export type NewAuditLogEntry = typeof auditLog.$inferInsert;
+
+// ===================
+// Response Cache
+// ===================
+
+/**
+ * Cache for AI responses to common queries (FAQ-style)
+ */
+export const responseCache = sqliteTable(
+  'response_cache',
+  {
+    id: text('id').primaryKey(),
+
+    // Query fingerprint (hash of normalized query)
+    queryHash: text('query_hash').notNull().unique(),
+
+    // Original query (for debugging)
+    query: text('query').notNull(),
+
+    // Cached response
+    response: text('response').notNull(),
+    intent: text('intent'),
+
+    // Usage tracking
+    hitCount: integer('hit_count').notNull().default(0),
+    lastHitAt: text('last_hit_at'),
+
+    // Expiration
+    expiresAt: text('expires_at').notNull(),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_response_cache_hash').on(table.queryHash),
+    index('idx_response_cache_expires').on(table.expiresAt),
+  ]
+);
+
+export type ResponseCacheEntry = typeof responseCache.$inferSelect;
+export type NewResponseCacheEntry = typeof responseCache.$inferInsert;
