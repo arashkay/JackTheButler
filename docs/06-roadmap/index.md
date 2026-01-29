@@ -35,6 +35,12 @@ This roadmap defines a **phased, incremental build approach** where each release
 - Performance optimization
 - Documentation and deployment
 
+### Post-Launch (1.1.x+): Progressive Autonomy
+- **Kernel/Extension separation** for maintainability
+- **Task Router** for automatic task creation
+- **Configurable autonomy** levels per hotel
+- Move from L2 (Supervised) toward L3/L4 (Autonomous)
+
 ---
 
 ## Phase Summary
@@ -52,6 +58,7 @@ This roadmap defines a **phased, incremental build approach** where each release
 | 8 | 0.9.0 | **Polish** | Multi-channel, automation engine | Feature complete |
 | 8b | 0.9.5 | **Admin Console** | Integration UI, automation UI | Admin can configure |
 | 9 | 1.0.0 | **Launch** | Production hardening | Go live |
+| **10** | **1.1.0** | **Kernel** | Core/Extension separation, Task Router, Autonomy | **L2 Autonomy** |
 
 ---
 
@@ -72,6 +79,7 @@ Phase 6 (Operations)   → Dashboard shows conversations
 Phase 7 (Integration)  → Guest data from PMS visible
 Phase 8 (Polish)       → All P0 use cases pass
 Phase 9 (Launch)       → Production deployment works
+Phase 10 (Kernel)      → Tasks auto-created from requests
 ```
 
 ### Implementation Rules
@@ -97,6 +105,17 @@ Phase 9 (Launch)       → Production deployment works
 | [Phase 7: Integration](phase-7-integration.md) | PMS and hotel systems |
 | [Phase 8: Polish](phase-8-polish.md) | Multi-channel, automation |
 | [Phase 9: Launch](phase-9-launch.md) | Production readiness |
+| [Phase 10: Extension Architecture](phase-10-extensions.md) | Core/Extension separation |
+
+### Phase 10 Sub-Phases
+
+| Document | Description |
+|----------|-------------|
+| [Phase 10.1: Core Structure](phase-10-1-core-structure.md) | Create `src/core/`, move kernel modules |
+| [Phase 10.2: Task Router](phase-10-2-task-router.md) | Auto-create tasks from guest intents |
+| [Phase 10.3: Extension Consolidation](phase-10-3-extension-consolidation.md) | Manifest-based extensions |
+| [Phase 10.4: Autonomy Settings](phase-10-4-autonomy-settings.md) | Configurable autonomy levels |
+| [Phase 10.5: Recovery Engine](phase-10-5-recovery-engine.md) | Post-stay review recovery |
 
 ---
 
@@ -146,6 +165,11 @@ Phase 9 (Launch)       → Production deployment works
                     ┌────────────────▼──────────────┐
                     │       Phase 9: Launch         │
                     │    Production, documentation  │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │   Phase 10: Extension Arch    │
+                    │    Kernel, Task Router, L2    │
                     └───────────────────────────────┘
 ```
 
@@ -167,6 +191,7 @@ Phase 9 (Launch)       → Production deployment works
 | 0.8.0 | "Guest data from PMS" | **Hotel integration** |
 | 0.9.0 | "All features working" | **Feature complete** |
 | 1.0.0 | "Production ready" | **Launch ready** |
+| 1.1.0 | "Tasks auto-created, autonomy configurable" | **L2 Autonomy** |
 
 ---
 

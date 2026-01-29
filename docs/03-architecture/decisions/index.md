@@ -24,6 +24,7 @@ An Architecture Decision Record captures an important architectural decision mad
 | [003](003-message-queue.md) | In-Memory Queue with Optional Redis | Accepted | 2024-01 |
 | [004](004-pms-integration-pattern.md) | PMS Integration Pattern | Proposed | 2024-02 |
 | [005](005-job-scheduler.md) | SQLite Job Scheduler | Accepted | 2024-03 |
+| [006](006-extension-architecture.md) | Extension Architecture | Proposed | 2026-01 |
 
 ---
 

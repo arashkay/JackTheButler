@@ -28,11 +28,17 @@
 ```
 jack/
 ├── src/
+│   ├── core/             # Kernel - business logic (v1.1.0+)
+│   │   ├── message-processor.ts
+│   │   ├── task-router.ts
+│   │   ├── escalation-engine.ts
+│   │   └── interfaces/   # Abstract interfaces for extensions
+│   ├── extensions/       # Adapters - external integrations (v1.1.0+)
+│   │   ├── ai/           # AI providers (anthropic, openai, ollama)
+│   │   ├── channels/     # Communication (whatsapp, sms, email)
+│   │   └── pms/          # Property management systems
 │   ├── gateway/          # Central WebSocket/HTTP server
-│   ├── channels/         # Channel adapters (whatsapp, sms, email, webchat)
-│   ├── ai/               # AI engine, intent classification, RAG
-│   ├── integrations/     # Hotel system adapters (PMS, housekeeping)
-│   ├── services/         # Business logic services
+│   ├── services/         # State management services
 │   ├── db/               # Database schema, migrations, repositories
 │   ├── config/           # Configuration loading
 │   ├── utils/            # Shared utilities
@@ -46,6 +52,8 @@ jack/
 ├── tests/                # Test files mirroring src/
 └── config/               # Environment configs
 ```
+
+> **Note:** `src/core/` and `src/extensions/` are introduced in v1.1.0. See [ADR-006](docs/03-architecture/decisions/006-extension-architecture.md) for the architecture.
 
 ## Key Commands
 
@@ -91,6 +99,7 @@ pnpm check                # Run all checks (lint + types + tests)
 4. **Channel-agnostic** - Core logic independent of messaging platform
 5. **AI provider abstraction** - Support Claude, OpenAI, or local Ollama
 6. **Simple operations** - SQLite database, easy backup (copy file)
+7. **Kernel/Extension separation** - Business logic in `src/core/`, adapters in `src/extensions/` (v1.1.0+)
 
 ## Code Conventions
 
@@ -172,16 +181,17 @@ export class GuestService {
 
 ### Channel Adapter Pattern
 ```typescript
-// src/channels/base-adapter.ts
+// src/core/interfaces/channel.ts (v1.1.0+)
 export interface ChannelAdapter {
-  readonly channel: ChannelType;
-  send(message: OutgoingMessage): Promise<SendResult>;
-  parseIncoming(raw: unknown): Promise<IncomingMessage>;
+  readonly id: string;
+  send(message: OutboundMessage): Promise<SendResult>;
+  parseIncoming(payload: unknown): InboundMessage | null;
+  verifySignature?(payload: unknown, signature: string): boolean;
 }
 
-// src/channels/whatsapp/adapter.ts
+// src/extensions/channels/whatsapp/adapter.ts
 export class WhatsAppAdapter implements ChannelAdapter {
-  readonly channel = 'whatsapp';
+  readonly id = 'whatsapp';
   // ... implementation
 }
 ```
@@ -198,6 +208,24 @@ export class ConversationRepository {
       .get(guestId, 'active') as Conversation | null;
   }
 }
+```
+
+### Extension Manifest Pattern (v1.1.0+)
+```typescript
+// src/extensions/channels/whatsapp/manifest.ts
+import type { ChannelManifest } from '../types.js';
+
+export const manifest: ChannelManifest = {
+  id: 'whatsapp',
+  name: 'WhatsApp Business',
+  category: 'channel',
+  configSchema: [
+    { key: 'accessToken', type: 'password', required: true },
+    { key: 'phoneNumberId', type: 'text', required: true },
+  ],
+  createAdapter: (config) => new WhatsAppAdapter(config),
+  getRoutes: () => whatsappWebhookRoutes,
+};
 ```
 
 ## Database (SQLite)
@@ -253,6 +281,8 @@ describe('GuestService', () => {
 - [API Specs](docs/04-specs/api/openapi.yaml)
 - [Local Development](docs/05-operations/local-development.md)
 - [Deployment](docs/05-operations/deployment.md)
+- [Release Roadmap](docs/06-roadmap/index.md)
+- [ADR-006: Extension Architecture](docs/03-architecture/decisions/006-extension-architecture.md)
 
 ## When Implementing
 
