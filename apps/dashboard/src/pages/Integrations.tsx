@@ -209,9 +209,9 @@ export function IntegrationsPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Extensions</h1>
         <p className="text-muted-foreground">
-          Connect and manage external services for your hotel
+          Connect and manage AI providers, channels, and hotel systems
         </p>
       </div>
 
@@ -229,7 +229,7 @@ export function IntegrationsPage() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search integrations..."
+          placeholder="Search extensions..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 max-w-md"
@@ -244,13 +244,13 @@ export function IntegrationsPage() {
       ) : error ? (
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load integrations</p>
+          <p className="text-lg font-medium">Failed to load extensions</p>
           <p className="text-muted-foreground">Please try again later</p>
         </Card>
       ) : filteredIntegrations.length === 0 ? (
         <Card className="p-8 text-center">
           <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium">No integrations found</p>
+          <p className="text-lg font-medium">No extensions found</p>
           <p className="text-muted-foreground">Try a different search term</p>
         </Card>
       ) : (

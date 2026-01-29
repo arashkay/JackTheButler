@@ -6,13 +6,13 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { db, integrationConfigs } from '@/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { integrationRoutes } from '@/gateway/routes/integrations.js';
+import { legacyIntegrationRoutes } from '@/gateway/routes/extensions.js';
 import { generateId } from '@/utils/id.js';
 import { encryptObject } from '@/utils/crypto.js';
 
 // Create test app
 const app = new Hono();
-app.route('/api/v1/integrations', integrationRoutes);
+app.route('/api/v1/integrations', legacyIntegrationRoutes);
 
 describe('Integration Management API', () => {
   // Helper to clean up test data
@@ -38,13 +38,12 @@ describe('Integration Management API', () => {
       expect(body.integrations).toBeDefined();
       expect(Array.isArray(body.integrations)).toBe(true);
 
-      // Should have AI, WhatsApp, SMS, Email, Webchat, PMS integrations
+      // Should have AI, WhatsApp, SMS, Email, PMS integrations
       const integrationIds = body.integrations.map((i: { id: string }) => i.id);
       expect(integrationIds).toContain('ai');
       expect(integrationIds).toContain('whatsapp');
       expect(integrationIds).toContain('sms');
       expect(integrationIds).toContain('email');
-      expect(integrationIds).toContain('webchat');
       expect(integrationIds).toContain('pms');
     });
 

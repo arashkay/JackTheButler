@@ -10,7 +10,7 @@ import { authRoutes } from './auth.js';
 import { conversationsRouter } from './conversations.js';
 import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
-import { integrationRoutes } from './integrations.js';
+import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
 import { automationRoutes } from './automation.js';
 
 const api = new Hono();
@@ -27,8 +27,11 @@ api.route('/tasks', tasksRouter);
 // Admin routes
 api.route('/admin', adminRouter);
 
-// Integration management routes
-api.route('/integrations', integrationRoutes);
+// Extension management routes (new)
+api.route('/extensions', extensionRoutes);
+
+// Integration management routes (legacy - maps to extensions)
+api.route('/integrations', legacyIntegrationRoutes);
 
 // Automation management routes
 api.route('/automation', automationRoutes);

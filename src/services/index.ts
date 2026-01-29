@@ -14,5 +14,5 @@
 
 export { AuthService } from './auth.js';
 export { ConversationService, conversationService } from './conversation.js';
-export { IntegrationConfigService, integrationConfigService } from './integration-config.js';
-export type { ProviderConfig, IntegrationConfigRecord, IntegrationWithStatus } from './integration-config.js';
+export { ExtensionConfigService, extensionConfigService } from './extension-config.js';
+export type { ProviderConfig, ExtensionConfigRecord, ExtensionWithStatus } from './extension-config.js';

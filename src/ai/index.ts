@@ -11,7 +11,6 @@
  */
 
 export * from './types.js';
-export * from './providers/index.js';
 export { KnowledgeService } from './knowledge/index.js';
 export { IntentClassifier, IntentTaxonomy, getIntentDefinition } from './intent/index.js';
 export { AIResponder, type AIResponderConfig } from './responder.js';

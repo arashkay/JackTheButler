@@ -9,8 +9,8 @@ import { eq, and, sql } from 'drizzle-orm';
 import { db, guests, reservations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
-import { getPMSAdapter } from '@/integrations/pms/index.js';
-import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/integrations/types.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/core/interfaces/pms.js';
 import type { Guest, Reservation } from '@/db/schema.js';
 
 const log = createLogger('pms-sync');
@@ -20,8 +20,13 @@ export class PMSSyncService {
    * Sync all reservations modified since last sync
    */
   async syncReservations(since?: Date): Promise<SyncResult> {
-    const adapter = getPMSAdapter();
+    const adapter = getExtensionRegistry().getActivePMSAdapter();
     const result: SyncResult = { created: 0, updated: 0, unchanged: 0, errors: 0, errorDetails: [] };
+
+    if (!adapter) {
+      log.warn('No PMS adapter configured, skipping sync');
+      return result;
+    }
 
     const sinceDt = since || new Date(Date.now() - 24 * 60 * 60 * 1000); // Default: last 24 hours
     log.info({ since: sinceDt.toISOString(), provider: adapter.provider }, 'Starting PMS sync');

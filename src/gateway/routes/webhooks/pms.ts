@@ -9,8 +9,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
 import { loadConfig } from '@/config/index.js';
-import { getPMSAdapter } from '@/integrations/pms/index.js';
-import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/integrations/types.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/core/interfaces/pms.js';
 import { validateBody } from '../../middleware/validator.js';
 
 const log = createLogger('webhook:pms');
@@ -192,7 +192,11 @@ pmsWebhooks.post('/mews', async (c) => {
   const signature = c.req.header('x-mews-signature');
   const body = await c.req.text();
 
-  const adapter = getPMSAdapter();
+  const adapter = getExtensionRegistry().getActivePMSAdapter();
+  if (!adapter) {
+    log.warn('No PMS adapter configured');
+    return c.json({ error: 'PMS not configured' }, 400);
+  }
   if (adapter.provider !== 'mews') {
     log.warn('Received Mews webhook but adapter is not Mews');
     return c.json({ error: 'PMS mismatch' }, 400);
@@ -226,7 +230,11 @@ pmsWebhooks.post('/mews', async (c) => {
 pmsWebhooks.post('/cloudbeds', async (c) => {
   const body = await c.req.text();
 
-  const adapter = getPMSAdapter();
+  const adapter = getExtensionRegistry().getActivePMSAdapter();
+  if (!adapter) {
+    log.warn('No PMS adapter configured');
+    return c.json({ error: 'PMS not configured' }, 400);
+  }
   if (adapter.provider !== 'cloudbeds') {
     log.warn('Received Cloudbeds webhook but adapter is not Cloudbeds');
     return c.json({ error: 'PMS mismatch' }, 400);

@@ -84,13 +84,21 @@ async function initializeAIResponder(): Promise<Responder | null> {
 
   try {
     // Dynamic imports to avoid circular dependency issues
-    const [providersModule, responderModule] = await Promise.all([
-      import('@/ai/providers/index.js'),
+    const [extensionsModule, responderModule] = await Promise.all([
+      import('@/extensions/index.js'),
       import('@/ai/responder.js'),
     ]);
 
-    const provider = providersModule.getProvider();
-    const embeddingProvider = providersModule.getEmbeddingProvider();
+    const registry = extensionsModule.getExtensionRegistry();
+    const provider = registry.getActiveAIProvider();
+
+    if (!provider) {
+      log.warn('No active AI provider in registry');
+      return null;
+    }
+
+    // Get embedding provider (same as completion provider for now)
+    const embeddingProvider = provider;
 
     const responder = new responderModule.AIResponder({
       provider,

@@ -481,12 +481,12 @@ export function IntegrationEditPage() {
       <div className="p-6 max-w-3xl mx-auto">
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load integration</p>
+          <p className="text-lg font-medium">Failed to load extension</p>
           <p className="text-muted-foreground mb-4">Please try again later</p>
           <Button variant="outline" asChild>
             <Link to="/settings/integrations">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Integrations
+              Back to Extensions
             </Link>
           </Button>
         </Card>
@@ -502,7 +502,7 @@ export function IntegrationEditPage() {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Integrations
+        Back to Extensions
       </Link>
 
       {/* Header */}

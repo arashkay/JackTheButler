@@ -246,3 +246,14 @@ export interface PMSConfig {
  * Factory function type for creating PMS adapters
  */
 export type PMSAdapterFactory = (config: PMSConfig) => PMSAdapter;
+
+/**
+ * Sync result tracking
+ */
+export interface SyncResult {
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: number;
+  errorDetails?: Array<{ id: string; error: string }>;
+}

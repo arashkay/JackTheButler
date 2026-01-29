@@ -37,7 +37,7 @@ export function Layout() {
   const navItems = [
     { path: '/', label: 'Conversations' },
     { path: '/tasks', label: 'Tasks' },
-    { path: '/settings/integrations', label: 'Integrations' },
+    { path: '/settings/integrations', label: 'Extensions' },
     { path: '/settings/automations', label: 'Automations' },
   ];
 
