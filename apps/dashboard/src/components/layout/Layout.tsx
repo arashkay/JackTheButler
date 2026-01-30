@@ -73,7 +73,7 @@ export function Layout() {
   // Fetch conversation stats for badge
   const { data: conversationStats } = useQuery({
     queryKey: ['conversationStats'],
-    queryFn: () => api.get<{ needsAttention: number }>('/conversations/stats'),
+    queryFn: () => api.get<{ escalated: number }>('/conversations/stats'),
     refetchInterval: 30000,
     enabled: isAuthenticated,
   });
@@ -162,13 +162,13 @@ export function Layout() {
 
   const pendingTasks = taskStats?.pending || 0;
   const pendingApprovals = approvalStats?.stats?.pending || 0;
-  const needsAttention = conversationStats?.needsAttention || 0;
+  const escalatedConversations = conversationStats?.escalated || 0;
 
   const navSections: NavSection[] = [
     {
       items: [
         { path: '/', label: 'Home', icon: <Home size={20} /> },
-        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} />, badge: needsAttention },
+        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} />, badge: escalatedConversations },
         { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} />, badge: pendingTasks },
         { path: '/approvals', label: 'Approvals', icon: <Bell size={20} />, badge: pendingApprovals },
         { path: '/guests', label: 'Guests', icon: <Users size={20} /> },

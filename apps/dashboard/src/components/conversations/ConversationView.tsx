@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -36,7 +37,9 @@ interface Message {
 export function ConversationView({ id }: Props) {
   const queryClient = useQueryClient();
   const [input, setInput] = useState('');
+  const [stateMenuOpen, setStateMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const stateMenuRef = useRef<HTMLDivElement>(null);
 
   const { data: convData } = useQuery({
     queryKey: ['conversation', id],
@@ -58,6 +61,28 @@ export function ConversationView({ id }: Props) {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
+
+  const updateStateMutation = useMutation({
+    mutationFn: (state: string) =>
+      api.patch(`/conversations/${id}`, { state }),
+    onSuccess: () => {
+      setStateMenuOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['conversation', id] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['conversationStats'] });
+    },
+  });
+
+  // Close state menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (stateMenuRef.current && !stateMenuRef.current.contains(event.target as Node)) {
+        setStateMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const conv = convData?.conversation;
   const messages = msgData?.messages || [];
@@ -100,6 +125,65 @@ export function ConversationView({ id }: Props) {
               {conv.channelType} · {conv.state}
               {conv.currentIntent && ` · ${conv.currentIntent}`}
             </p>
+          </div>
+          <div className="relative" ref={stateMenuRef}>
+            <button
+              onClick={() => setStateMenuOpen(!stateMenuOpen)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors',
+                conv.state === 'escalated'
+                  ? 'bg-orange-50 border-orange-200 text-orange-700'
+                  : conv.state === 'resolved'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : conv.state === 'closed'
+                  ? 'bg-gray-50 border-gray-200 text-gray-500'
+                  : 'bg-blue-50 border-blue-200 text-blue-700'
+              )}
+            >
+              <span className="capitalize">{conv.state}</span>
+              <ChevronDown size={14} className={cn('transition-transform', stateMenuOpen && 'rotate-180')} />
+            </button>
+
+            {stateMenuOpen && (
+              <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50">
+                {(conv.state === 'active' || conv.state === 'new') && (
+                  <button
+                    onClick={() => updateStateMutation.mutate('escalated')}
+                    disabled={updateStateMutation.isPending}
+                    className="w-full px-3 py-2 text-left text-sm text-orange-700 hover:bg-orange-50 disabled:opacity-50"
+                  >
+                    Escalate
+                  </button>
+                )}
+                {conv.state === 'escalated' && (
+                  <button
+                    onClick={() => updateStateMutation.mutate('active')}
+                    disabled={updateStateMutation.isPending}
+                    className="w-full px-3 py-2 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                  >
+                    De-escalate
+                  </button>
+                )}
+                {conv.state !== 'resolved' && conv.state !== 'closed' && (
+                  <button
+                    onClick={() => updateStateMutation.mutate('resolved')}
+                    disabled={updateStateMutation.isPending}
+                    className="w-full px-3 py-2 text-left text-sm text-green-700 hover:bg-green-50 disabled:opacity-50"
+                  >
+                    Resolve
+                  </button>
+                )}
+                {(conv.state === 'resolved' || conv.state === 'closed') && (
+                  <button
+                    onClick={() => updateStateMutation.mutate('active')}
+                    disabled={updateStateMutation.isPending}
+                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Reopen
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
