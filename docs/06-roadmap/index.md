@@ -60,6 +60,8 @@ This roadmap defines a **phased, incremental build approach** where each release
 | 9 | 1.0.0 | **Launch** | Production hardening | Go live |
 | **10** | **1.1.0** | **Kernel** | Core/Extension separation, Task Router, Autonomy | **L2 Autonomy** |
 | **11** | **1.2.0** | **Tools** | Built-in tools for hotel onboarding | **Self-service setup** |
+| **12** | **1.3.0** | **Profiles** | Guest directory and profile management | **Know your guests** |
+| **13** | **1.4.0** | **Bookings** | Reservation dashboard and management | **Booking visibility** |
 
 ---
 
@@ -82,6 +84,8 @@ Phase 8 (Polish)       → All P0 use cases pass
 Phase 9 (Launch)       → Production deployment works
 Phase 10 (Kernel)      → Tasks auto-created from requests
 Phase 11 (Tools)       → Site scraper imports knowledge base
+Phase 12 (Profiles)    → Guest directory searchable
+Phase 13 (Bookings)    → Today's arrivals/departures visible
 ```
 
 ### Implementation Rules
@@ -109,6 +113,8 @@ Phase 11 (Tools)       → Site scraper imports knowledge base
 | [Phase 9: Launch](phase-9-launch.md) | Production readiness |
 | [Phase 10: Extension Architecture](phase-10-extensions.md) | Core/Extension separation |
 | [Phase 11: Tools](phase-11-tools.md) | Built-in tools for onboarding |
+| [Phase 12: Guest Management](phase-12-guests.md) | Guest directory and profiles |
+| [Phase 13: Reservation Management](phase-13-reservations.md) | Reservation dashboard |
 
 ### Phase 10 Sub-Phases
 
@@ -184,6 +190,16 @@ Phase 11 (Tools)       → Site scraper imports knowledge base
                     ┌────────────────▼──────────────┐
                     │       Phase 11: Tools         │
                     │  Site Scraper, CSV Import     │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │      Phase 12: Profiles       │
+                    │  Guest directory & profiles   │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │      Phase 13: Bookings       │
+                    │   Reservation dashboard       │
                     └───────────────────────────────┘
 ```
 
@@ -207,6 +223,8 @@ Phase 11 (Tools)       → Site scraper imports knowledge base
 | 1.0.0 | "Production ready" | **Launch ready** |
 | 1.1.0 | "Tasks auto-created, autonomy configurable" | **L2 Autonomy** |
 | 1.2.0 | "Scrape website to populate knowledge base" | **Self-service onboarding** |
+| 1.3.0 | "Search and view guest profiles" | **Guest intelligence** |
+| 1.4.0 | "See today's arrivals and reservations" | **Booking visibility** |
 
 ---
 
