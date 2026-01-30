@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ListTodo, AlertCircle } from 'lucide-react';
+import { ListTodo } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';

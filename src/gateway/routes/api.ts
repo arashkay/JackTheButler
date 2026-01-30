@@ -14,6 +14,8 @@ import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
 import { automationRoutes } from './automation.js';
 import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
 import { knowledgeRoutes } from './knowledge.js';
+import { guestRoutes } from './guests.js';
+import { reservationRoutes } from './reservations.js';
 import { siteScraperRoutes } from '@/extensions/tools/site-scraper/routes.js';
 
 const api = new Hono();
@@ -47,6 +49,12 @@ api.route('/approvals', approvalsRoutes);
 
 // Knowledge base routes
 api.route('/knowledge', knowledgeRoutes);
+
+// Guest routes
+api.route('/guests', guestRoutes);
+
+// Reservation routes
+api.route('/reservations', reservationRoutes);
 
 // Tool routes
 api.route('/tools/site-scraper', siteScraperRoutes);

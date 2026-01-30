@@ -12,6 +12,8 @@ import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
 import { ApprovalsPage } from '@/pages/approvals/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
+import { GuestsPage, GuestProfilePage, GuestFormPage } from '@/pages/guests';
+import { ReservationsPage, ReservationDetailPage } from '@/pages/reservations';
 
 export function App() {
   return (
@@ -28,6 +30,11 @@ export function App() {
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/guests" element={<GuestsPage />} />
+          <Route path="/guests/new" element={<GuestFormPage />} />
+          <Route path="/guests/:id" element={<GuestProfilePage />} />
+          <Route path="/reservations" element={<ReservationsPage />} />
+          <Route path="/reservations/:id" element={<ReservationDetailPage />} />
           <Route path="/tools/knowledge-base" element={<KnowledgeBasePage />} />
           <Route path="/tools/site-scraper" element={<SiteScraperPage />} />
         </Route>

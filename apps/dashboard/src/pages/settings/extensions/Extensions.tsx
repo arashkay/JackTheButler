@@ -11,7 +11,6 @@ import {
   Settings2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExtensionIcon, CategoryIcon } from '@/components';

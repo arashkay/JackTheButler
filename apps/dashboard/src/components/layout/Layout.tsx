@@ -14,6 +14,8 @@ import {
   ChevronDown,
   LogOut,
   User,
+  Users,
+  CalendarDays,
   Settings,
   Globe,
   Wrench,
@@ -138,6 +140,8 @@ export function Layout() {
         { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} /> },
         { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} /> },
         { path: '/approvals', label: 'Approvals', icon: <Bell size={20} /> },
+        { path: '/guests', label: 'Guests', icon: <Users size={20} /> },
+        { path: '/reservations', label: 'Reservations', icon: <CalendarDays size={20} /> },
       ],
     },
     {
