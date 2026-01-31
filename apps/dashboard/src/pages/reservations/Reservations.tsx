@@ -11,9 +11,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PageContainer, EmptyState, DataTable } from '@/components';
+import { PageContainer, EmptyState, DataTable, StatsBar } from '@/components';
 import type { Column } from '@/components/DataTable';
 
 type ReservationStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show';
@@ -69,51 +68,6 @@ const statusColors: Record<ReservationStatus, string> = {
   cancelled: 'bg-red-100 text-red-700',
   no_show: 'bg-orange-100 text-orange-700',
 };
-
-function TodayCard({
-  title,
-  icon: Icon,
-  value,
-  subtitle,
-  variant = 'default',
-}: {
-  title: string;
-  icon: typeof Calendar;
-  value: number;
-  subtitle?: string;
-  variant?: 'default' | 'success' | 'warning';
-}) {
-  const variantStyles = {
-    default: 'bg-muted/50',
-    success: 'bg-green-50 border-green-200',
-    warning: 'bg-amber-50 border-amber-200',
-  };
-
-  return (
-    <Card className={cn('border', variantStyles[variant])}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            'p-2 rounded-lg',
-            variant === 'success' ? 'bg-green-100' :
-            variant === 'warning' ? 'bg-amber-100' : 'bg-muted'
-          )}>
-            <Icon className={cn(
-              'w-5 h-5',
-              variant === 'success' ? 'text-green-600' :
-              variant === 'warning' ? 'text-amber-600' : 'text-muted-foreground'
-            )} />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold">{value}</p>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function ReservationsPage() {
   const navigate = useNavigate();
@@ -258,35 +212,15 @@ export function ReservationsPage() {
 
   return (
     <PageContainer>
-      {/* Today's Dashboard */}
       {today && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <TodayCard
-            title="Arrivals Today"
-            icon={LogIn}
-            value={today.arrivals.count}
-            subtitle={`${today.arrivals.pending} pending`}
-            variant="success"
-          />
-          <TodayCard
-            title="Departures Today"
-            icon={LogOut}
-            value={today.departures.count}
-            subtitle={today.departures.late > 0 ? `${today.departures.late} late` : undefined}
-            variant="warning"
-          />
-          <TodayCard
-            title="In-House"
-            icon={Home}
-            value={today.inHouse}
-          />
-          <TodayCard
-            title="Occupancy"
-            icon={Users}
-            value={today.occupancyRate}
-            subtitle="%"
-          />
-        </div>
+        <StatsBar
+          items={[
+            { label: 'Arrivals', value: today.arrivals.count, icon: LogIn, variant: 'success', subtitle: today.arrivals.pending > 0 ? `${today.arrivals.pending} pending` : undefined },
+            { label: 'Departures', value: today.departures.count, icon: LogOut, variant: 'warning', subtitle: today.departures.late > 0 ? `${today.departures.late} late` : undefined },
+            { label: 'In-House', value: today.inHouse, icon: Home },
+            { label: 'Occupancy', value: `${today.occupancyRate}%`, icon: Users },
+          ]}
+        />
       )}
 
       <DataTable
