@@ -77,3 +77,13 @@
 button, a, input, select, textarea {
   @apply transition-colors duration-150;
 }
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

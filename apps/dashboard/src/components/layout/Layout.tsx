@@ -3,6 +3,7 @@ import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { PageActionsProvider, usePageActions } from '@/contexts/PageActionsContext';
 import { api } from '@/lib/api';
 import {
   Home,
@@ -407,28 +408,39 @@ export function Layout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen">
-        {/* Top header - fixed */}
-        <header className="bg-white border-b h-14 flex-shrink-0 flex items-center px-6">
-          {(() => {
-            const activeItem = navSections
-              .flatMap((s) => s.items)
-              .find((item) => isActive(item.path));
-            return (
-              <h1 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                {activeItem && (
-                  <span className="text-gray-500">{activeItem.icon}</span>
-                )}
-                {activeItem?.label || 'Dashboard'}
-              </h1>
-            );
-          })()}
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
+        <PageActionsProvider>
+          <HeaderBar navSections={navSections} isActive={isActive} />
+          {/* Page content */}
+          <main className="flex-1 overflow-auto">
+            <Outlet />
+          </main>
+        </PageActionsProvider>
       </div>
     </div>
+  );
+}
+
+function HeaderBar({
+  navSections,
+  isActive
+}: {
+  navSections: NavSection[];
+  isActive: (path: string) => boolean;
+}) {
+  const { actions } = usePageActions();
+  const activeItem = navSections
+    .flatMap((s) => s.items)
+    .find((item) => isActive(item.path));
+
+  return (
+    <header className="bg-white border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
+      <h1 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+        {activeItem && (
+          <span className="text-gray-500">{activeItem.icon}</span>
+        )}
+        {activeItem?.label || 'Dashboard'}
+      </h1>
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    </header>
   );
 }

@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { PageContainer, StatsBar, SearchInput, EmptyState } from '@/components';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { PageContainer, StatsBar, EmptyState, DataTable } from '@/components';
+import { usePageActions } from '@/contexts/PageActionsContext';
+import type { Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Plus,
-  Search,
-  Loader2,
   AlertCircle,
   Users,
   Crown,
@@ -65,80 +57,159 @@ const loyaltyColors: Record<string, string> = {
   member: 'bg-blue-100 text-blue-800',
 };
 
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 export function GuestsPage() {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [stats, setStats] = useState<GuestStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { setActions } = usePageActions();
   const [search, setSearch] = useState('');
-  const [vipFilter, setVipFilter] = useState<string>('all');
-  const [loyaltyFilter, setLoyaltyFilter] = useState<string>('all');
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchGuests = async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    setActions(
+      <Link to="/guests/new">
+        <Button size="xs" className="bg-gray-900 hover:bg-gray-800">
+          <Plus className="w-3.5 h-3.5 mr-1.5" />
+          Add Guest
+        </Button>
+      </Link>
+    );
+    return () => setActions(null);
+  }, [setActions]);
+
+  const { data: stats } = useQuery({
+    queryKey: ['guestStats'],
+    queryFn: () => api.get<GuestStats>('/guests/stats'),
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['guests', searchQuery],
+    queryFn: () => {
       const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (vipFilter !== 'all') params.set('vipStatus', vipFilter);
-      if (loyaltyFilter !== 'all') params.set('loyaltyTier', loyaltyFilter);
-      params.set('limit', String(limit));
-      params.set('offset', String(offset));
+      if (searchQuery) params.set('search', searchQuery);
+      params.set('limit', '50');
+      return api.get<{ guests: Guest[]; total: number }>(`/guests?${params.toString()}`);
+    },
+  });
 
-      const data = await api.get<{ guests: Guest[]; total: number }>(
-        `/guests?${params.toString()}`
-      );
-      setGuests(data.guests);
-      setTotal(data.total);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load guests');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const data = await api.get<GuestStats>('/guests/stats');
-      setStats(data);
-    } catch (err) {
-      // Non-critical
-    }
-  };
-
-  useEffect(() => {
-    fetchGuests();
-  }, [vipFilter, loyaltyFilter, offset]);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const guests = data?.guests || [];
 
   const handleSearch = () => {
-    setOffset(0);
-    fetchGuests();
+    setSearchQuery(search);
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  const columns: Column<Guest>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (guest) => (
+        <div>
+          <Link
+            to={`/guests/${guest.id}`}
+            className="font-medium text-gray-900 hover:text-blue-600"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {guest.firstName} {guest.lastName}
+          </Link>
+          {guest.tags.length > 0 && (
+            <div className="flex gap-1 mt-1">
+              {guest.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+              {guest.tags.length > 2 && (
+                <span className="text-xs text-gray-400">
+                  +{guest.tags.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'Contact',
+      render: (guest) => (
+        <div className="text-sm">
+          <div className="text-gray-600 truncate max-w-[200px]">
+            {guest.email || <span className="text-gray-400 italic">No email</span>}
+          </div>
+          {guest.phone && (
+            <div className="text-gray-500 text-xs">{guest.phone}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (guest) => (
+        <div className="flex gap-1.5">
+          {guest.vipStatus && guest.vipStatus !== 'none' && (
+            <Badge className={vipColors[guest.vipStatus] || 'bg-gray-100 text-gray-800'}>
+              <Crown className="w-3 h-3 mr-1" />
+              {guest.vipStatus}
+            </Badge>
+          )}
+          {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
+            <Badge variant="outline" className={loyaltyColors[guest.loyaltyTier] || ''}>
+              {guest.loyaltyTier}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'stayCount',
+      header: 'Stays',
+      className: 'text-right',
+      render: (guest) => <span className="font-medium">{guest.stayCount}</span>,
+    },
+    {
+      key: 'totalRevenue',
+      header: 'Revenue',
+      className: 'text-right',
+      render: (guest) => (
+        <span className="text-gray-600">{formatCurrency(guest.totalRevenue)}</span>
+      ),
+    },
+    {
+      key: 'lastStayDate',
+      header: 'Last Stay',
+      render: (guest) => (
+        <span className="text-gray-500 text-sm">{formatDate(guest.lastStayDate)}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-10',
+      render: () => <ChevronRight className="w-4 h-4 text-gray-400" />,
+    },
+  ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <PageContainer>
@@ -152,7 +223,6 @@ export function GuestsPage() {
         </div>
       )}
 
-      {/* Stats */}
       {stats && (
         <StatsBar
           items={[
@@ -164,213 +234,31 @@ export function GuestsPage() {
         />
       )}
 
-      {/* Search and Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="flex-1 min-w-[200px] max-w-md flex gap-2">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Search by name, email, phone..."
+      <DataTable
+        data={guests}
+        columns={columns}
+        keyExtractor={(guest) => guest.id}
+        search={{
+          value: search,
+          onChange: setSearch,
+          onSearch: handleSearch,
+          onClear: () => setSearchQuery(''),
+          placeholder: 'Search guests...',
+        }}
+        loading={isLoading}
+        onRowClick={(guest) => navigate(`/guests/${guest.id}`)}
+        emptyState={
+          <EmptyState
+            icon={Users}
+            title="No guests found"
+            description={
+              searchQuery
+                ? 'Try changing your search'
+                : 'Add your first guest to get started'
+            }
           />
-          <Button variant="outline" onClick={handleSearch}>
-            <Search className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <select
-            value={vipFilter}
-            onChange={(e) => {
-              setVipFilter(e.target.value);
-              setOffset(0);
-            }}
-            className="border rounded-md px-3 py-2 text-sm"
-          >
-            <option value="all">All VIP Status</option>
-            <option value="any">Any VIP</option>
-            <option value="diamond">Diamond</option>
-            <option value="platinum">Platinum</option>
-            <option value="gold">Gold</option>
-            <option value="silver">Silver</option>
-          </select>
-
-          <select
-            value={loyaltyFilter}
-            onChange={(e) => {
-              setLoyaltyFilter(e.target.value);
-              setOffset(0);
-            }}
-            className="border rounded-md px-3 py-2 text-sm"
-          >
-            <option value="all">All Loyalty</option>
-            <option value="platinum">Platinum</option>
-            <option value="gold">Gold</option>
-            <option value="silver">Silver</option>
-            <option value="member">Member</option>
-          </select>
-        </div>
-
-        <Link to="/guests/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Guest
-          </Button>
-        </Link>
-      </div>
-
-      {/* Guest Table */}
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="py-12 text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-              <p className="text-sm text-gray-500">Loading guests...</p>
-            </div>
-          ) : guests.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="No guests found"
-              description={
-                search || vipFilter !== 'all' || loyaltyFilter !== 'all'
-                  ? 'Try changing your search or filters'
-                  : 'Add your first guest to get started'
-              }
-            />
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Stays</TableHead>
-                    <TableHead className="text-right">Revenue</TableHead>
-                    <TableHead>Last Stay</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {guests.map((guest) => (
-                    <TableRow key={guest.id} className="group">
-                      <TableCell>
-                        <Link
-                          to={`/guests/${guest.id}`}
-                          className="font-medium text-gray-900 hover:text-blue-600"
-                        >
-                          {guest.firstName} {guest.lastName}
-                        </Link>
-                        {guest.tags.length > 0 && (
-                          <div className="flex gap-1 mt-1">
-                            {guest.tags.slice(0, 2).map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {guest.tags.length > 2 && (
-                              <span className="text-xs text-gray-400">
-                                +{guest.tags.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {guest.email && (
-                            <div className="text-gray-600 truncate max-w-[200px]">
-                              {guest.email}
-                            </div>
-                          )}
-                          {guest.phone && (
-                            <div className="text-gray-500 text-xs">{guest.phone}</div>
-                          )}
-                          {!guest.email && !guest.phone && (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1.5">
-                          {guest.vipStatus && guest.vipStatus !== 'none' && (
-                            <Badge
-                              className={vipColors[guest.vipStatus] || 'bg-gray-100 text-gray-800'}
-                            >
-                              <Crown className="w-3 h-3 mr-1" />
-                              {guest.vipStatus}
-                            </Badge>
-                          )}
-                          {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
-                            <Badge
-                              variant="outline"
-                              className={loyaltyColors[guest.loyaltyTier] || ''}
-                            >
-                              {guest.loyaltyTier}
-                            </Badge>
-                          )}
-                          {(!guest.vipStatus || guest.vipStatus === 'none') &&
-                            (!guest.loyaltyTier || guest.loyaltyTier === 'none') && (
-                              <span className="text-gray-400 text-sm">-</span>
-                            )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="font-medium">{guest.stayCount}</span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="text-gray-600">
-                          {formatCurrency(guest.totalRevenue)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-gray-500 text-sm">
-                          {formatDate(guest.lastStayDate)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Link to={`/guests/${guest.id}`}>
-                          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {/* Pagination */}
-              {total > limit && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <span className="text-sm text-gray-500">
-                    Showing {offset + 1}-{Math.min(offset + limit, total)} of {total} guests
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOffset(Math.max(0, offset - limit))}
-                      disabled={offset === 0}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOffset(offset + limit)}
-                      disabled={offset + limit >= total}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+        }
+      />
     </PageContainer>
   );
 }

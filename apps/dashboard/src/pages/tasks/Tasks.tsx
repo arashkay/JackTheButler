@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListTodo } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
-import { PageContainer, PageHeader, EmptyState } from '@/components';
+import { PageContainer, EmptyState } from '@/components';
+import { DataTable, Column } from '@/components/DataTable';
 
 type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 type TaskSource = 'manual' | 'auto' | 'automation';
@@ -32,11 +32,6 @@ const statusFilters: { value: TaskStatus | 'all'; label: string }[] = [
   { value: 'completed', label: 'Completed' },
 ];
 
-const sourceFilters: { value: TaskSource | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Sources' },
-  { value: 'auto', label: 'Auto' },
-  { value: 'manual', label: 'Manual' },
-];
 
 const sourceColors: Record<string, string> = {
   auto: 'bg-indigo-100 text-indigo-700',
@@ -62,14 +57,12 @@ const statusColors: Record<string, string> = {
 export function TasksPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
-  const [sourceFilter, setSourceFilter] = useState<TaskSource | 'all'>('all');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tasks', statusFilter, sourceFilter],
+    queryKey: ['tasks', statusFilter],
     queryFn: () => {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      if (sourceFilter !== 'all') params.set('source', sourceFilter);
       const queryString = params.toString();
       return api.get<{ tasks: Task[] }>(`/tasks${queryString ? `?${queryString}` : ''}`);
     },
@@ -92,136 +85,141 @@ export function TasksPage() {
 
   const tasks = data?.tasks || [];
 
+  const columns: Column<Task>[] = [
+    {
+      key: 'type',
+      header: 'Type',
+      render: (task) => (
+        <div>
+          <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
+          <div className="text-xs text-muted-foreground">{task.department}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      className: 'max-w-xs',
+      render: (task) => (
+        <span className="text-sm text-foreground truncate block">{task.description}</span>
+      ),
+    },
+    {
+      key: 'roomNumber',
+      header: 'Room',
+      render: (task) => (
+        <span className="text-sm text-muted-foreground">{task.roomNumber || '-'}</span>
+      ),
+    },
+    {
+      key: 'source',
+      header: 'Source',
+      render: (task) => (
+        <div className="flex items-center gap-2">
+          <span className={cn('text-xs px-2 py-1 rounded', sourceColors[task.source])}>
+            {task.source === 'auto' ? 'Auto' : task.source === 'automation' ? 'Rule' : 'Manual'}
+          </span>
+          {task.conversationId && (
+            <a
+              href={`/conversations/${task.conversationId}`}
+              className="text-xs text-primary hover:underline"
+              title="View conversation"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View
+            </a>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'priority',
+      header: 'Priority',
+      render: (task) => (
+        <span className={cn('text-xs px-2 py-1 rounded capitalize', priorityColors[task.priority])}>
+          {task.priority}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (task) => (
+        <span className={cn('text-xs px-2 py-1 rounded capitalize', statusColors[task.status])}>
+          {task.status.replace('_', ' ')}
+        </span>
+      ),
+    },
+    {
+      key: 'assignedName',
+      header: 'Assigned',
+      render: (task) => (
+        <span className="text-sm text-muted-foreground">{task.assignedName || '-'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (task) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          {task.status === 'pending' && (
+            <button
+              onClick={() => claimMutation.mutate(task.id)}
+              disabled={claimMutation.isPending}
+              className="text-sm text-primary hover:text-primary/80"
+            >
+              Claim
+            </button>
+          )}
+          {task.status === 'in_progress' && (
+            <button
+              onClick={() => completeMutation.mutate(task.id)}
+              disabled={completeMutation.isPending}
+              className="text-sm text-green-600 hover:text-green-800"
+            >
+              Complete
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const filters = (
+    <div className="flex gap-1 flex-nowrap">
+      {statusFilters.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => setStatusFilter(s.value)}
+          className={cn(
+            'px-3 py-1 text-sm rounded whitespace-nowrap',
+            statusFilter === s.value
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-600 hover:bg-gray-100'
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <PageContainer>
-      <PageHeader>
-        <div className="flex gap-4">
-          <div className="flex gap-1">
-            {sourceFilters.map((s) => (
-              <button
-                key={s.value}
-                onClick={() => setSourceFilter(s.value)}
-                className={cn(
-                  'px-3 py-1 text-sm rounded',
-                  sourceFilter === s.value
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {statusFilters.map((s) => (
-              <button
-                key={s.value}
-                onClick={() => setStatusFilter(s.value)}
-                className={cn(
-                  'px-3 py-1 text-sm rounded',
-                  statusFilter === s.value
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </PageHeader>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : tasks.length === 0 ? (
-        <EmptyState
-          icon={ListTodo}
-          title="No tasks found"
-          description="Tasks will appear here when created by guests or staff"
-        />
-      ) : (
-        <Card>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Type</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Description</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Room</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Source</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Priority</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Assigned</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id} className="border-b last:border-0 hover:bg-muted/50">
-                  <td className="p-3">
-                    <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
-                    <div className="text-xs text-muted-foreground">{task.department}</div>
-                  </td>
-                  <td className="p-3 text-sm text-foreground max-w-xs truncate">
-                    {task.description}
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {task.roomNumber || '-'}
-                  </td>
-                  <td className="p-3">
-                    <span className={cn('text-xs px-2 py-1 rounded', sourceColors[task.source])}>
-                      {task.source === 'auto' ? 'Auto' : task.source === 'automation' ? 'Rule' : 'Manual'}
-                    </span>
-                    {task.conversationId && (
-                      <a
-                        href={`/conversations/${task.conversationId}`}
-                        className="ml-2 text-xs text-primary hover:underline"
-                        title="View conversation"
-                      >
-                        View
-                      </a>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <span className={cn('text-xs px-2 py-1 rounded capitalize', priorityColors[task.priority])}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={cn('text-xs px-2 py-1 rounded capitalize', statusColors[task.status])}>
-                      {task.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {task.assignedName || '-'}
-                  </td>
-                  <td className="p-3">
-                    {task.status === 'pending' && (
-                      <button
-                        onClick={() => claimMutation.mutate(task.id)}
-                        disabled={claimMutation.isPending}
-                        className="text-sm text-primary hover:text-primary/80"
-                      >
-                        Claim
-                      </button>
-                    )}
-                    {task.status === 'in_progress' && (
-                      <button
-                        onClick={() => completeMutation.mutate(task.id)}
-                        disabled={completeMutation.isPending}
-                        className="text-sm text-green-600 hover:text-green-800"
-                      >
-                        Complete
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      )}
+      <DataTable
+        data={tasks}
+        columns={columns}
+        keyExtractor={(task) => task.id}
+        filters={filters}
+        loading={isLoading}
+        emptyState={
+          <EmptyState
+            icon={ListTodo}
+            title="No tasks found"
+            description="Tasks will appear here when created by guests or staff"
+          />
+        }
+      />
     </PageContainer>
   );
 }
