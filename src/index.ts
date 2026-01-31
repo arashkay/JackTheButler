@@ -9,6 +9,7 @@ import { loadConfig, getEnv } from '@/config/index.js';
 import { logger } from '@/utils/logger.js';
 import { closeDatabase, isDatabaseHealthy } from '@/db/index.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
+import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/services/scheduler.js';
 import { getEmailAdapter } from '@/channels/email/index.js';
 import { extensionConfigService } from '@/services/extension-config.js';
@@ -96,6 +97,9 @@ async function main(): Promise<void> {
 
   // Setup WebSocket on the same server
   setupWebSocket(server);
+
+  // Setup event bridge for real-time dashboard updates
+  setupWebSocketBridge();
 
   // Start listening
   server.listen(config.port, () => {

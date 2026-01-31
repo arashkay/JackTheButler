@@ -7,11 +7,8 @@
  */
 
 import { Hono } from 'hono';
-import { eq, desc, sql, and, gte, lte } from 'drizzle-orm';
+import { eq, desc, sql, and, gte } from 'drizzle-orm';
 import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
-import { createLogger } from '@/utils/logger.js';
-
-const log = createLogger('routes:reservations');
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -26,7 +23,7 @@ const reservationRoutes = new Hono<{ Variables: Variables }>();
  */
 reservationRoutes.get('/today', async (c) => {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr: string = today.toISOString().split('T')[0]!;
 
   // Arrivals today
   const arrivalsResult = await db
@@ -85,10 +82,10 @@ reservationRoutes.get('/today', async (c) => {
  * Get today's arrivals list
  */
 reservationRoutes.get('/arrivals', async (c) => {
-  const date = c.req.query('date') || new Date().toISOString().split('T')[0];
+  const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
   const status = c.req.query('status'); // optional filter
 
-  let query = db
+  const query = db
     .select({
       reservation: reservations,
       guest: guests,
@@ -128,7 +125,7 @@ reservationRoutes.get('/arrivals', async (c) => {
  * Get today's departures list
  */
 reservationRoutes.get('/departures', async (c) => {
-  const date = c.req.query('date') || new Date().toISOString().split('T')[0];
+  const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
   const status = c.req.query('status');
 
   const results = await db
@@ -171,7 +168,7 @@ reservationRoutes.get('/departures', async (c) => {
  * Get current in-house guests
  */
 reservationRoutes.get('/in-house', async (c) => {
-  const today = new Date().toISOString().split('T')[0];
+  const today: string = new Date().toISOString().split('T')[0]!;
 
   const results = await db
     .select({

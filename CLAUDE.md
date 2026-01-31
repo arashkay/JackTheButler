@@ -228,6 +228,25 @@ export const manifest: ChannelManifest = {
 };
 ```
 
+### Real-Time Updates Pattern (v1.5.0+)
+Use WebSocket push instead of polling for dashboard updates:
+```typescript
+// Backend: Subscribe to events, broadcast to clients
+events.on(EventTypes.TASK_CREATED, async () => {
+  const stats = await taskService.getStats();
+  broadcast({ type: 'stats:tasks', payload: stats });
+});
+
+// Frontend: Update React Query cache directly
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+  if (msg.type === 'stats:tasks') {
+    queryClient.setQueryData(['taskStats'], msg.payload);
+  }
+};
+```
+See `src/gateway/websocket-bridge.ts` and `apps/dashboard/src/hooks/useWebSocket.ts`.
+
 ## Database (SQLite)
 
 ```typescript

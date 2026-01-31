@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { api } from '@/lib/api';
 import {
   Home,
@@ -54,27 +55,30 @@ export function Layout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fetch task stats for badge
+  // Connect to WebSocket for real-time updates
+  useWebSocket();
+
+  // Fetch task stats for badge (initial load - WebSocket pushes updates)
   const { data: taskStats } = useQuery({
     queryKey: ['taskStats'],
     queryFn: () => api.get<{ pending: number; inProgress: number; completed: number; total: number }>('/tasks/stats'),
-    refetchInterval: 30000,
+    staleTime: Infinity,
     enabled: isAuthenticated,
   });
 
-  // Fetch approval stats for badge
+  // Fetch approval stats for badge (initial load - WebSocket pushes updates)
   const { data: approvalStats } = useQuery({
     queryKey: ['approvalStats'],
     queryFn: () => api.get<{ stats: { pending: number } }>('/approvals/stats'),
-    refetchInterval: 30000,
+    staleTime: Infinity,
     enabled: isAuthenticated,
   });
 
-  // Fetch conversation stats for badge
+  // Fetch conversation stats for badge (initial load - WebSocket pushes updates)
   const { data: conversationStats } = useQuery({
     queryKey: ['conversationStats'],
     queryFn: () => api.get<{ escalated: number }>('/conversations/stats'),
-    refetchInterval: 30000,
+    staleTime: Infinity,
     enabled: isAuthenticated,
   });
 

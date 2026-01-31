@@ -13,6 +13,9 @@ import { jwtVerify } from 'jose';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { handleChatConnection } from '@/channels/webchat/index.js';
+import { taskService } from '@/services/task.js';
+import { conversationService } from '@/services/conversation.js';
+import { getApprovalQueue } from '@/core/approval-queue.js';
 
 const log = createLogger('websocket');
 
@@ -120,6 +123,13 @@ export function setupWebSocket(server: Server): WebSocketServer {
         timestamp: Date.now(),
       },
     });
+
+    // Send initial stats for authenticated users
+    if (ws.userId) {
+      sendInitialStats(ws).catch((error) => {
+        log.error({ error }, 'Failed to send initial stats');
+      });
+    }
 
     log.info({ authenticated: !!ws.userId }, 'WebSocket client connected');
 
@@ -241,4 +251,19 @@ export function getConnectionCount(): number {
     count += sockets.size;
   });
   return count;
+}
+
+/**
+ * Send initial stats to a newly connected authenticated client
+ */
+async function sendInitialStats(ws: AuthenticatedSocket) {
+  const [taskStats, approvalStats, convStats] = await Promise.all([
+    taskService.getStats(),
+    getApprovalQueue().getStats(),
+    conversationService.getStats(),
+  ]);
+
+  sendMessage(ws, { type: 'stats:tasks', payload: taskStats });
+  sendMessage(ws, { type: 'stats:approvals', payload: approvalStats });
+  sendMessage(ws, { type: 'stats:conversations', payload: convStats });
 }

@@ -112,15 +112,26 @@ interface ClientMessage {
 **Server → Client:**
 ```typescript
 interface ServerMessage {
-  type: 'message' | 'conversation_update' | 'task_update' | 'notification';
-  payload: {
-    conversationId?: string;
-    message?: Message;
-    conversation?: Conversation;
-    task?: Task;
-  };
+  type: 'message' | 'conversation_update' | 'task_update' | 'notification' | 'stats:tasks' | 'stats:approvals' | 'stats:conversations';
+  payload: unknown;
 }
 ```
+
+### Real-Time Dashboard Updates
+
+Stats are pushed to connected clients via WebSocket instead of polling:
+
+```
+Services ──[emit]──► EventBus ──► WebSocketBridge ──► broadcast()
+                                                          │
+Dashboard ◄──────────────────────────────────────────────┘
+```
+
+- **`src/gateway/websocket-bridge.ts`** - Subscribes to domain events, broadcasts stats
+- **Initial stats** sent on connect, then pushed on every change
+- Dashboard uses `staleTime: Infinity` (no polling)
+
+See [Phase 14: Real-Time Dashboard](../../06-roadmap/phase-14-realtime.md) for details.
 
 ### Internal Service API
 

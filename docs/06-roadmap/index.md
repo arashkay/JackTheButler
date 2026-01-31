@@ -62,6 +62,7 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **11** | **1.2.0** | **Tools** | Built-in tools for hotel onboarding | **Self-service setup** |
 | **12** | **1.3.0** | **Profiles** | Guest directory and profile management | **Know your guests** |
 | **13** | **1.4.0** | **Bookings** | Reservation dashboard and management | **Booking visibility** |
+| **14** | **1.5.0** | **Pulse** | Real-time WebSocket dashboard updates | **Instant updates** |
 
 ---
 
@@ -86,6 +87,7 @@ Phase 10 (Kernel)      → Tasks auto-created from requests
 Phase 11 (Tools)       → Site scraper imports knowledge base
 Phase 12 (Profiles)    → Guest directory searchable
 Phase 13 (Bookings)    → Today's arrivals/departures visible
+Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
 ```
 
 ### Implementation Rules
@@ -115,6 +117,7 @@ Phase 13 (Bookings)    → Today's arrivals/departures visible
 | [Phase 11: Tools](phase-11-tools.md) | Built-in tools for onboarding |
 | [Phase 12: Guest Management](phase-12-guests.md) | Guest directory and profiles |
 | [Phase 13: Reservation Management](phase-13-reservations.md) | Reservation dashboard |
+| [Phase 14: Real-Time Dashboard](phase-14-realtime.md) | WebSocket push updates |
 
 ### Phase 10 Sub-Phases
 
@@ -200,6 +203,11 @@ Phase 13 (Bookings)    → Today's arrivals/departures visible
                     ┌────────────────▼──────────────┐
                     │      Phase 13: Bookings       │
                     │   Reservation dashboard       │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │       Phase 14: Pulse         │
+                    │  Real-time WebSocket updates  │
                     └───────────────────────────────┘
 ```
 
@@ -225,6 +233,7 @@ Phase 13 (Bookings)    → Today's arrivals/departures visible
 | 1.2.0 | "Scrape website to populate knowledge base" | **Self-service onboarding** |
 | 1.3.0 | "Search and view guest profiles" | **Guest intelligence** |
 | 1.4.0 | "See today's arrivals and reservations" | **Booking visibility** |
+| 1.5.0 | "Badge counts update instantly, no refresh" | **Real-time UX** |
 
 ---
 
