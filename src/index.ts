@@ -12,7 +12,7 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/services/scheduler.js';
 import { extensionConfigService } from '@/services/extension-config.js';
-import { resetResponder } from '@/pipeline/responder.js';
+import { resetResponder } from '@/ai/index.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = '1.0.0';
@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   // Start listening
   server.listen(config.port, () => {
     logger.info({ port: config.port }, 'HTTP server listening');
-    logger.info({ paths: ['/ws', '/chat'] }, 'WebSocket servers ready');
+    logger.info({ path: '/ws' }, 'WebSocket server ready');
 
     // Start background scheduler
     scheduler.start();

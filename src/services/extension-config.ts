@@ -20,7 +20,7 @@ import {
   type ExtensionCategory,
 } from '@/extensions/index.js';
 import type { ConnectionTestResult } from '@/extensions/types.js';
-import { resetResponder } from '@/pipeline/responder.js';
+import { resetResponder } from '@/ai/index.js';
 
 const log = createLogger('service:extension-config');
 

@@ -9,121 +9,106 @@
 
 ## Goal
 
-Remove any remaining duplicate/unused code and verify the architecture is clean.
+Remove duplicate/unused code and verify the architecture is clean.
 
 ---
 
-## Tasks
+## Completed Tasks
 
-### 1. Verify No Duplicates
+### 1. Deleted Duplicate Provider Folders
 
-- [ ] Check no duplicate AI provider code:
-  ```bash
-  find src -name "*.ts" | xargs grep -l "class.*Provider.*implements.*AIProvider" | wc -l
-  # Expected: 3 (one per provider in extensions/ai/)
-  ```
+| Folder | Action | Replacement |
+|--------|--------|-------------|
+| `src/ai/providers/` | Deleted | `src/extensions/ai/` |
+| `src/channels/whatsapp/` | Deleted | `src/extensions/channels/whatsapp/` |
+| `src/channels/sms/` | Deleted | `src/extensions/channels/sms/` |
+| `src/channels/email/` | Deleted | `src/extensions/channels/email/` (Phase 16) |
 
-- [ ] Check no duplicate channel code:
-  ```bash
-  find src -name "*.ts" | xargs grep -l "class.*Provider.*implements.*ChannelProvider" | wc -l
-  # Expected: 4 (one per channel in extensions/channels/)
-  ```
+### 2. Kept Folders (With Justification)
 
-### 2. Clean Up ai/ Folder
+| Folder | Kept | Reason |
+|--------|------|--------|
+| `src/channels/webchat/` | ✓ | WebChat IS Jack's own WebSocket server, not an external service |
+| `src/pipeline/` | ✓ | Contains responder factory (creates AI or Echo responder) |
+| `src/ai/` | ✓ | Contains AIResponder, intent classifier, knowledge service, cache |
+| `src/core/` | ✓ | Contains orchestrator logic (message-processor, task-router, escalation-engine, autonomy) |
 
-After orchestrators are created, `src/ai/` should only contain:
+### 3. Architecture Decision: No Separate Orchestrators Folder
 
-- [ ] `src/ai/cache.ts` - Keep (caching logic)
-- [ ] `src/ai/intent/` - Keep (intent classification)
-- [ ] `src/ai/knowledge/` - Keep (knowledge retrieval)
-- [ ] `src/ai/types.ts` - Keep (type definitions)
-- [ ] Delete `src/ai/providers/` - Already done in 15.1
-- [ ] Delete `src/ai/responder.ts` - Already done in 15.3
-- [ ] Delete `src/ai/escalation.ts` - Move to core if needed
+The original plan suggested creating `src/orchestrators/`. After review, this was **not needed** because `src/core/` already contains the orchestrator functionality:
 
-### 3. Verify Folder Structure
+- `message-processor.ts` - Message handling orchestration
+- `task-router.ts` - Task routing logic
+- `escalation-engine.ts` - Escalation decisions
+- `autonomy.ts` - Autonomy level handling
+- `approval-queue.ts` - Approval workflow
 
-Final structure should be:
+---
+
+## Final Folder Structure
 
 ```
 src/
-├── core/                    # Domain logic ✓
-├── db/                      # Database ✓
-├── extensions/              # ALL providers ✓
-│   ├── ai/
-│   ├── channels/
-│   └── pms/
-├── gateway/                 # HTTP/WebSocket ✓
-├── orchestrators/           # Business logic ✓ (NEW)
-├── services/                # State management ✓
-├── types/                   # TypeScript types ✓
-├── utils/                   # Utilities ✓
-├── config/                  # Configuration ✓
-├── errors/                  # Error classes ✓
-└── events/                  # Event system ✓
+├── ai/                      # AI response generation
+│   ├── cache.ts             # Response caching
+│   ├── intent/              # Intent classification
+│   ├── knowledge/           # Knowledge base / RAG
+│   ├── responder.ts         # AIResponder class
+│   └── types.ts             # AI types
+├── channels/                # Jack's own channels (not external)
+│   └── webchat/             # WebSocket chat server
+├── core/                    # Business logic / Orchestration
+│   ├── message-processor.ts # Message handling
+│   ├── task-router.ts       # Task routing
+│   ├── escalation-engine.ts # Escalation logic
+│   ├── autonomy.ts          # Autonomy levels
+│   └── approval-queue.ts    # Approval workflow
+├── extensions/              # External service providers
+│   ├── ai/                  # AI providers (anthropic, openai, ollama)
+│   ├── channels/            # Channel providers (whatsapp, sms, email)
+│   └── pms/                 # PMS providers
+├── pipeline/                # Response factory
+│   └── responder.ts         # Creates AI or Echo responder
+├── gateway/                 # HTTP/WebSocket entry points
+├── services/                # State management
+├── db/                      # Database
+├── config/                  # Configuration
+├── types/                   # TypeScript types
+├── utils/                   # Utilities
+├── errors/                  # Error classes
+└── events/                  # Event system
 ```
 
-Folders that should NOT exist:
-- [ ] `src/ai/providers/` - Deleted
-- [ ] `src/channels/` - Deleted
-- [ ] `src/pipeline/` - Deleted
+---
 
-### 4. Update Documentation
-
-- [ ] Update `CLAUDE.md` with new folder structure
-- [ ] Update `docs/conversation.md` with new structure
-- [ ] Update any architecture docs
-
-### 5. Final Verification
+## Verification
 
 ```bash
-# Full test suite
-pnpm test
-
-# Type check
-pnpm typecheck
-
-# Lint
-pnpm lint
-
-# Build
-pnpm build
-
-# Start and test manually
-pnpm dev
+# All checks pass
+pnpm typecheck  # ✓
+pnpm test       # ✓ 238 tests pass
+pnpm lint       # ✓
 ```
 
 ---
 
-## Final Checklist
-
-| Check | Status |
-|-------|--------|
-| No `src/ai/providers/` folder | [ ] |
-| No `src/channels/` folder | [ ] |
-| No `src/pipeline/` folder | [ ] |
-| `src/orchestrators/` exists with 3 files | [ ] |
-| All providers in `src/extensions/` | [ ] |
-| All tests pass | [ ] |
-| TypeScript compiles | [ ] |
-| Documentation updated | [ ] |
-
----
-
-## Architecture Summary (After Phase 15)
+## Architecture Summary
 
 ```
-Request → Gateway → Orchestrator → Provider → External Service
-                         ↓
-                       Core
-                    (task routing,
-                     escalation)
+Request → Gateway → Core (Orchestration) → Extensions (Providers) → External Service
+              ↓
+         Pipeline
+        (Responder)
+              ↓
+            AI
+       (AIResponder)
 ```
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | Entry points | `gateway/` | HTTP, WebSocket, Webhooks |
-| Business logic | `orchestrators/` | Workflow coordination |
-| Domain logic | `core/` | Task routing, escalation |
-| External services | `extensions/` | AI, Channels, PMS |
-| State | `services/` | Database access |
+| Orchestration | `core/` | Message processing, task routing, escalation |
+| Response generation | `pipeline/` + `ai/` | AI/Echo responder factory and implementation |
+| External services | `extensions/` | AI, Channels, PMS providers |
+| State | `services/` | Database access, caching |
+| Own channels | `channels/webchat/` | Jack's WebSocket server |

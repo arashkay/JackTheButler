@@ -26,8 +26,8 @@ import { getApprovalQueue } from './approval-queue.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
-import type { Responder } from '@/pipeline/responder.js';
-import { defaultResponder } from '@/pipeline/responder.js';
+import type { Responder } from '@/ai/index.js';
+import { defaultResponder } from '@/ai/index.js';
 import type { ClassificationResult } from '@/ai/intent/index.js';
 
 const log = createLogger('core:processor');

@@ -3,9 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MessageProcessor } from '@/pipeline/processor.js';
-import { EchoResponder } from '@/pipeline/responder.js';
+import { MessageProcessor } from '@/core/message-processor.js';
+import { EchoResponder } from '@/ai/index.js';
 import { ConversationService } from '@/services/conversation.js';
+import { GuestService } from '@/services/guest.js';
 import { db, conversations, messages } from '@/db/index.js';
 import { eq, like } from 'drizzle-orm';
 import type { InboundMessage } from '@/types/index.js';
@@ -13,11 +14,13 @@ import type { InboundMessage } from '@/types/index.js';
 describe('MessageProcessor', () => {
   let processor: MessageProcessor;
   let conversationService: ConversationService;
+  let guestService: GuestService;
   const testPrefix = `proc-${Date.now()}`;
 
   beforeEach(async () => {
     conversationService = new ConversationService();
-    processor = new MessageProcessor(conversationService, new EchoResponder());
+    guestService = new GuestService();
+    processor = new MessageProcessor(conversationService, guestService, new EchoResponder());
   });
 
   describe('process', () => {

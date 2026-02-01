@@ -7,9 +7,8 @@
 
 import type { Conversation, Message } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
-import type { Response, Responder } from '@/pipeline/responder.js';
 import type { GuestContext } from '@/services/guest-context.js';
-import type { LLMProvider } from './types.js';
+import type { LLMProvider, Response, Responder } from './types.js';
 import { KnowledgeService, type KnowledgeSearchResult } from './knowledge/index.js';
 import { IntentClassifier, type ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';

@@ -1,9 +1,7 @@
 /**
  * WebSocket Server
  *
- * Real-time communication for:
- * - Staff dashboard notifications (/ws)
- * - Guest webchat (/chat)
+ * Real-time communication for staff dashboard notifications (/ws)
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
@@ -12,7 +10,6 @@ import type { Duplex } from 'node:stream';
 import { jwtVerify } from 'jose';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { handleChatConnection } from '@/channels/webchat/index.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { getApprovalQueue } from '@/core/approval-queue.js';
@@ -44,20 +41,13 @@ export function setupWebSocket(server: Server): WebSocketServer {
   const config = loadConfig();
   const secret = new TextEncoder().encode(config.jwt.secret);
 
-  // Guest chat WebSocket server (noServer mode for manual routing)
-  const chatWss = new WebSocketServer({ noServer: true });
-
-  // Handle HTTP upgrade requests manually to route to correct WebSocket server
+  // Handle HTTP upgrade requests manually to route to WebSocket server
   server.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     const pathname = new URL(request.url || '', `http://${request.headers.host}`).pathname;
 
     if (pathname === '/ws') {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
-      });
-    } else if (pathname === '/chat') {
-      chatWss.handleUpgrade(request, socket, head, (ws) => {
-        chatWss.emit('connection', ws, request);
       });
     } else {
       // Unknown WebSocket path - destroy connection
@@ -167,12 +157,7 @@ export function setupWebSocket(server: Server): WebSocketServer {
     });
   });
 
-  // Handle guest chat connections
-  chatWss.on('connection', (ws) => {
-    handleChatConnection(ws);
-  });
-
-  log.info('WebSocket server started on /ws (staff) and /chat (guests)');
+  log.info('WebSocket server started on /ws (staff dashboard)');
 
   return wss;
 }
