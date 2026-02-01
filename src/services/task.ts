@@ -272,6 +272,28 @@ export class TaskService {
   }
 
   /**
+   * Reopen a completed task (set back to pending)
+   */
+  async reopen(id: string): Promise<Task> {
+    const task = await this.getById(id);
+
+    if (task.status !== 'completed' && task.status !== 'cancelled') {
+      throw new Error('Only completed or cancelled tasks can be reopened');
+    }
+
+    await db.update(tasks).set({
+      status: 'pending',
+      assignedTo: null,
+      completedAt: null,
+      updatedAt: new Date().toISOString(),
+    }).where(eq(tasks.id, id));
+
+    log.info({ taskId: id }, 'Task reopened');
+
+    return this.getById(id);
+  }
+
+  /**
    * Get task counts by status
    */
   async getStats(): Promise<{

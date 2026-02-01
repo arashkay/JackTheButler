@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 interface DropdownMenuProps {
@@ -26,15 +27,42 @@ interface DropdownMenuItemProps {
 const DropdownMenuContext = React.createContext<{
   open: boolean;
   setOpen: (open: boolean) => void;
-}>({ open: false, setOpen: () => {} });
+  triggerRef: React.RefObject<HTMLDivElement | null>;
+  dropdownId: string;
+}>({ open: false, setOpen: () => {}, triggerRef: { current: null }, dropdownId: '' });
+
+// Global event emitter for closing other dropdowns
+const closeCallbacks = new Set<(excludeId: string) => void>();
+
+function emitCloseOthers(excludeId: string) {
+  closeCallbacks.forEach((cb) => cb(excludeId));
+}
+
+let dropdownIdCounter = 0;
 
 export function DropdownMenu({ children }: DropdownMenuProps) {
   const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const dropdownId = React.useRef(`dropdown-${++dropdownIdCounter}`);
+
+  React.useEffect(() => {
+    const handleCloseOthers = (excludeId: string) => {
+      if (excludeId !== dropdownId.current) {
+        setOpen(false);
+      }
+    };
+
+    closeCallbacks.add(handleCloseOthers);
+    return () => {
+      closeCallbacks.delete(handleCloseOthers);
+    };
+  }, []);
 
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-dropdown]')) {
+      const clickedDropdown = target.closest('[data-dropdown-id]');
+      if (!clickedDropdown || clickedDropdown.getAttribute('data-dropdown-id') !== dropdownId.current) {
         setOpen(false);
       }
     };
@@ -45,9 +73,16 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
     }
   }, [open]);
 
+  const handleSetOpen = React.useCallback((value: boolean) => {
+    if (value) {
+      emitCloseOthers(dropdownId.current);
+    }
+    setOpen(value);
+  }, []);
+
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen }}>
-      <div className="relative inline-block" data-dropdown>
+    <DropdownMenuContext.Provider value={{ open, setOpen: handleSetOpen, triggerRef, dropdownId: dropdownId.current }}>
+      <div ref={triggerRef} className="relative inline-block" data-dropdown data-dropdown-id={dropdownId.current}>
         {children}
       </div>
     </DropdownMenuContext.Provider>
@@ -76,20 +111,38 @@ export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerPr
 }
 
 export function DropdownMenuContent({ children, align = 'end', className }: DropdownMenuContentProps) {
-  const { open } = React.useContext(DropdownMenuContext);
+  const { open, triggerRef, dropdownId } = React.useContext(DropdownMenuContext);
+  const [position, setPosition] = React.useState({ top: 0, left: 0 });
+
+  React.useEffect(() => {
+    if (open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY,
+        left: align === 'end' ? rect.right + window.scrollX : rect.left + window.scrollX,
+      });
+    }
+  }, [open, align, triggerRef]);
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
+      data-dropdown
+      data-dropdown-id={dropdownId}
       className={cn(
-        'absolute z-50 min-w-[120px] mt-1 py-1 bg-white border rounded-md shadow-lg',
-        align === 'end' ? 'right-0' : 'left-0',
+        'fixed z-50 min-w-[120px] py-1 bg-white border rounded-md shadow-lg',
         className
       )}
+      style={{
+        top: position.top,
+        left: position.left,
+        transform: align === 'end' ? 'translateX(-100%)' : undefined,
+      }}
     >
       {children}
-    </div>
+    </div>,
+    document.body
   );
 }
 

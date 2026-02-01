@@ -36,6 +36,7 @@ export interface DataTableProps<T> {
   loading?: boolean;
   loadingState?: React.ReactNode;
   onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string | undefined;
 }
 
 function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: SearchConfig }) {
@@ -94,6 +95,7 @@ export function DataTable<T>({
   loading,
   loadingState,
   onRowClick,
+  rowClassName,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -134,7 +136,7 @@ export function DataTable<T>({
           {data.map((row) => (
             <TableRow
               key={keyExtractor(row)}
-              className={cn(onRowClick && 'cursor-pointer')}
+              className={cn(onRowClick && 'cursor-pointer', rowClassName?.(row))}
               onClick={() => onRowClick?.(row)}
             >
               {columns.map((column) => (

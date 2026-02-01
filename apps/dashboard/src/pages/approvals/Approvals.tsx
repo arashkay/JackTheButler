@@ -386,9 +386,9 @@ export function ApprovalsPage() {
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="px-4 w-12"></TableHead>
+                <TableHead className="px-4 w-12"></TableHead>
                 <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
                 <TableHead className="px-4">Preview</TableHead>
-                <TableHead className="px-4 min-w-[90px]">Priority</TableHead>
                 <TableHead className="px-4 min-w-[80px]">Time</TableHead>
                 <TableHead className="px-4 min-w-[100px]">Status</TableHead>
               </TableRow>
@@ -405,13 +405,24 @@ export function ApprovalsPage() {
                   <>
                     <TableRow
                       key={item.id}
-                      className={cn('cursor-pointer', isExpanded && 'bg-muted/30')}
+                      className={cn(
+                        'cursor-pointer',
+                        isExpanded && 'bg-muted/30',
+                        item.status === 'pending' && !isExpanded && 'bg-yellow-50'
+                      )}
                       onClick={() => setExpandedId(isExpanded ? null : item.id)}
                     >
                       <TableCell className="px-4">
                         <Tooltip content={typeInfo?.label}>
                           <Icon className="w-4 h-4 text-gray-500" />
                         </Tooltip>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {actionData.priority && (
+                          <Badge className={cn('capitalize text-xs', priorityColors[actionData.priority] || 'bg-gray-100 text-gray-600')}>
+                            {actionData.priority}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="px-4">
                         <div className="text-sm">
@@ -432,13 +443,6 @@ export function ApprovalsPage() {
                         <span className="text-sm text-gray-600 truncate block">
                           {preview || '-'}
                         </span>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        {item.type === 'task' && actionData.priority ? (
-                          <Badge className={cn('capitalize text-xs', priorityColors[actionData.priority] || 'bg-gray-100 text-gray-600')}>
-                            {actionData.priority}
-                          </Badge>
-                        ) : null}
                       </TableCell>
                       <TableCell className="px-4">
                         <span className="text-sm text-gray-500">{formatTimeAgo(item.createdAt)}</span>

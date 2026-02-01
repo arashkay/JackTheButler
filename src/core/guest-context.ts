@@ -222,7 +222,7 @@ export class GuestContextService {
         and(
           eq(reservations.guestId, guestId),
           sql`${reservations.departureDate} >= ${today}`,
-          sql`${reservations.status} IN ('confirmed', 'in_house')`
+          sql`${reservations.status} IN ('confirmed', 'in_house', 'checked_in')`
         )
       )
       .orderBy(reservations.arrivalDate)

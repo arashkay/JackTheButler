@@ -148,4 +148,16 @@ tasksRouter.post('/:id/complete', validateBody(completeBodySchema), async (c) =>
   return c.json({ task });
 });
 
+/**
+ * POST /api/v1/tasks/:id/reopen
+ * Reopen a completed or cancelled task
+ */
+tasksRouter.post('/:id/reopen', async (c) => {
+  const id = c.req.param('id');
+
+  const task = await taskService.reopen(id);
+
+  return c.json({ task });
+});
+
 export { tasksRouter };
