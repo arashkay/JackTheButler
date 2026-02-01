@@ -5,7 +5,7 @@
  */
 
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { db, conversations, messages, guests, staff } from '@/db/index.js';
+import { db, conversations, messages, guests, staff, tasks } from '@/db/index.js';
 import type { Conversation, Message } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -42,10 +42,11 @@ export interface GetMessagesOptions {
 
 export class ConversationService {
   /**
-   * Find an active conversation or create a new one
+   * Find an open conversation or create a new one
+   * Matches 'active' or 'escalated' states - only 'resolved'/'closed' start new conversations
    */
   async findOrCreate(channelType: ChannelType, channelId: string, guestId?: string): Promise<Conversation> {
-    // Find existing active conversation
+    // Find existing open conversation (active or escalated)
     const [existing] = await db
       .select()
       .from(conversations)
@@ -53,7 +54,7 @@ export class ConversationService {
         and(
           eq(conversations.channelType, channelType),
           eq(conversations.channelId, channelId),
-          eq(conversations.state, 'active')
+          sql`${conversations.state} IN ('active', 'escalated')`
         )
       )
       .limit(1);
@@ -68,7 +69,7 @@ export class ConversationService {
         log.debug({ conversationId: existing.id, guestId }, 'Linked guest to conversation');
         return this.findById(existing.id) as Promise<Conversation>;
       }
-      log.debug({ conversationId: existing.id }, 'Found existing conversation');
+      log.debug({ conversationId: existing.id, state: existing.state }, 'Found existing conversation');
       return existing;
     }
 
@@ -164,9 +165,10 @@ export class ConversationService {
 
     const results = await query;
 
-    // Get message counts
+    // Get message and task counts
     const conversationIds = results.map((c) => c.id);
-    const counts = await this.getMessageCounts(conversationIds);
+    const messageCounts = await this.getMessageCounts(conversationIds);
+    const taskCounts = await this.getTaskCounts(conversationIds);
 
     return results.map((c) => {
       const guestName = c.guestFirstName && c.guestLastName
@@ -183,7 +185,8 @@ export class ConversationService {
         currentIntent: c.currentIntent,
         lastMessageAt: c.lastMessageAt,
         createdAt: c.createdAt,
-        messageCount: counts.get(c.id) || 0,
+        messageCount: messageCounts.get(c.id) || 0,
+        taskCount: taskCounts.get(c.id) || 0,
       };
 
       if (guestName) {
@@ -200,6 +203,7 @@ export class ConversationService {
   async getDetails(id: string): Promise<ConversationDetails> {
     const conversation = await this.getById(id);
     const messageCount = (await this.getMessageCounts([id])).get(id) || 0;
+    const taskCount = (await this.getTaskCounts([id])).get(id) || 0;
 
     // Get guest name if linked
     let guestName: string | undefined;
@@ -232,6 +236,7 @@ export class ConversationService {
       lastMessageAt: conversation.lastMessageAt,
       resolvedAt: conversation.resolvedAt,
       messageCount,
+      taskCount,
       createdAt: conversation.createdAt,
       updatedAt: conversation.updatedAt,
     };
@@ -394,6 +399,26 @@ export class ConversationService {
       .groupBy(messages.conversationId);
 
     return new Map(counts.map((c) => [c.conversationId, c.count]));
+  }
+
+  /**
+   * Get task counts for multiple conversations
+   */
+  private async getTaskCounts(conversationIds: string[]): Promise<Map<string, number>> {
+    if (conversationIds.length === 0) {
+      return new Map();
+    }
+
+    const counts = await db
+      .select({
+        conversationId: tasks.conversationId,
+        count: sql<number>`count(*)`.as('count'),
+      })
+      .from(tasks)
+      .where(sql`${tasks.conversationId} IN (${sql.join(conversationIds.map(id => sql`${id}`), sql`, `)})`)
+      .groupBy(tasks.conversationId);
+
+    return new Map(counts.map((c) => [c.conversationId!, c.count]));
   }
 
   /**

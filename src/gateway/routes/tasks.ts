@@ -14,6 +14,7 @@ const listQuerySchema = z.object({
   status: z.enum(['pending', 'assigned', 'in_progress', 'completed', 'cancelled']).optional(),
   department: z.string().optional(),
   assignedTo: z.string().optional(),
+  conversationId: z.string().optional(),
   source: z.enum(['manual', 'auto', 'automation']).optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
   offset: z.coerce.number().min(0).default(0),
@@ -21,6 +22,7 @@ const listQuerySchema = z.object({
 
 const createBodySchema = z.object({
   conversationId: z.string().optional(),
+  messageId: z.string().optional(),
   type: z.enum(['housekeeping', 'maintenance', 'concierge', 'room_service', 'other']),
   department: z.string(),
   roomNumber: z.string().optional(),
@@ -73,6 +75,7 @@ tasksRouter.get('/', validateQuery(listQuerySchema), async (c) => {
     status: query.status,
     department: query.department,
     assignedTo: query.assignedTo,
+    conversationId: query.conversationId,
     source: query.source,
     limit: query.limit,
     offset: query.offset,

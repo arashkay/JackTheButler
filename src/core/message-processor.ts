@@ -169,15 +169,15 @@ export class MessageProcessor {
           : '';
         const channelInfo = inbound.channel ? `via ${inbound.channel}` : '';
 
-        // Create a clear, actionable description
-        const baseDescription = routingDecision.description ?? inbound.content;
+        // Create a clear, actionable description using the guest's actual message
         const contextParts = [roomInfo, channelInfo].filter(Boolean).join(' ');
         const taskDescription = contextParts
-          ? `${guestName} (${contextParts}): ${baseDescription}`
-          : `${guestName}: ${baseDescription}`;
+          ? `${guestName} (${contextParts}): "${inbound.content}"`
+          : `${guestName}: "${inbound.content}"`;
 
         const taskInput: Parameters<typeof taskService.create>[0] = {
           conversationId: conversation.id,
+          messageId: savedInbound.id,
           source: 'auto',
           type: (routingDecision.taskType ?? 'other') as TaskType,
           department: routingDecision.department,

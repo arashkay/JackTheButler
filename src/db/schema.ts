@@ -302,6 +302,7 @@ export const tasks = sqliteTable(
   {
     id: text('id').primaryKey(),
     conversationId: text('conversation_id').references(() => conversations.id),
+    messageId: text('message_id').references(() => messages.id),
 
     // Source: manual, auto, automation
     source: text('source').notNull().default('manual'),
@@ -344,6 +345,7 @@ export const tasks = sqliteTable(
   },
   (table) => [
     index('idx_tasks_conversation').on(table.conversationId),
+    index('idx_tasks_message').on(table.messageId),
     index('idx_tasks_status').on(table.status),
     index('idx_tasks_department').on(table.department, table.status),
     index('idx_tasks_assigned').on(table.assignedTo),

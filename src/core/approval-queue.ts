@@ -354,6 +354,7 @@ export class ApprovalQueue {
         // Create the task
         const task = await taskService.create({
           conversationId: actionData.conversationId as string | undefined,
+          messageId: actionData.messageId as string | undefined,
           source: (actionData.source as 'manual' | 'auto' | 'automation') || 'auto',
           type: actionData.type as TaskType,
           department: actionData.department as string,

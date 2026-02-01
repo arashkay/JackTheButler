@@ -1,3 +1,4 @@
+import { MessageSquare, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChannelIcon } from '@/components/shared/ChannelIcon';
 
@@ -11,6 +12,7 @@ interface Conversation {
   currentIntent: string | null;
   lastMessageAt: string | null;
   messageCount: number;
+  taskCount: number;
 }
 
 interface Props {
@@ -50,11 +52,20 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
               </span>
             )}
           </div>
-          {/* Bottom row: Icon + msgs | State */}
+          {/* Bottom row: Icon + msgs + tasks | State */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-gray-500">
               <ChannelIcon channel={conv.channelType} size="sm" />
-              <span className="text-xs">{conv.messageCount} msgs</span>
+              <span className="flex items-center gap-0.5 text-xs bg-gray-100 px-1.5 py-0.5 rounded-md">
+                <MessageSquare className="w-3 h-3" />
+                {conv.messageCount}
+              </span>
+              {conv.taskCount > 0 && (
+                <span className="flex items-center gap-0.5 text-xs bg-gray-100 px-1.5 py-0.5 rounded-md">
+                  <ListTodo className="w-3 h-3" />
+                  {conv.taskCount}
+                </span>
+              )}
             </div>
             <span className={cn('text-xs px-1.5 py-0.5 rounded', stateColors[conv.state])}>
               {conv.state}

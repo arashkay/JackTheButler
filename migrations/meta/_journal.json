@@ -29,6 +29,13 @@
       "when": 1769679537230,
       "tag": "0003_sour_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1769767980000,
+      "tag": "0004_add_task_message_id",
+      "breakpoints": true
     }
   ]
 }

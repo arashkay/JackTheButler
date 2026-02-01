@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   id: string;
@@ -34,10 +36,25 @@ interface Message {
   createdAt: string;
 }
 
+interface Task {
+  id: string;
+  messageId: string | null;
+  type: string;
+  status: string;
+  description: string;
+  priority: string;
+  roomNumber: string | null;
+  department: string;
+  assignedTo: string | null;
+  assignedName?: string;
+  createdAt: string;
+}
+
 export function ConversationView({ id }: Props) {
   const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
+  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stateMenuRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +67,12 @@ export function ConversationView({ id }: Props) {
     queryKey: ['messages', id],
     queryFn: () => api.get<{ messages: Message[] }>(`/conversations/${id}/messages`),
     refetchInterval: 5000,
+  });
+
+  const { data: taskData } = useQuery({
+    queryKey: ['tasks', 'conversation', id],
+    queryFn: () => api.get<{ tasks: Task[] }>(`/tasks?conversationId=${id}`),
+    refetchInterval: 10000,
   });
 
   const sendMutation = useMutation({
@@ -73,6 +96,20 @@ export function ConversationView({ id }: Props) {
     },
   });
 
+  const claimTaskMutation = useMutation({
+    mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/claim`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'conversation', id] });
+    },
+  });
+
+  const completeTaskMutation = useMutation({
+    mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/complete`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'conversation', id] });
+    },
+  });
+
   // Close state menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -86,6 +123,20 @@ export function ConversationView({ id }: Props) {
 
   const conv = convData?.conversation;
   const messages = msgData?.messages || [];
+  const tasks = taskData?.tasks || [];
+
+  // Create a map of messageId -> tasks
+  const tasksByMessageId = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const task of tasks) {
+      if (task.messageId) {
+        const existing = map.get(task.messageId) || [];
+        existing.push(task);
+        map.set(task.messageId, existing);
+      }
+    }
+    return map;
+  }, [tasks]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -195,9 +246,21 @@ export function ConversationView({ id }: Props) {
         ) : messages.length === 0 ? (
           <div className="text-center text-gray-500">No messages yet</div>
         ) : (
-          messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))
+          messages.map((msg) => {
+            const messageTasks = tasksByMessageId.get(msg.id) || [];
+            return (
+              <div key={msg.id}>
+                <MessageBubble message={msg} />
+                {messageTasks.length > 0 && (
+                  <TaskIndicator
+                    tasks={messageTasks}
+                    isInbound={msg.direction === 'inbound'}
+                    onClick={() => setTaskDrawerOpen(true)}
+                  />
+                )}
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -223,6 +286,28 @@ export function ConversationView({ id }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Tasks Drawer */}
+      <DrawerRoot open={taskDrawerOpen} onOpenChange={setTaskDrawerOpen}>
+        <DrawerContent title={`Tasks (${tasks.length})`}>
+          <div className="p-4 space-y-3">
+            {tasks.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No tasks for this conversation</p>
+            ) : (
+              tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onClaim={() => claimTaskMutation.mutate(task.id)}
+                  onComplete={() => completeTaskMutation.mutate(task.id)}
+                  isClaimPending={claimTaskMutation.isPending}
+                  isCompletePending={completeTaskMutation.isPending}
+                />
+              ))
+            )}
+          </div>
+        </DrawerContent>
+      </DrawerRoot>
     </div>
   );
 }
@@ -270,6 +355,157 @@ function MessageBubble({ message }: { message: Message }) {
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function TaskIndicator({
+  tasks,
+  isInbound,
+  onClick,
+}: {
+  tasks: Task[];
+  isInbound: boolean;
+  onClick: () => void;
+}) {
+  const statusColors: Record<string, string> = {
+    pending: 'text-yellow-600',
+    in_progress: 'text-blue-600',
+    completed: 'text-green-600',
+    cancelled: 'text-gray-400',
+  };
+
+  return (
+    <div className={cn('flex mt-1', isInbound ? 'justify-start' : 'justify-end')}>
+      <button
+        onClick={onClick}
+        className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+      >
+        <ListTodo className="w-3 h-3" />
+        <span>
+          {tasks.length} task{tasks.length > 1 ? 's' : ''} created
+        </span>
+        {tasks.map((task) => (
+          <span
+            key={task.id}
+            className={cn('capitalize', statusColors[task.status] || 'text-gray-500')}
+          >
+            ({task.status.replace('_', ' ')})
+          </span>
+        ))}
+      </button>
+    </div>
+  );
+}
+
+const taskTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  housekeeping: Sparkles,
+  maintenance: Wrench,
+  concierge: ConciergeBell,
+  room_service: UtensilsCrossed,
+  other: HelpCircle,
+};
+
+const priorityColors: Record<string, string> = {
+  urgent: 'bg-red-100 text-red-700',
+  high: 'bg-orange-100 text-orange-700',
+  standard: 'bg-gray-100 text-gray-600',
+  low: 'bg-gray-100 text-gray-600',
+};
+
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-700',
+  assigned: 'bg-blue-100 text-blue-700',
+  in_progress: 'bg-purple-100 text-purple-700',
+  completed: 'bg-green-100 text-green-700',
+  cancelled: 'bg-gray-100 text-gray-500',
+};
+
+function TaskCard({
+  task,
+  onClaim,
+  onComplete,
+  isClaimPending,
+  isCompletePending,
+}: {
+  task: Task;
+  onClaim: () => void;
+  onComplete: () => void;
+  isClaimPending: boolean;
+  isCompletePending: boolean;
+}) {
+  const Icon = taskTypeIcons[task.type] || HelpCircle;
+
+  return (
+    <div className={cn(
+      'border rounded-lg p-3',
+      task.status === 'pending' && 'bg-yellow-50 border-yellow-200'
+    )}>
+      {/* Header row: Icon + Type + Priority + Status */}
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-4 h-4 text-gray-500" />
+        <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
+        <Badge className={cn('capitalize text-xs', priorityColors[task.priority])}>
+          {task.priority}
+        </Badge>
+        <Badge className={cn('capitalize text-xs', statusColors[task.status])}>
+          {task.status.replace('_', ' ')}
+        </Badge>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-gray-700 mb-2">{task.description}</p>
+
+      {/* Meta row: Room + Department + Time */}
+      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
+        {task.roomNumber && (
+          <Badge className="bg-gray-100 text-gray-600">Room {task.roomNumber}</Badge>
+        )}
+        <span className="capitalize">{task.department.replace('_', ' ')}</span>
+        <span>·</span>
+        <span>{formatDateTime(task.createdAt)}</span>
+      </div>
+
+      {/* Assigned */}
+      {task.assignedName && (
+        <p className="text-xs text-gray-500 mb-3">
+          Assigned to: <span className="font-medium text-gray-700">{task.assignedName}</span>
+        </p>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        {task.status === 'pending' && (
+          <button
+            onClick={onClaim}
+            disabled={isClaimPending}
+            className="text-xs px-3 py-1.5 rounded bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
+          >
+            {isClaimPending ? 'Claiming...' : 'Claim'}
+          </button>
+        )}
+        {task.status === 'in_progress' && (
+          <button
+            onClick={onComplete}
+            disabled={isCompletePending}
+            className="text-xs px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {isCompletePending ? 'Completing...' : 'Complete'}
+          </button>
+        )}
+        {(task.status === 'completed' || task.status === 'cancelled') && (
+          <span className="text-xs text-gray-400 italic">No actions available</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatDateTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });

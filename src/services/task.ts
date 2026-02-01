@@ -22,6 +22,7 @@ export type TaskSource = 'manual' | 'auto' | 'automation';
 
 export interface CreateTaskInput {
   conversationId?: string | undefined;
+  messageId?: string | undefined;
   source?: TaskSource | undefined;
   type: TaskType;
   department: string;
@@ -44,6 +45,7 @@ export interface ListTasksOptions {
   status?: TaskStatus | undefined;
   department?: string | undefined;
   assignedTo?: string | undefined;
+  conversationId?: string | undefined;
   source?: TaskSource | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
@@ -52,6 +54,7 @@ export interface ListTasksOptions {
 export interface TaskSummary {
   id: string;
   conversationId: string | null;
+  messageId: string | null;
   source: string;
   type: string;
   department: string;
@@ -76,6 +79,7 @@ export class TaskService {
     await db.insert(tasks).values({
       id,
       conversationId: input.conversationId ?? null,
+      messageId: input.messageId ?? null,
       source: input.source ?? 'manual',
       type: input.type,
       department: input.department,
@@ -134,6 +138,9 @@ export class TaskService {
     if (options.assignedTo) {
       conditions.push(eq(tasks.assignedTo, options.assignedTo));
     }
+    if (options.conversationId) {
+      conditions.push(eq(tasks.conversationId, options.conversationId));
+    }
     if (options.source) {
       conditions.push(eq(tasks.source, options.source));
     }
@@ -142,6 +149,7 @@ export class TaskService {
       .select({
         id: tasks.id,
         conversationId: tasks.conversationId,
+        messageId: tasks.messageId,
         source: tasks.source,
         type: tasks.type,
         department: tasks.department,
