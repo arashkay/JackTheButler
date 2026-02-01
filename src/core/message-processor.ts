@@ -144,7 +144,6 @@ export class MessageProcessor {
         guestId: guestContext?.guest?.id ?? 'unknown',
         firstName: guestContext?.guest?.firstName ?? 'Guest',
         lastName: guestContext?.guest?.lastName ?? '',
-        isVIP: guestContext?.guest?.vipStatus === 'vip' || guestContext?.guest?.vipStatus === 'VIP',
       };
       // Add optional fields only if they have values
       if (guestContext?.reservation?.roomNumber) {
@@ -316,9 +315,7 @@ export class MessageProcessor {
     // Build autonomy context
     const autonomyContext: AutonomyContext = {
       guestId: guestContext?.guest?.id ?? undefined,
-      isVIP: guestContext?.guest?.vipStatus === 'vip' || guestContext?.guest?.vipStatus === 'VIP',
       loyaltyTier: guestContext?.guest?.loyaltyTier ?? undefined,
-      hasComplaint: response.intent?.startsWith('feedback.complaint') ?? false,
       roomNumber: guestContext?.reservation?.roomNumber ?? undefined,
     };
 
@@ -330,7 +327,7 @@ export class MessageProcessor {
       response.confidence ?? 0.5
     );
 
-    if (!canAutoExecute || confidenceDecision === 'escalate') {
+    if (!canAutoExecute || confidenceDecision === 'approval_required') {
       // Queue response for staff approval
       const approvalQueue = getApprovalQueue();
       const approvalItem = await approvalQueue.queueForApproval({

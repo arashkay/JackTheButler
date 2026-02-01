@@ -8,14 +8,12 @@ import {
   RefreshCw,
   AlertCircle,
   Settings2,
-  Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { PageContainer, PageHeader, EmptyState } from '@/components';
 
@@ -38,22 +36,14 @@ interface ActionConfig {
 }
 
 interface ConfidenceThresholds {
-  autoExecute: number;
-  suggestToStaff: number;
-  escalate: number;
-}
-
-interface VIPOverrides {
-  alwaysEscalateComplaints: boolean;
-  requireApprovalForOffers: boolean;
-  elevateTaskPriority: boolean;
+  approval: number;
+  urgent: number;
 }
 
 interface AutonomySettings {
   defaultLevel: AutonomyLevel;
   actions: Record<ActionType, ActionConfig>;
   confidenceThresholds: ConfidenceThresholds;
-  vipOverrides: VIPOverrides;
 }
 
 const levelInfo: Record<AutonomyLevel, { label: string; description: string; icon: typeof Shield }> = {
@@ -69,15 +59,15 @@ const levelInfo: Record<AutonomyLevel, { label: string; description: string; ico
   },
 };
 
-const actionLabels: Record<ActionType, { label: string; description: string }> = {
+const actionLabels: Record<ActionType, { label: string; description: string; disabled?: boolean }> = {
   respondToGuest: { label: 'Respond to Guest', description: 'Send AI-generated messages' },
   createHousekeepingTask: { label: 'Housekeeping Tasks', description: 'Create cleaning requests' },
   createMaintenanceTask: { label: 'Maintenance Tasks', description: 'Create repair requests' },
   createConciergeTask: { label: 'Concierge Tasks', description: 'Create service requests' },
   createRoomServiceTask: { label: 'Room Service Tasks', description: 'Create room service orders' },
-  issueRefund: { label: 'Issue Refunds', description: 'Process guest refunds' },
-  offerDiscount: { label: 'Offer Discounts', description: 'Send promotional offers' },
-  sendMarketingMessage: { label: 'Marketing Messages', description: 'Send marketing communications' },
+  issueRefund: { label: 'Issue Refunds', description: 'Process guest refunds', disabled: true },
+  offerDiscount: { label: 'Offer Discounts', description: 'Send promotional offers', disabled: true },
+  sendMarketingMessage: { label: 'Marketing Messages', description: 'Send marketing communications', disabled: true },
 };
 
 function LevelSelector({
@@ -300,18 +290,27 @@ export function AutonomyPage() {
               return (
                 <div
                   key={actionType}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50"
+                  className={cn(
+                    'flex items-center justify-between p-4 rounded-lg border',
+                    action.disabled ? 'opacity-50' : 'hover:bg-gray-50'
+                  )}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{action.label}</div>
                     <div className="text-sm text-gray-500">{action.description}</div>
                   </div>
                   <div className="shrink-0">
-                    <LevelSelector
-                      value={config.level}
-                      onChange={(level) => updateAction(actionType, { level })}
-                      compact
-                    />
+                    {action.disabled ? (
+                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded">
+                        Coming Soon
+                      </span>
+                    ) : (
+                      <LevelSelector
+                        value={config.level}
+                        onChange={(level) => updateAction(actionType, { level })}
+                        compact
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -320,12 +319,50 @@ export function AutonomyPage() {
         </CardContent>
       </Card>
 
-      {/* Financial Action Limits */}
+      {/* Confidence Thresholds */}
       <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">AI Confidence Thresholds</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Control how AI confidence affects responses in Auto-Execute mode (L2).
+          </p>
+          <div className="space-y-6">
+            <ThresholdSlider
+              label="Approval Threshold"
+              value={settings.confidenceThresholds.approval}
+              onChange={(value) =>
+                updateSettings({
+                  confidenceThresholds: { ...settings.confidenceThresholds, approval: value },
+                })
+              }
+              description="Below this confidence, responses are queued for staff approval instead of being sent automatically."
+            />
+            <ThresholdSlider
+              label="Urgent Flag Threshold"
+              value={settings.confidenceThresholds.urgent}
+              onChange={(value) =>
+                updateSettings({
+                  confidenceThresholds: { ...settings.confidenceThresholds, urgent: value },
+                })
+              }
+              description="Below this confidence, conversations are flagged as urgent requiring immediate staff attention."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Financial Action Limits - Disabled until financial features are implemented */}
+      <Card className="opacity-50">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Financial Action Limits</h2>
+            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded ml-auto">
+              Coming Soon
+            </span>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Set maximum amounts that can be auto-approved without staff review.
@@ -337,9 +374,7 @@ export function AutonomyPage() {
                 type="number"
                 min="0"
                 value={settings.actions.issueRefund.maxAutoAmount || 0}
-                onChange={(e) =>
-                  updateAction('issueRefund', { maxAutoAmount: Number(e.target.value) })
-                }
+                disabled
               />
               <p className="text-xs text-gray-500">
                 Refunds above this amount require approval
@@ -352,9 +387,7 @@ export function AutonomyPage() {
                 min="0"
                 max="100"
                 value={settings.actions.offerDiscount.maxAutoPercent || 0}
-                onChange={(e) =>
-                  updateAction('offerDiscount', { maxAutoPercent: Number(e.target.value) })
-                }
+                disabled
               />
               <p className="text-xs text-gray-500">
                 Discounts above this percentage require approval
@@ -364,113 +397,6 @@ export function AutonomyPage() {
         </CardContent>
       </Card>
 
-      {/* Confidence Thresholds */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Eye className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Confidence Thresholds</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Control how AI confidence scores affect autonomy decisions.
-          </p>
-          <div className="space-y-6">
-            <ThresholdSlider
-              label="Auto-Execute Threshold"
-              value={settings.confidenceThresholds.autoExecute}
-              onChange={(value) =>
-                updateSettings({
-                  confidenceThresholds: { ...settings.confidenceThresholds, autoExecute: value },
-                })
-              }
-              description="AI must be this confident to auto-execute actions"
-            />
-            <ThresholdSlider
-              label="Suggest to Staff Threshold"
-              value={settings.confidenceThresholds.suggestToStaff}
-              onChange={(value) =>
-                updateSettings({
-                  confidenceThresholds: { ...settings.confidenceThresholds, suggestToStaff: value },
-                })
-              }
-              description="Responses below this confidence are suggested for staff review"
-            />
-            <ThresholdSlider
-              label="Escalation Threshold"
-              value={settings.confidenceThresholds.escalate}
-              onChange={(value) =>
-                updateSettings({
-                  confidenceThresholds: { ...settings.confidenceThresholds, escalate: value },
-                })
-              }
-              description="Responses below this confidence trigger automatic escalation"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* VIP Overrides */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">VIP Guest Overrides</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Special handling rules for VIP guests.
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div>
-                <div className="font-medium">Always Escalate Complaints</div>
-                <div className="text-sm text-gray-500">
-                  Automatically escalate negative feedback from VIP guests
-                </div>
-              </div>
-              <Switch
-                checked={settings.vipOverrides.alwaysEscalateComplaints}
-                onCheckedChange={(checked) =>
-                  updateSettings({
-                    vipOverrides: { ...settings.vipOverrides, alwaysEscalateComplaints: checked },
-                  })
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div>
-                <div className="font-medium">Require Approval for Offers</div>
-                <div className="text-sm text-gray-500">
-                  Require staff approval for discounts/refunds to VIP guests
-                </div>
-              </div>
-              <Switch
-                checked={settings.vipOverrides.requireApprovalForOffers}
-                onCheckedChange={(checked) =>
-                  updateSettings({
-                    vipOverrides: { ...settings.vipOverrides, requireApprovalForOffers: checked },
-                  })
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div>
-                <div className="font-medium">Elevate Task Priority</div>
-                <div className="text-sm text-gray-500">
-                  Automatically increase priority for VIP guest requests
-                </div>
-              </div>
-              <Switch
-                checked={settings.vipOverrides.elevateTaskPriority}
-                onCheckedChange={(checked) =>
-                  updateSettings({
-                    vipOverrides: { ...settings.vipOverrides, elevateTaskPriority: checked },
-                  })
-                }
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </PageContainer>
   );
 }

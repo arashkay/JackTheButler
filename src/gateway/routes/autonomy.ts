@@ -32,14 +32,8 @@ const autonomySettingsSchema = z.object({
   defaultLevel: autonomyLevelSchema,
   actions: z.record(z.string(), actionConfigSchema) as z.ZodType<Record<string, ActionConfig>>,
   confidenceThresholds: z.object({
-    autoExecute: z.number().min(0).max(1),
-    suggestToStaff: z.number().min(0).max(1),
-    escalate: z.number().min(0).max(1),
-  }),
-  vipOverrides: z.object({
-    alwaysEscalateComplaints: z.boolean(),
-    requireApprovalForOffers: z.boolean(),
-    elevateTaskPriority: z.boolean(),
+    approval: z.number().min(0).max(1),
+    urgent: z.number().min(0).max(1),
   }),
 });
 

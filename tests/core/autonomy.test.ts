@@ -68,17 +68,8 @@ describe('AutonomyEngine', () => {
     it('has confidence thresholds configured', () => {
       const settings = engine.getSettings();
 
-      expect(settings.confidenceThresholds.autoExecute).toBe(0.9);
-      expect(settings.confidenceThresholds.suggestToStaff).toBe(0.7);
-      expect(settings.confidenceThresholds.escalate).toBe(0.5);
-    });
-
-    it('has VIP overrides configured', () => {
-      const settings = engine.getSettings();
-
-      expect(settings.vipOverrides.alwaysEscalateComplaints).toBe(true);
-      expect(settings.vipOverrides.requireApprovalForOffers).toBe(true);
-      expect(settings.vipOverrides.elevateTaskPriority).toBe(true);
+      expect(settings.confidenceThresholds.approval).toBe(0.7);
+      expect(settings.confidenceThresholds.urgent).toBe(0.5);
     });
   });
 
@@ -112,73 +103,56 @@ describe('AutonomyEngine', () => {
     });
   });
 
-  describe('VIP context handling', () => {
-    it('escalates VIP complaints when override enabled', () => {
-      const context: GuestContext = {
-        guestId: 'guest_vip',
-        isVIP: true,
-        hasComplaint: true,
-      };
-
-      const level = engine.getEffectiveLevel('respondToGuest', context);
-      expect(level).toBe('L1'); // Forced to L1 for VIP complaints
-    });
-
-    it('requires approval for VIP offers when override enabled', () => {
-      const context: GuestContext = {
-        guestId: 'guest_vip',
-        isVIP: true,
-      };
-
-      const level = engine.getEffectiveLevel('offerDiscount', context);
-      expect(level).toBe('L1');
-
-      const level2 = engine.getEffectiveLevel('issueRefund', context);
-      expect(level2).toBe('L1');
-    });
-
-    it('does not modify level for non-VIP guests', () => {
-      const context: GuestContext = {
-        guestId: 'guest_regular',
-        isVIP: false,
-        hasComplaint: true,
-      };
-
-      // respondToGuest is at L2 by default
-      const level = engine.getEffectiveLevel('respondToGuest', context);
-      expect(level).toBe('L2');
-    });
-  });
-
   describe('confidence-based decisions', () => {
-    it('returns auto for high confidence', () => {
+    it('returns auto for confidence at or above approval threshold', () => {
       expect(engine.shouldAutoExecuteByConfidence(0.95)).toBe('auto');
-      expect(engine.shouldAutoExecuteByConfidence(0.90)).toBe('auto');
+      expect(engine.shouldAutoExecuteByConfidence(0.70)).toBe('auto'); // At threshold
     });
 
-    it('returns suggest for medium confidence', () => {
-      expect(engine.shouldAutoExecuteByConfidence(0.85)).toBe('suggest');
-      expect(engine.shouldAutoExecuteByConfidence(0.70)).toBe('suggest');
-    });
-
-    it('returns escalate for low confidence', () => {
-      expect(engine.shouldAutoExecuteByConfidence(0.49)).toBe('escalate');
-      expect(engine.shouldAutoExecuteByConfidence(0.30)).toBe('escalate');
+    it('returns approval_required for confidence below approval threshold', () => {
+      expect(engine.shouldAutoExecuteByConfidence(0.69)).toBe('approval_required');
+      expect(engine.shouldAutoExecuteByConfidence(0.30)).toBe('approval_required');
     });
 
     it('respects custom thresholds', async () => {
       const customSettings: AutonomySettings = {
         ...DEFAULT_AUTONOMY_SETTINGS,
         confidenceThresholds: {
-          autoExecute: 0.95,
-          suggestToStaff: 0.80,
-          escalate: 0.60,
+          approval: 0.80,
+          urgent: 0.60,
         },
       };
       await engine.saveSettings(customSettings);
 
-      expect(engine.shouldAutoExecuteByConfidence(0.90)).toBe('suggest'); // Below new auto threshold
-      expect(engine.shouldAutoExecuteByConfidence(0.75)).toBe('escalate'); // Below new suggest threshold
+      expect(engine.shouldAutoExecuteByConfidence(0.85)).toBe('auto'); // Above threshold
+      expect(engine.shouldAutoExecuteByConfidence(0.75)).toBe('approval_required'); // Below threshold
+    });
+  });
+
+  describe('urgent threshold', () => {
+    it('has default urgent threshold at 0.5', () => {
+      const settings = engine.getSettings();
+      expect(settings.confidenceThresholds.urgent).toBe(0.5);
+    });
+
+    it('can be customized via settings', async () => {
+      const settings = engine.getSettings();
+      settings.confidenceThresholds.urgent = 0.6;
+      await engine.saveSettings(settings);
+
+      const updatedSettings = engine.getSettings();
+      expect(updatedSettings.confidenceThresholds.urgent).toBe(0.6);
+    });
+
+    it('is independent from approval threshold', async () => {
+      const settings = engine.getSettings();
+      settings.confidenceThresholds.approval = 0.9;
+      settings.confidenceThresholds.urgent = 0.3;
+      await engine.saveSettings(settings);
+
+      const updatedSettings = engine.getSettings();
+      expect(updatedSettings.confidenceThresholds.approval).toBe(0.9);
+      expect(updatedSettings.confidenceThresholds.urgent).toBe(0.3);
     });
   });
 

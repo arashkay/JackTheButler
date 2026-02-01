@@ -52,8 +52,8 @@ function getConfidenceThresholdFromAutonomy(): number {
   try {
     const autonomyEngine = getAutonomyEngine();
     const settings = autonomyEngine.getSettings();
-    // Use the escalate threshold from autonomy settings
-    return settings.confidenceThresholds.escalate;
+    // Use the urgent threshold from autonomy settings
+    return settings.confidenceThresholds.urgent;
   } catch {
     return DEFAULT_CONFIG.confidenceThreshold;
   }
@@ -160,30 +160,14 @@ export class EscalationManager {
       reasons.push('Guest repeating similar request');
     }
 
-    // 5. Check VIP status and autonomy VIP overrides
+    // 5. Check VIP status
     let guest: Guest | null = null;
     if (conversation.guestId) {
       guest =
         (await db.select().from(guests).where(eq(guests.id, conversation.guestId)).get()) || null;
 
       if (guest?.vipStatus) {
-        // Check autonomy VIP overrides
-        try {
-          const autonomyEngine = getAutonomyEngine();
-          const settings = autonomyEngine.getSettings();
-
-          // Check if this is a complaint and VIP complaints should always escalate
-          const isComplaint = this.detectNegativeSentiment(messageContent) ||
-                              sentiment < this.config.sentimentThreshold;
-          if (isComplaint && settings.vipOverrides.alwaysEscalateComplaints) {
-            reasons.push(`VIP complaint escalation (${guest.vipStatus})`);
-          } else {
-            reasons.push(`VIP guest (${guest.vipStatus})`);
-          }
-        } catch {
-          // Fallback to standard VIP handling
-          reasons.push(`VIP guest (${guest.vipStatus})`);
-        }
+        reasons.push(`VIP guest (${guest.vipStatus})`);
       }
     }
 

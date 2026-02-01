@@ -59,24 +59,10 @@ export interface ActionConfig {
  * Confidence thresholds for autonomy decisions
  */
 export interface ConfidenceThresholds {
-  /** Confidence above this level triggers auto-execute */
-  autoExecute: number;
-  /** Confidence above this level suggests to staff for approval */
-  suggestToStaff: number;
-  /** Confidence below this level triggers escalation */
-  escalate: number;
-}
-
-/**
- * VIP-specific overrides
- */
-export interface VIPOverrides {
-  /** Always escalate complaints from VIP guests */
-  alwaysEscalateComplaints: boolean;
-  /** Always require approval for offers to VIP guests */
-  requireApprovalForOffers: boolean;
-  /** Automatically elevate task priority for VIP guests */
-  elevateTaskPriority: boolean;
+  /** Confidence above this level allows auto-send; below requires staff approval */
+  approval: number;
+  /** Confidence below this level flags conversation as urgent */
+  urgent: number;
 }
 
 /**
@@ -89,8 +75,6 @@ export interface AutonomySettings {
   actions: Record<ActionType, ActionConfig>;
   /** Confidence thresholds for decision-making */
   confidenceThresholds: ConfidenceThresholds;
-  /** VIP-specific behavior overrides */
-  vipOverrides: VIPOverrides;
 }
 
 /**
@@ -98,9 +82,7 @@ export interface AutonomySettings {
  */
 export interface GuestContext {
   guestId?: string | undefined;
-  isVIP?: boolean | undefined;
   loyaltyTier?: string | undefined;
-  hasComplaint?: boolean | undefined;
   roomNumber?: string | undefined;
 }
 
@@ -125,14 +107,8 @@ export const DEFAULT_AUTONOMY_SETTINGS: AutonomySettings = {
     sendMarketingMessage: { level: 'L1' },
   },
   confidenceThresholds: {
-    autoExecute: 0.9,
-    suggestToStaff: 0.7,
-    escalate: 0.5,
-  },
-  vipOverrides: {
-    alwaysEscalateComplaints: true,
-    requireApprovalForOffers: true,
-    elevateTaskPriority: true,
+    approval: 0.7,
+    urgent: 0.5,
   },
 };
 
@@ -238,27 +214,9 @@ export class AutonomyEngine {
   /**
    * Get the effective autonomy level for an action considering context
    */
-  getEffectiveLevel(actionType: ActionType, context: GuestContext = {}): AutonomyLevel {
+  getEffectiveLevel(actionType: ActionType, _context: GuestContext = {}): AutonomyLevel {
     const config = this.getActionConfig(actionType);
-    let level = config.level;
-
-    // VIP overrides
-    if (context.isVIP) {
-      // Force L1 for complaints from VIPs
-      if (context.hasComplaint && this.settings.vipOverrides.alwaysEscalateComplaints) {
-        return 'L1';
-      }
-
-      // Force approval for offers to VIPs
-      if (
-        (actionType === 'offerDiscount' || actionType === 'issueRefund') &&
-        this.settings.vipOverrides.requireApprovalForOffers
-      ) {
-        return 'L1';
-      }
-    }
-
-    return level;
+    return config.level;
   }
 
   /**
@@ -275,18 +233,14 @@ export class AutonomyEngine {
   /**
    * Determine action based on confidence score
    */
-  shouldAutoExecuteByConfidence(confidence: number): 'auto' | 'suggest' | 'escalate' {
+  shouldAutoExecuteByConfidence(confidence: number): 'auto' | 'approval_required' {
     const thresholds = this.settings.confidenceThresholds;
 
-    if (confidence >= thresholds.autoExecute) {
+    if (confidence >= thresholds.approval) {
       return 'auto';
     }
 
-    if (confidence >= thresholds.suggestToStaff) {
-      return 'suggest';
-    }
-
-    return 'escalate';
+    return 'approval_required';
   }
 
   /**
@@ -363,17 +317,25 @@ export class AutonomyEngine {
       }
     }
 
+    // Migrate old threshold names to new names
+    const oldThresholds = partial.confidenceThresholds as {
+      autoExecute?: number;
+      suggestToStaff?: number;
+      escalate?: number;
+      approval?: number;
+      urgent?: number;
+    } | undefined;
+
+    const migratedThresholds: ConfidenceThresholds = {
+      // Use new names if present, fall back to old names, then defaults
+      approval: oldThresholds?.approval ?? oldThresholds?.suggestToStaff ?? DEFAULT_AUTONOMY_SETTINGS.confidenceThresholds.approval,
+      urgent: oldThresholds?.urgent ?? oldThresholds?.escalate ?? DEFAULT_AUTONOMY_SETTINGS.confidenceThresholds.urgent,
+    };
+
     return {
       defaultLevel,
       actions: migratedActions,
-      confidenceThresholds: {
-        ...DEFAULT_AUTONOMY_SETTINGS.confidenceThresholds,
-        ...partial.confidenceThresholds,
-      },
-      vipOverrides: {
-        ...DEFAULT_AUTONOMY_SETTINGS.vipOverrides,
-        ...partial.vipOverrides,
-      },
+      confidenceThresholds: migratedThresholds,
     };
   }
 }

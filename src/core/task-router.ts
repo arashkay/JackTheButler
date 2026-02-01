@@ -29,7 +29,6 @@ export interface GuestContext {
   firstName: string;
   lastName: string;
   roomNumber?: string;
-  isVIP?: boolean;
   loyaltyTier?: string;
   language?: string;
 }
@@ -60,22 +59,8 @@ export interface TaskCreationResult {
 }
 
 // ===================
-// Priority Elevation
+// Helper Functions
 // ===================
-
-/**
- * Elevate priority for VIP guests
- */
-function elevatePriority(basePriority: TaskPriority, isVIP: boolean): TaskPriority {
-  if (!isVIP) return basePriority;
-
-  const priorityOrder: TaskPriority[] = ['low', 'standard', 'high', 'urgent'];
-  const currentIndex = priorityOrder.indexOf(basePriority);
-
-  // Elevate by one level (max is 'urgent')
-  const newIndex = Math.min(currentIndex + 1, priorityOrder.length - 1);
-  return priorityOrder[newIndex] ?? basePriority;
-}
 
 /**
  * Map intent type prefix to task type
@@ -150,9 +135,8 @@ export class TaskRouter {
       };
     }
 
-    // Determine priority (elevate for VIP)
-    const basePriority = definition.priority;
-    const priority = elevatePriority(basePriority, context.isVIP ?? false);
+    // Use priority from intent definition
+    const priority = definition.priority;
 
     // Get task type from intent
     const taskType = getTaskType(classification.intent);
@@ -168,7 +152,6 @@ export class TaskRouter {
       const autonomyEngine = getAutonomyEngine();
       const autonomyContext: AutonomyContext = {
         guestId: context.guestId,
-        isVIP: context.isVIP ?? undefined,
         loyaltyTier: context.loyaltyTier ?? undefined,
       };
       requiresApproval = !autonomyEngine.canAutoExecute(actionType, autonomyContext);
@@ -179,7 +162,6 @@ export class TaskRouter {
         intent: classification.intent,
         department: definition.department,
         priority,
-        isVIP: context.isVIP,
         guestId: context.guestId,
         requiresApproval,
       },

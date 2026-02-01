@@ -23,15 +23,7 @@ describe('TaskRouter', () => {
     firstName: 'John',
     lastName: 'Doe',
     roomNumber: '412',
-    isVIP: false,
     language: 'en',
-  };
-
-  // VIP guest context
-  const vipContext: GuestContext = {
-    ...guestContext,
-    isVIP: true,
-    loyaltyTier: 'platinum',
   };
 
   beforeEach(() => {
@@ -192,62 +184,6 @@ describe('TaskRouter', () => {
     });
   });
 
-  describe('VIP priority elevation', () => {
-    it('elevates priority from standard to high for VIP guests', () => {
-      const classification: ClassificationResult = {
-        intent: 'request.housekeeping.towels',
-        confidence: 0.9,
-        department: 'housekeeping',
-        requiresAction: true,
-      };
-
-      const result = router.route(classification, vipContext);
-
-      expect(result.shouldCreateTask).toBe(true);
-      expect(result.priority).toBe('high'); // Elevated from 'standard'
-    });
-
-    it('elevates priority from high to urgent for VIP guests', () => {
-      const classification: ClassificationResult = {
-        intent: 'request.maintenance',
-        confidence: 0.85,
-        department: 'maintenance',
-        requiresAction: true,
-      };
-
-      const result = router.route(classification, vipContext);
-
-      expect(result.shouldCreateTask).toBe(true);
-      expect(result.priority).toBe('urgent'); // Elevated from 'high'
-    });
-
-    it('keeps urgent priority as urgent for VIP guests', () => {
-      const classification: ClassificationResult = {
-        intent: 'emergency',
-        confidence: 0.99,
-        department: 'front_desk',
-        requiresAction: true,
-      };
-
-      const result = router.route(classification, vipContext);
-
-      expect(result.shouldCreateTask).toBe(true);
-      expect(result.priority).toBe('urgent'); // Already at max
-    });
-
-    it('does not elevate priority for non-VIP guests', () => {
-      const classification: ClassificationResult = {
-        intent: 'request.housekeeping.towels',
-        confidence: 0.9,
-        department: 'housekeeping',
-        requiresAction: true,
-      };
-
-      const result = router.route(classification, guestContext);
-
-      expect(result.priority).toBe('standard'); // Not elevated
-    });
-  });
 
   describe('process', () => {
     it('returns shouldCreateTask=false for non-actionable intents', () => {
@@ -312,20 +248,6 @@ describe('TaskRouter', () => {
       expect(result.shouldCreateTask).toBe(true);
       expect(result.department).toBe('front_desk');
       expect(result.priority).toBe('high');
-    });
-
-    it('elevates complaint priority to urgent for VIP', () => {
-      const classification: ClassificationResult = {
-        intent: 'feedback.complaint',
-        confidence: 0.85,
-        department: 'front_desk',
-        requiresAction: true,
-      };
-
-      const result = router.route(classification, vipContext);
-
-      expect(result.shouldCreateTask).toBe(true);
-      expect(result.priority).toBe('urgent');
     });
   });
 
