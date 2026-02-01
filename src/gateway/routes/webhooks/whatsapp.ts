@@ -289,15 +289,7 @@ async function handleIncomingMessage(
       );
     }
   } else {
-    // Fallback to old adapter
-    const { getWhatsAppAdapter } = await import('@/channels/whatsapp/index.js');
-    const adapter = getWhatsAppAdapter();
-
-    if (adapter) {
-      await adapter.handleIncomingMessage(message, contact);
-    } else {
-      log.warn('WhatsApp not configured in extension registry or env');
-    }
+    log.warn('WhatsApp not configured. Enable it in Settings > Integrations.');
   }
 }
 

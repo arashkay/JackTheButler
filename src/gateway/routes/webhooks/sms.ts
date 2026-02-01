@@ -2,26 +2,107 @@
  * SMS (Twilio) Webhook Routes
  *
  * Handles incoming SMS messages and status callbacks from Twilio.
+ * Configuration is loaded from extension registry (configured via dashboard UI).
  */
 
 import { Hono } from 'hono';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
-import { getSMSAdapter, verifyTwilioSignature } from '@/channels/sms/index.js';
-import type { TwilioWebhookBody, TwilioStatusBody } from '@/channels/sms/index.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import { extensionConfigService } from '@/services/extension-config.js';
 
 const log = createLogger('webhook:sms');
 
 export const smsWebhook = new Hono();
 
 /**
+ * Twilio webhook body structure
+ */
+interface TwilioWebhookBody {
+  MessageSid: string;
+  AccountSid: string;
+  From: string;
+  To: string;
+  Body: string;
+  NumMedia: string;
+  NumSegments: string;
+  SmsStatus?: string;
+  MediaUrl0?: string;
+  MediaContentType0?: string;
+}
+
+/**
+ * Twilio status callback body
+ */
+interface TwilioStatusBody {
+  MessageSid: string;
+  MessageStatus: string;
+  ErrorCode?: string;
+  ErrorMessage?: string;
+}
+
+/**
+ * Get Twilio config from extension registry
+ */
+async function getTwilioConfig(): Promise<{
+  accountSid?: string;
+  authToken?: string;
+  phoneNumber?: string;
+} | null> {
+  const extConfig = await extensionConfigService.getExtensionConfig('sms-twilio');
+  if (extConfig?.config) {
+    return extConfig.config as {
+      accountSid?: string;
+      authToken?: string;
+      phoneNumber?: string;
+    };
+  }
+  return null;
+}
+
+/**
+ * Verify Twilio webhook signature
+ */
+function verifyTwilioSignature(
+  signature: string,
+  url: string,
+  params: Record<string, string>,
+  authToken: string | undefined
+): boolean {
+  if (!authToken) {
+    log.warn('Auth token not configured, skipping signature verification');
+    return true; // Allow in development without auth token
+  }
+
+  if (!signature) {
+    log.warn('Missing x-twilio-signature header');
+    return false;
+  }
+
+  // Build the data string: URL + sorted params
+  const sortedKeys = Object.keys(params).sort();
+  let data = url;
+  for (const key of sortedKeys) {
+    data += key + params[key];
+  }
+
+  // Calculate expected signature
+  const expectedSignature = createHmac('sha1', authToken).update(data).digest('base64');
+
+  // Constant-time comparison
+  try {
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+  } catch {
+    return false;
+  }
+}
+
+/**
  * POST /webhooks/sms
  * Receive incoming SMS messages from Twilio
  */
 smsWebhook.post('/', async (c) => {
-  // Get signature for verification
   const signature = c.req.header('x-twilio-signature') || '';
-
-  // Parse form data (Twilio sends application/x-www-form-urlencoded)
   const formData = await c.req.parseBody();
   const body = formData as unknown as TwilioWebhookBody;
 
@@ -34,37 +115,27 @@ smsWebhook.post('/', async (c) => {
     'Received SMS webhook'
   );
 
-  // Verify signature in production
+  // Get config and verify signature
+  const twilioConfig = await getTwilioConfig();
   const url = new URL(c.req.url);
   const fullUrl = `${url.protocol}//${url.host}${url.pathname}`;
 
-  if (!verifyTwilioSignature(signature, fullUrl, formData as Record<string, string>)) {
+  if (!verifyTwilioSignature(signature, fullUrl, formData as Record<string, string>, twilioConfig?.authToken)) {
     log.warn('Invalid Twilio signature');
     return c.text('Invalid signature', 401);
   }
 
-  // Get adapter
-  const adapter = getSMSAdapter();
-  if (!adapter) {
-    log.error('SMS adapter not available');
-    return c.text('SMS not configured', 503);
-  }
+  // Process asynchronously to respond quickly
+  processIncomingSmsAsync(body).catch((err) => {
+    log.error({ err }, 'Error processing SMS');
+  });
 
-  // Process message
-  try {
-    await adapter.handleIncomingMessage(body);
-
-    // Return TwiML response (tells Twilio we handled it)
-    // We already sent the response via the API, so return empty TwiML
-    return c.text(
-      '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-      200,
-      { 'Content-Type': 'text/xml' }
-    );
-  } catch (error) {
-    log.error({ err: error }, 'Failed to process SMS webhook');
-    return c.text('Processing error', 500);
-  }
+  // Return empty TwiML response
+  return c.text(
+    '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+    200,
+    { 'Content-Type': 'text/xml' }
+  );
 });
 
 /**
@@ -84,27 +155,106 @@ smsWebhook.post('/status', async (c) => {
     'Received SMS status callback'
   );
 
-  // Verify signature
+  // Get config and verify signature
+  const twilioConfig = await getTwilioConfig();
   const url = new URL(c.req.url);
   const fullUrl = `${url.protocol}//${url.host}${url.pathname}`;
 
-  if (!verifyTwilioSignature(signature, fullUrl, formData as Record<string, string>)) {
+  if (!verifyTwilioSignature(signature, fullUrl, formData as Record<string, string>, twilioConfig?.authToken)) {
     log.warn('Invalid Twilio signature on status callback');
     return c.text('Invalid signature', 401);
   }
 
-  // Get adapter
-  const adapter = getSMSAdapter();
-  if (!adapter) {
-    return c.text('OK', 200); // Acknowledge even if not configured
-  }
-
-  // Update status
-  try {
-    await adapter.handleStatusCallback(body);
-  } catch (error) {
-    log.warn({ err: error }, 'Failed to process status callback');
-  }
+  // Process status update
+  await handleStatusUpdate(body);
 
   return c.text('OK', 200);
 });
+
+/**
+ * Process incoming SMS asynchronously
+ */
+async function processIncomingSmsAsync(body: TwilioWebhookBody): Promise<void> {
+  // Get provider from extension registry
+  const registry = getExtensionRegistry();
+  const ext = registry.get('sms-twilio');
+
+  if (ext?.status !== 'active' || !ext.instance) {
+    log.warn('SMS extension not active');
+    return;
+  }
+
+  const provider = ext.instance as {
+    sendMessage: (to: string, body: string) => Promise<unknown>;
+  };
+
+  // Only process text messages
+  if (parseInt(body.NumMedia, 10) > 0) {
+    log.info({ numMedia: body.NumMedia }, 'SMS contains media, sending fallback');
+    await provider.sendMessage(
+      body.From,
+      "I can only process text messages at the moment. Please send your request as text."
+    );
+    return;
+  }
+
+  // Process through message processor
+  const { messageProcessor } = await import('@/core/message-processor.js');
+  const { generateId } = await import('@/utils/id.js');
+
+  const inbound = {
+    id: generateId('message'),
+    channel: 'sms' as const,
+    channelId: body.From,
+    content: body.Body,
+    contentType: 'text' as const,
+    timestamp: new Date(),
+  };
+
+  try {
+    const response = await messageProcessor.process(inbound);
+    await provider.sendMessage(body.From, response.content);
+    log.info({ messageSid: body.MessageSid }, 'SMS processed successfully');
+  } catch (error) {
+    log.error({ err: error, messageSid: body.MessageSid }, 'Failed to process SMS');
+    await provider.sendMessage(
+      body.From,
+      "I'm sorry, I encountered an error processing your request. Please try again."
+    );
+  }
+}
+
+/**
+ * Handle a status update for a sent message
+ */
+async function handleStatusUpdate(body: TwilioStatusBody): Promise<void> {
+  // Map Twilio status to our status
+  const statusMap: Record<string, string> = {
+    queued: 'pending',
+    sending: 'pending',
+    sent: 'sent',
+    delivered: 'delivered',
+    undelivered: 'failed',
+    failed: 'failed',
+  };
+
+  const deliveryStatus = statusMap[body.MessageStatus] || 'pending';
+
+  // Update message status in database
+  try {
+    const { db, messages } = await import('@/db/index.js');
+    const { eq } = await import('drizzle-orm');
+
+    await db
+      .update(messages)
+      .set({
+        deliveryStatus,
+        deliveryError: body.ErrorMessage,
+      })
+      .where(eq(messages.channelMessageId, body.MessageSid));
+  } catch (error) {
+    log.warn({ err: error, messageSid: body.MessageSid }, 'Failed to update SMS status');
+  }
+}
+
+export type { TwilioWebhookBody, TwilioStatusBody };

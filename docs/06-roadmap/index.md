@@ -63,6 +63,8 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **12** | **1.3.0** | **Profiles** | Guest directory and profile management | **Know your guests** |
 | **13** | **1.4.0** | **Bookings** | Reservation dashboard and management | **Booking visibility** |
 | **14** | **1.5.0** | **Pulse** | Real-time WebSocket dashboard updates | **Instant updates** |
+| **15** | **1.6.0** | **Clean Slate** | Orchestrator/Provider simplification | **No duplication** |
+| **16** | **1.7.0** | **Easy Mail** | Gmail OAuth, Mailgun/SendGrid | **One-click email** |
 
 ---
 
@@ -88,6 +90,8 @@ Phase 11 (Tools)       → Site scraper imports knowledge base
 Phase 12 (Profiles)    → Guest directory searchable
 Phase 13 (Bookings)    → Today's arrivals/departures visible
 Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
+Phase 15 (Clean Slate) → No duplicate code, clear orchestrator/provider separation
+Phase 16 (Easy Mail)   → Gmail connected with one click, email works
 ```
 
 ### Implementation Rules
@@ -118,6 +122,17 @@ Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
 | [Phase 12: Guest Management](phase-12-guests.md) | Guest directory and profiles |
 | [Phase 13: Reservation Management](phase-13-reservations.md) | Reservation dashboard |
 | [Phase 14: Real-Time Dashboard](phase-14-realtime.md) | WebSocket push updates |
+| [Phase 15: Architecture Simplification](phase-15-simplification.md) | Orchestrator/Provider cleanup |
+| [Phase 16: Email Providers](phase-16-email-providers.md) | Gmail OAuth, Mailgun/SendGrid |
+
+### Phase 15 Sub-Phases
+
+| Document | Description |
+|----------|-------------|
+| [Phase 15.1: AI Providers](phase-15-1-ai-providers.md) | Consolidate AI providers into extensions/ |
+| [Phase 15.2: Channel Providers](phase-15-2-channel-providers.md) | Consolidate channel providers into extensions/ |
+| [Phase 15.3: Orchestrators](phase-15-3-orchestrators.md) | Create orchestrator layer |
+| [Phase 15.4: Cleanup](phase-15-4-cleanup.md) | Final cleanup and verification |
 
 ### Phase 10 Sub-Phases
 
@@ -208,6 +223,16 @@ Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
                     ┌────────────────▼──────────────┐
                     │       Phase 14: Pulse         │
                     │  Real-time WebSocket updates  │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │    Phase 15: Clean Slate      │
+                    │ Orchestrator/Provider cleanup │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │    Phase 16: Easy Mail        │
+                    │  Gmail OAuth, Mailgun/SendGrid│
                     └───────────────────────────────┘
 ```
 
@@ -234,6 +259,8 @@ Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
 | 1.3.0 | "Search and view guest profiles" | **Guest intelligence** |
 | 1.4.0 | "See today's arrivals and reservations" | **Booking visibility** |
 | 1.5.0 | "Badge counts update instantly, no refresh" | **Real-time UX** |
+| 1.6.0 | "No duplicate code, clear separation" | **Clean architecture** |
+| 1.7.0 | "Connect Gmail with one click, email works" | **Easy email setup** |
 
 ---
 

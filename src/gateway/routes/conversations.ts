@@ -11,7 +11,10 @@ import { guestContextService } from '@/services/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
-import { getWhatsAppAdapter } from '@/channels/whatsapp/index.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import { createLogger } from '@/utils/logger.js';
+
+const log = createLogger('api:conversations');
 
 // Validation schemas
 const listQuerySchema = z.object({
@@ -185,17 +188,33 @@ async function sendToChannel(
   channelId: string,
   content: string
 ): Promise<void> {
+  const registry = getExtensionRegistry();
+
   switch (channelType) {
     case 'whatsapp': {
-      const adapter = getWhatsAppAdapter();
-      if (adapter) {
-        await adapter.send(channelId, { content, contentType: 'text' });
+      const ext = registry.get('whatsapp-meta');
+      if (ext?.status === 'active' && ext.instance) {
+        const provider = ext.instance as { sendText: (to: string, text: string) => Promise<unknown> };
+        await provider.sendText(channelId, content);
+        log.info({ channelType, channelId }, 'Message sent via WhatsApp');
+      } else {
+        log.warn({ channelType }, 'WhatsApp extension not active');
       }
       break;
     }
-    // Other channels can be added here
+    case 'sms': {
+      const ext = registry.get('sms-twilio');
+      if (ext?.status === 'active' && ext.instance) {
+        const provider = ext.instance as { sendMessage: (to: string, body: string) => Promise<unknown> };
+        await provider.sendMessage(channelId, content);
+        log.info({ channelType, channelId }, 'Message sent via SMS');
+      } else {
+        log.warn({ channelType }, 'SMS extension not active');
+      }
+      break;
+    }
     default:
-      // No adapter for this channel
+      log.debug({ channelType }, 'No extension available for channel');
       break;
   }
 }
