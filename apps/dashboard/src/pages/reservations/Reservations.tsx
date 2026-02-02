@@ -11,8 +11,15 @@ import {
   Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { Badge, BadgeVariant } from '@/components/ui/badge';
+
+const reservationStatusVariants: Record<string, BadgeVariant> = {
+  confirmed: 'default',
+  checked_in: 'success',
+  checked_out: 'default',
+  cancelled: 'error',
+  no_show: 'error',
+};
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, EmptyState, DataTable, StatsBar } from '@/components';
 import type { Column } from '@/components/DataTable';
@@ -62,14 +69,6 @@ const statusFilters: { value: ReservationStatus | 'all'; label: string }[] = [
   { value: 'checked_out', label: 'Checked Out' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
-
-const statusColors: Record<ReservationStatus, string> = {
-  confirmed: '!bg-gray-100 !text-gray-600',
-  checked_in: '!bg-gray-700 !text-white',
-  checked_out: '!bg-gray-100 !text-gray-600',
-  cancelled: '!bg-gray-100 !text-gray-600',
-  no_show: '!bg-gray-100 !text-gray-600',
-};
 
 export function ReservationsPage() {
   const navigate = useNavigate();
@@ -130,7 +129,7 @@ export function ReservationsPage() {
               {reservation.guest.firstName} {reservation.guest.lastName}
             </Link>
             {reservation.guest.vipStatus && (
-              <Badge className="ml-2 text-xs bg-gray-700 text-white">
+              <Badge variant="dark" className="ml-2">
                 <Crown className="w-3 h-3 mr-1" />
                 VIP
               </Badge>
@@ -180,7 +179,7 @@ export function ReservationsPage() {
       key: 'status',
       header: 'Status',
       render: (reservation) => (
-        <Badge variant="secondary" className={cn('capitalize', statusColors[reservation.status])}>
+        <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
           {reservation.status.replace('_', ' ')}
         </Badge>
       ),

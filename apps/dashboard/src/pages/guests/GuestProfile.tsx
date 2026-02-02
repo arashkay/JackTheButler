@@ -32,6 +32,23 @@ import {
   User,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { BadgeVariant } from '@/components/ui/badge';
+
+const reservationStatusVariants: Record<string, BadgeVariant> = {
+  confirmed: 'default',
+  checked_in: 'success',
+  checked_out: 'default',
+  cancelled: 'error',
+  no_show: 'error',
+};
+
+const conversationStateVariants: Record<string, BadgeVariant> = {
+  new: 'info',
+  active: 'success',
+  escalated: 'error',
+  resolved: 'default',
+  closed: 'default',
+};
 
 interface Guest {
   id: string;
@@ -76,21 +93,6 @@ interface Conversation {
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
 const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
-
-const statusColors: Record<string, string> = {
-  confirmed: 'bg-blue-100 text-blue-800',
-  checked_in: 'bg-green-100 text-green-800',
-  checked_out: 'bg-gray-100 text-gray-800',
-  cancelled: 'bg-red-100 text-red-800',
-  no_show: 'bg-orange-100 text-orange-800',
-};
-
-const conversationStateColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-800',
-  escalated: 'bg-orange-100 text-orange-800',
-  resolved: 'bg-gray-100 text-gray-800',
-  closed: 'bg-gray-100 text-gray-800',
-};
 
 export function GuestProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -564,7 +566,7 @@ export function GuestProfilePage() {
                       <TableCell>{formatDate(res.arrivalDate)}</TableCell>
                       <TableCell>{formatDate(res.departureDate)}</TableCell>
                       <TableCell>
-                        <Badge className={statusColors[res.status] || 'bg-gray-100 text-gray-800'}>
+                        <Badge variant={reservationStatusVariants[res.status]} className="capitalize">
                           {res.status.replace('_', ' ')}
                         </Badge>
                       </TableCell>
@@ -601,7 +603,7 @@ export function GuestProfilePage() {
                     <TableRow key={conv.id}>
                       <TableCell className="capitalize">{conv.channelType}</TableCell>
                       <TableCell>
-                        <Badge className={conversationStateColors[conv.state] || 'bg-gray-100'}>
+                        <Badge variant={conversationStateVariants[conv.state]}>
                           {conv.state}
                         </Badge>
                       </TableCell>

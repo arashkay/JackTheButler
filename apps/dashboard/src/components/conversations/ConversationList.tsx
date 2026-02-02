@@ -1,6 +1,7 @@
 import { MessageSquare, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChannelIcon } from '@/components/shared/ChannelIcon';
+import { Badge } from '@/components/ui/badge';
 
 interface Conversation {
   id: string;
@@ -21,12 +22,12 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-const stateColors: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-700',
-  active: 'bg-green-100 text-green-700',
-  escalated: 'bg-red-100 text-red-700',
-  resolved: 'bg-gray-100 text-gray-600',
-  closed: 'bg-gray-100 text-gray-500',
+const stateVariants: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
+  new: 'info',
+  active: 'success',
+  escalated: 'error',
+  resolved: 'default',
+  closed: 'default',
 };
 
 export function ConversationList({ conversations, selectedId, onSelect }: Props) {
@@ -67,9 +68,9 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
                 </span>
               )}
             </div>
-            <span className={cn('text-xs px-1.5 py-0.5 rounded', stateColors[conv.state])}>
+            <Badge variant={stateVariants[conv.state] || 'default'}>
               {conv.state}
-            </span>
+            </Badge>
           </div>
         </button>
       ))}

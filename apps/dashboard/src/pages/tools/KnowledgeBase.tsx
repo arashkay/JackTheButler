@@ -73,18 +73,6 @@ const CATEGORIES = [
   'other',
 ];
 
-const categoryColors: Record<string, string> = {
-  faq: '!bg-gray-100 !text-gray-600',
-  policy: '!bg-gray-100 !text-gray-600',
-  amenity: '!bg-gray-100 !text-gray-600',
-  service: '!bg-gray-100 !text-gray-600',
-  dining: '!bg-gray-100 !text-gray-600',
-  room_type: '!bg-gray-100 !text-gray-600',
-  local_info: '!bg-gray-100 !text-gray-600',
-  contact: '!bg-gray-100 !text-gray-600',
-  other: '!bg-gray-100 !text-gray-600',
-};
-
 export function KnowledgeBasePage() {
   const { setActions } = usePageActions();
   const { providers } = useSystemStatus();
@@ -304,7 +292,7 @@ export function KnowledgeBasePage() {
       key: 'category',
       header: 'Category',
       render: (entry) => (
-        <Badge className={categoryColors[entry.category] || categoryColors.other}>
+        <Badge>
           {entry.category.replace(/_/g, ' ')}
         </Badge>
       ),
@@ -438,7 +426,7 @@ export function KnowledgeBasePage() {
                         className="flex items-center justify-between p-2 bg-white border rounded-lg text-sm"
                       >
                         <div className="flex items-center gap-2">
-                          <Badge className={categoryColors[match.category] || categoryColors.other}>
+                          <Badge>
                             {match.category.replace(/_/g, ' ')}
                           </Badge>
                           <span className="font-medium">{match.title}</span>

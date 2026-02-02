@@ -4,7 +4,7 @@ import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
-import { Badge } from '@/components/ui/badge';
+import { Badge, BadgeVariant } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -369,9 +369,9 @@ function TaskIndicator({
   isInbound: boolean;
   onClick: () => void;
 }) {
-  const statusColors: Record<string, string> = {
+  const statusTextColors: Record<string, string> = {
     pending: 'text-yellow-600',
-    in_progress: 'text-blue-600',
+    in_progress: 'text-yellow-600',
     completed: 'text-green-600',
     cancelled: 'text-gray-400',
   };
@@ -389,7 +389,7 @@ function TaskIndicator({
         {tasks.map((task) => (
           <span
             key={task.id}
-            className={cn('capitalize', statusColors[task.status] || 'text-gray-500')}
+            className={cn('capitalize', statusTextColors[task.status] || 'text-gray-500')}
           >
             ({task.status.replace('_', ' ')})
           </span>
@@ -407,19 +407,19 @@ const taskTypeIcons: Record<string, React.ComponentType<{ className?: string }>>
   other: HelpCircle,
 };
 
-const priorityColors: Record<string, string> = {
-  urgent: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  standard: 'bg-gray-100 text-gray-600',
-  low: 'bg-gray-100 text-gray-600',
+const priorityVariants: Record<string, BadgeVariant> = {
+  urgent: 'error',
+  high: 'warning',
+  standard: 'default',
+  low: 'default',
 };
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  assigned: 'bg-blue-100 text-blue-700',
-  in_progress: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-gray-100 text-gray-500',
+const taskStatusVariants: Record<string, BadgeVariant> = {
+  pending: 'warning',
+  assigned: 'default',
+  in_progress: 'warning',
+  completed: 'success',
+  cancelled: 'default',
 };
 
 function TaskCard({
@@ -446,10 +446,10 @@ function TaskCard({
       <div className="flex items-center gap-2 mb-2">
         <Icon className="w-4 h-4 text-gray-500" />
         <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
-        <Badge className={cn('capitalize text-xs', priorityColors[task.priority])}>
+        <Badge variant={priorityVariants[task.priority]} className="capitalize">
           {task.priority}
         </Badge>
-        <Badge className={cn('capitalize text-xs', statusColors[task.status])}>
+        <Badge variant={taskStatusVariants[task.status]} className="capitalize">
           {task.status.replace('_', ' ')}
         </Badge>
       </div>

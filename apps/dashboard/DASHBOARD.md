@@ -438,3 +438,31 @@ apps/dashboard/src/
 ├── lib/                 # Utilities (api, utils)
 └── types/               # TypeScript types
 ```
+
+---
+
+## Refactoring To-Do (Temporary)
+
+### High Priority
+- [x] ~~Create `src/lib/colors.ts`~~ - Replaced with Badge component variants
+- [ ] Create `src/lib/formatters.ts` - formatDate, formatCurrency, formatTimeAgo
+- [ ] Create `src/types/api.ts` - shared Guest, Reservation, Task types
+- [ ] Create `src/lib/config.ts` - status filter options, priority options
+
+### Medium Priority
+- [ ] Create `<Spinner />` component - replace repeated spinner markup
+- [ ] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
+- [ ] Use `FilterTabs` consistently (fix Conversations, Automations pages)
+- [ ] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
+- [ ] Create `useFilteredQuery()` hook - query + URLSearchParams pattern
+- [ ] Create `buildQueryString()` utility - reduce URLSearchParams duplication
+
+### Lower Priority
+- [x] ~~Create Badge variants for status types~~ - Done: default, success, warning, error, info, dark, gold
+- [ ] Define icon size constants (xs, sm, md, lg, xl)
+- [ ] Extract `<GuestFormFields />` - shared between GuestForm and GuestProfile
+- [ ] Create column factory functions for DataTable (createStatusColumn, createDateColumn)
+- [ ] Extract `<SectionCard />` - Card with icon + title pattern
+- [ ] Standardize empty states - all pages use EmptyState component
+- [ ] Standardize loading states - consistent spinner/skeleton patterns
+- [ ] Create `<ErrorAlert />` wrapper - handles error state + dismissal

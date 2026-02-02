@@ -13,9 +13,24 @@ import {
   Star,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge, BadgeVariant } from '@/components/ui/badge';
+
+const reservationStatusVariants: Record<string, BadgeVariant> = {
+  confirmed: 'default',
+  checked_in: 'success',
+  checked_out: 'default',
+  cancelled: 'error',
+  no_show: 'error',
+};
+
+const taskStatusVariants: Record<string, BadgeVariant> = {
+  pending: 'warning',
+  assigned: 'default',
+  in_progress: 'warning',
+  completed: 'success',
+  cancelled: 'default',
+};
 import { PageContainer, EmptyState } from '@/components';
 
 type ReservationStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show';
@@ -69,21 +84,6 @@ interface ReservationDetail {
     tasks: RelatedTask[];
   };
 }
-
-const statusColors: Record<ReservationStatus, string> = {
-  confirmed: 'bg-blue-100 text-blue-700',
-  checked_in: 'bg-green-100 text-green-700',
-  checked_out: 'bg-gray-100 text-gray-600',
-  cancelled: 'bg-red-100 text-red-700',
-  no_show: 'bg-orange-100 text-orange-700',
-};
-
-const taskStatusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-gray-100 text-gray-500',
-};
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: React.ReactNode; icon?: typeof Calendar }) {
   return (
@@ -148,7 +148,7 @@ export function ReservationDetailPage() {
             <h1 className="text-2xl font-semibold">
               Reservation #{reservation.confirmationNumber}
             </h1>
-            <Badge className={cn('capitalize', statusColors[reservation.status])}>
+            <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
               {reservation.status.replace('_', ' ')}
             </Badge>
           </div>
@@ -330,7 +330,7 @@ export function ReservationDetailPage() {
                           {task.description}
                         </p>
                       </div>
-                      <Badge className={cn('capitalize', taskStatusColors[task.status])}>
+                      <Badge variant={taskStatusVariants[task.status]} className="capitalize">
                         {task.status.replace('_', ' ')}
                       </Badge>
                     </Link>

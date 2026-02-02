@@ -16,6 +16,21 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { BadgeVariant } from '@/components/ui/badge';
+
+const vipVariants: Record<string, BadgeVariant> = {
+  diamond: 'dark',
+  platinum: 'dark',
+  gold: 'gold',
+  silver: 'dark',
+};
+
+const loyaltyVariants: Record<string, BadgeVariant> = {
+  platinum: 'default',
+  gold: 'warning',
+  silver: 'default',
+  member: 'default',
+};
 
 interface Guest {
   id: string;
@@ -41,20 +56,6 @@ interface GuestStats {
   repeatGuests: number;
   newThisMonth: number;
 }
-
-const vipColors: Record<string, string> = {
-  diamond: '!bg-gray-700 !text-white',
-  platinum: '!bg-gray-700 !text-white',
-  gold: '!bg-yellow-500 !text-white',
-  silver: '!bg-gray-700 !text-white',
-};
-
-const loyaltyColors: Record<string, string> = {
-  platinum: 'bg-gray-100 text-gray-600',
-  gold: 'bg-yellow-100 text-yellow-700',
-  silver: 'bg-gray-100 text-gray-600',
-  member: 'bg-gray-100 text-gray-600',
-};
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return '';
@@ -167,13 +168,13 @@ export function GuestsPage() {
       render: (guest) => (
         <div className="flex gap-1.5">
           {guest.vipStatus && guest.vipStatus !== 'none' && (
-            <Badge className={guest.vipStatus.toLowerCase() === 'gold' ? '!bg-yellow-500 !text-white' : '!bg-gray-700 !text-white'}>
+            <Badge variant={vipVariants[guest.vipStatus.toLowerCase()] || 'dark'}>
               <Crown className="w-3 h-3 mr-1" />
               {guest.vipStatus}
             </Badge>
           )}
           {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
-            <Badge className={loyaltyColors[guest.loyaltyTier] || 'bg-gray-100 text-gray-600'}>
+            <Badge variant={loyaltyVariants[guest.loyaltyTier] || 'default'}>
               {guest.loyaltyTier}
             </Badge>
           )}

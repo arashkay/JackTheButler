@@ -2,13 +2,27 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListTodo, Eye } from 'lucide-react';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import { Badge, BadgeVariant } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FilterTabs } from '@/components/ui/filter-tabs';
+
+const priorityVariants: Record<string, BadgeVariant> = {
+  urgent: 'error',
+  high: 'warning',
+  standard: 'default',
+  low: 'default',
+};
+
+const taskStatusVariants: Record<string, BadgeVariant> = {
+  pending: 'warning',
+  assigned: 'default',
+  in_progress: 'warning',
+  completed: 'success',
+  cancelled: 'default',
+};
 
 type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 type TaskSource = 'manual' | 'auto' | 'automation';
@@ -35,22 +49,6 @@ const statusFilters: { value: TaskStatus | 'all'; label: string }[] = [
   { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
 ];
-
-
-const priorityColors: Record<string, string> = {
-  urgent: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  standard: 'bg-gray-100 text-gray-600',
-  low: 'bg-gray-100 text-gray-600',
-};
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  assigned: 'bg-blue-100 text-blue-700',
-  in_progress: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-gray-100 text-gray-500',
-};
 
 export function TasksPage() {
   const queryClient = useQueryClient();
@@ -96,7 +94,7 @@ export function TasksPage() {
       key: 'priority',
       header: '',
       render: (task) => (
-        <Badge className={cn('capitalize', priorityColors[task.priority])}>
+        <Badge variant={priorityVariants[task.priority]} className="capitalize">
           {task.priority}
         </Badge>
       ),
@@ -231,10 +229,10 @@ export function TasksPage() {
                   <Badge>Room {selectedTask.roomNumber}</Badge>
                 )}
                 <Badge className="capitalize">{selectedTask.type.replace('_', ' ')}</Badge>
-                <Badge className={cn('capitalize', priorityColors[selectedTask.priority])}>
+                <Badge variant={priorityVariants[selectedTask.priority]} className="capitalize">
                   {selectedTask.priority}
                 </Badge>
-                <Badge className={cn('capitalize', statusColors[selectedTask.status])}>
+                <Badge variant={taskStatusVariants[selectedTask.status]} className="capitalize">
                   {selectedTask.status.replace('_', ' ')}
                 </Badge>
               </div>

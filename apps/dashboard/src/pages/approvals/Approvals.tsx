@@ -8,14 +8,25 @@ import {
   ListTodo,
   Gift,
   AlertCircle,
-  ChevronRight,
-  ChevronDown,
   MoreHorizontal,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge, BadgeVariant } from '@/components/ui/badge';
+
+const priorityVariants: Record<string, BadgeVariant> = {
+  urgent: 'error',
+  high: 'warning',
+  standard: 'default',
+  low: 'default',
+};
+
+const approvalStatusVariants: Record<string, BadgeVariant> = {
+  pending: 'warning',
+  approved: 'success',
+  rejected: 'error',
+};
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -97,19 +108,6 @@ const statusFilters: { value: ApprovalStatus | 'all'; label: string }[] = [
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
 ];
-
-const priorityColors: Record<string, string> = {
-  urgent: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  standard: 'bg-gray-100 text-gray-600',
-  low: 'bg-gray-100 text-gray-600',
-};
-
-const statusColors: Record<ApprovalStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  approved: 'bg-gray-100 text-gray-600',
-  rejected: 'bg-red-100 text-red-700',
-};
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -405,7 +403,7 @@ export function ApprovalsPage() {
                       </TableCell>
                       <TableCell className="px-4">
                         {actionData.priority && (
-                          <Badge className={cn('capitalize text-xs', priorityColors[actionData.priority] || 'bg-gray-100 text-gray-600')}>
+                          <Badge variant={priorityVariants[actionData.priority as string]} className="capitalize">
                             {actionData.priority}
                           </Badge>
                         )}
@@ -468,7 +466,7 @@ export function ApprovalsPage() {
                                 : null
                             }
                           >
-                            <Badge className={cn('capitalize text-xs', statusColors[item.status])}>
+                            <Badge variant={approvalStatusVariants[item.status]} className="capitalize">
                               {item.status}
                             </Badge>
                           </Tooltip>

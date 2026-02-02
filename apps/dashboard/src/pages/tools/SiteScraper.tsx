@@ -46,17 +46,17 @@ interface ProcessedEntry {
 
 type Step = 'urls' | 'fetching' | 'processing' | 'review' | 'importing' | 'done';
 
-const categoryColors: Record<string, string> = {
-  faq: 'bg-blue-100 text-blue-800',
-  policy: 'bg-purple-100 text-purple-800',
-  amenity: 'bg-green-100 text-green-800',
-  service: 'bg-orange-100 text-orange-800',
-  dining: 'bg-red-100 text-red-800',
-  room_type: 'bg-indigo-100 text-indigo-800',
-  local_info: 'bg-cyan-100 text-cyan-800',
-  contact: 'bg-yellow-100 text-yellow-800',
-  other: 'bg-gray-100 text-gray-800',
-};
+const CATEGORIES = [
+  'faq',
+  'policy',
+  'amenity',
+  'service',
+  'dining',
+  'room_type',
+  'local_info',
+  'contact',
+  'other',
+];
 
 export function SiteScraperPage() {
   const [urls, setUrls] = useState<string[]>(['']);
@@ -357,9 +357,9 @@ export function SiteScraperPage() {
                           onChange={(e) => updateEntryCategory(entry.id, e.target.value)}
                           className="text-xs border rounded px-2 py-1"
                         >
-                          {Object.keys(categoryColors).map((cat) => (
+                          {CATEGORIES.map((cat) => (
                             <option key={cat} value={cat}>
-                              {cat}
+                              {cat.replace(/_/g, ' ')}
                             </option>
                           ))}
                         </select>
