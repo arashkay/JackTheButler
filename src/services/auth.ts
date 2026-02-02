@@ -38,7 +38,7 @@ export class AuthService {
   /**
    * Authenticate user with email and password
    */
-  async login(email: string, password: string): Promise<TokenPair> {
+  async login(email: string, password: string, rememberMe = false): Promise<TokenPair> {
     const [user] = await db.select().from(staff).where(eq(staff.email, email)).limit(1);
 
     if (!user) {
@@ -61,7 +61,7 @@ export class AuthService {
       }
     }
 
-    log.info({ userId: user.id, email }, 'User logged in');
+    log.info({ userId: user.id, email, rememberMe }, 'User logged in');
 
     // Update last active time
     await db
@@ -69,7 +69,7 @@ export class AuthService {
       .set({ lastActiveAt: new Date().toISOString() })
       .where(eq(staff.id, user.id));
 
-    return this.generateTokens(user.id, user.role);
+    return this.generateTokens(user.id, user.role, rememberMe);
   }
 
   /**
@@ -122,10 +122,11 @@ export class AuthService {
   /**
    * Generate access and refresh tokens
    */
-  private async generateTokens(userId: string, role: string): Promise<TokenPair> {
+  private async generateTokens(userId: string, role: string, rememberMe = false): Promise<TokenPair> {
     const now = Math.floor(Date.now() / 1000);
     const accessExpiresIn = 15 * 60; // 15 minutes
-    const refreshExpiresIn = 7 * 24 * 60 * 60; // 7 days
+    // Remember me: 30 days, otherwise: 1 day
+    const refreshExpiresIn = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
 
     const accessToken = await new SignJWT({ sub: userId, role, type: 'access' })
       .setProtectedHeader({ alg: 'HS256' })

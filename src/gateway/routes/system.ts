@@ -138,7 +138,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_channels',
       severity: 'warning',
       message: 'No messaging channels configured',
-      action: { label: 'Configure Channels', route: '/settings/extensions/channels' },
+      action: { label: 'Configure Channels', route: '/settings/extensions' },
     });
   } else {
     completedSteps.push({

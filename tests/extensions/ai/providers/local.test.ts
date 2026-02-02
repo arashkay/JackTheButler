@@ -68,17 +68,8 @@ describe('LocalAIProvider', () => {
   });
 
   describe('complete', () => {
-    it('should throw error when completion is not enabled', async () => {
-      const provider = new LocalAIProvider({ enableCompletion: false });
-      await expect(
-        provider.complete({
-          messages: [{ role: 'user', content: 'Hello' }],
-        })
-      ).rejects.toThrow('Local AI completion is not enabled');
-    });
-
-    it('should generate completion when enabled', async () => {
-      const provider = new LocalAIProvider({ enableCompletion: true });
+    it('should generate completion', async () => {
+      const provider = new LocalAIProvider();
       const result = await provider.complete({
         messages: [
           { role: 'system', content: 'You are a helpful assistant.' },
@@ -93,7 +84,7 @@ describe('LocalAIProvider', () => {
     });
 
     it('should handle messages with different roles', async () => {
-      const provider = new LocalAIProvider({ enableCompletion: true });
+      const provider = new LocalAIProvider();
       const result = await provider.complete({
         messages: [
           { role: 'system', content: 'Be brief.' },
@@ -151,16 +142,11 @@ describe('Local AI Manifest', () => {
 
   it('should have config schema', () => {
     expect(Array.isArray(manifest.configSchema)).toBe(true);
-    expect(manifest.configSchema.length).toBe(3);
+    expect(manifest.configSchema.length).toBe(2);
 
     const embeddingField = manifest.configSchema.find((f) => f.key === 'embeddingModel');
     expect(embeddingField).toBeDefined();
     expect(embeddingField?.required).toBe(false);
-
-    const enableCompletionField = manifest.configSchema.find((f) => f.key === 'enableCompletion');
-    expect(enableCompletionField).toBeDefined();
-    expect(enableCompletionField?.type).toBe('boolean');
-    expect(enableCompletionField?.default).toBe(false);
 
     const completionField = manifest.configSchema.find((f) => f.key === 'completionModel');
     expect(completionField).toBeDefined();

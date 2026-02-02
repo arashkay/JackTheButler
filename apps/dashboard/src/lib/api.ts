@@ -3,25 +3,45 @@ const API_BASE = '/api/v1';
 class ApiClient {
   private accessToken: string | null = null;
   private refreshPromise: Promise<boolean> | null = null;
+  private useLocalStorage = true;
 
   constructor() {
-    this.accessToken = localStorage.getItem('accessToken');
+    // Check if we have a remembered session (localStorage) or session-only (sessionStorage)
+    this.useLocalStorage = localStorage.getItem('rememberMe') === 'true';
+    this.accessToken = this.getStorage().getItem('accessToken');
+  }
+
+  private getStorage(): Storage {
+    return this.useLocalStorage ? localStorage : sessionStorage;
+  }
+
+  setRememberMe(remember: boolean) {
+    this.useLocalStorage = remember;
+    if (remember) {
+      localStorage.setItem('rememberMe', 'true');
+    } else {
+      localStorage.removeItem('rememberMe');
+    }
   }
 
   setToken(token: string | null) {
     this.accessToken = token;
     if (token) {
-      localStorage.setItem('accessToken', token);
+      this.getStorage().setItem('accessToken', token);
     } else {
+      // Clear from both storages
       localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('accessToken');
     }
   }
 
   setRefreshToken(token: string | null) {
     if (token) {
-      localStorage.setItem('refreshToken', token);
+      this.getStorage().setItem('refreshToken', token);
     } else {
+      // Clear from both storages
       localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('refreshToken');
     }
   }
 
@@ -30,7 +50,8 @@ class ApiClient {
   }
 
   private getRefreshToken() {
-    return localStorage.getItem('refreshToken');
+    // Check both storages for refresh token
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   }
 
   /**

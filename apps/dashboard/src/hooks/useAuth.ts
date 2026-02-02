@@ -12,7 +12,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -22,10 +22,14 @@ export const useAuth = create<AuthState>((set) => ({
   isLoading: true,
   isAuthenticated: false,
 
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, rememberMe = false) => {
+    // Set storage preference before storing tokens
+    api.setRememberMe(rememberMe);
+
     const data = await api.post<{ accessToken: string; refreshToken: string }>('/auth/login', {
       email,
       password,
+      rememberMe,
     });
     api.setToken(data.accessToken);
     api.setRefreshToken(data.refreshToken);
@@ -35,6 +39,7 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    api.setRememberMe(false);
     api.setToken(null);
     api.setRefreshToken(null);
     set({ user: null, isAuthenticated: false });

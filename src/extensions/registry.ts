@@ -373,14 +373,10 @@ export class ExtensionRegistry {
         }
       }
     }
-    // Fallback to local only if active AND completion is enabled
+    // Fallback to local if active
     const localExt = this.extensions.get('local');
     if (localExt?.status === 'active') {
-      const localProvider = this.aiProviders.get('local') as AIProvider & { completionEnabled?: boolean };
-      // Only return local for completion if explicitly enabled
-      if (localProvider?.completionEnabled) {
-        return localProvider;
-      }
+      return this.aiProviders.get('local');
     }
     return undefined;
   }

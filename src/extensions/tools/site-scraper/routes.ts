@@ -15,8 +15,10 @@ import { parseHtml } from './parser.js';
 import { processContent } from './processor.js';
 import type { ProcessedEntry } from './processor.js';
 import { logger } from '@/utils/logger.js';
-import { db, knowledgeBase } from '@/db/index.js';
+import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import type { AIProvider } from '@/core/interfaces/ai.js';
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -116,6 +118,22 @@ router.post('/fetch', validateBody(fetchSchema), async (c) => {
  * Parse HTML content from previously fetched URLs
  */
 router.post('/parse', validateBody(fetchSchema), async (c) => {
+  // Check if embedding provider is available before starting
+  const registry = getExtensionRegistry();
+  const embeddingProvider = registry.getEmbeddingProvider();
+
+  if (!embeddingProvider) {
+    return c.json(
+      {
+        error: {
+          message: 'No embedding provider configured. Please enable Local AI or configure OpenAI/Anthropic in Settings > Extensions > AI before importing content.',
+          code: 'NO_EMBEDDING_PROVIDER',
+        },
+      },
+      400
+    );
+  }
+
   const { urls, options } = c.get('validatedBody') as z.infer<typeof fetchSchema>;
 
   logger.info({ urlCount: urls.length }, 'Site scraper parse request');
@@ -220,12 +238,28 @@ router.post('/process', validateBody(processSchema), async (c) => {
  * Import processed entries to knowledge base
  */
 router.post('/import', validateBody(importSchema), async (c) => {
+  // Check if embedding provider is available
+  const registry = getExtensionRegistry();
+  const embeddingProvider = registry.getEmbeddingProvider();
+
+  if (!embeddingProvider) {
+    return c.json(
+      {
+        error: {
+          message: 'No embedding provider configured. Please enable Local AI or configure OpenAI/Anthropic in Settings > Extensions > AI.',
+          code: 'NO_EMBEDDING_PROVIDER',
+        },
+      },
+      400
+    );
+  }
+
   const { entries, options } = c.get('validatedBody') as z.infer<typeof importSchema>;
 
   logger.info({ entryCount: entries.length }, 'Site scraper import request');
 
-  // Import to knowledge base
-  const result = await importToKnowledgeBase(entries, options || {});
+  // Import to knowledge base with embeddings
+  const result = await importToKnowledgeBase(entries, options || {}, embeddingProvider);
 
   return c.json({
     imported: result.imported,
@@ -375,7 +409,7 @@ function levenshteinSimilarity(a: string, b: string): number {
 }
 
 /**
- * Import entries to knowledge base
+ * Import entries to knowledge base with embeddings
  */
 async function importToKnowledgeBase(
   entries: Array<{
@@ -386,7 +420,8 @@ async function importToKnowledgeBase(
     priority: number;
     sourceUrl: string;
   }>,
-  options: { skipDuplicates?: boolean | undefined; updateExisting?: boolean | undefined }
+  options: { skipDuplicates?: boolean | undefined; updateExisting?: boolean | undefined },
+  embeddingProvider: AIProvider
 ): Promise<{
   imported: number;
   skipped: number;
@@ -429,6 +464,10 @@ async function importToKnowledgeBase(
             })
             .where(eq(knowledgeBase.id, existing.id))
             .run();
+
+          // Regenerate embedding for updated content
+          await generateAndStoreEmbedding(existing.id, entry.content, embeddingProvider);
+
           updated++;
           continue;
         }
@@ -453,6 +492,9 @@ async function importToKnowledgeBase(
         })
         .run();
 
+      // Generate embedding for new entry
+      await generateAndStoreEmbedding(id, entry.content, embeddingProvider);
+
       imported++;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -469,6 +511,38 @@ async function importToKnowledgeBase(
     updated,
     errors,
   };
+}
+
+/**
+ * Generate and store embedding for a knowledge base entry
+ */
+async function generateAndStoreEmbedding(
+  id: string,
+  content: string,
+  embeddingProvider: AIProvider
+): Promise<void> {
+  try {
+    const response = await embeddingProvider.embed({ text: content });
+
+    // Delete existing embedding if any
+    await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id)).run();
+
+    // Store new embedding
+    await db
+      .insert(knowledgeEmbeddings)
+      .values({
+        id,
+        embedding: JSON.stringify(response.embedding),
+        model: embeddingProvider.name,
+        dimensions: response.embedding.length,
+      })
+      .run();
+
+    logger.debug({ id, dimensions: response.embedding.length }, 'Embedding generated');
+  } catch (error) {
+    logger.error({ id, error }, 'Failed to generate embedding');
+    throw error;
+  }
 }
 
 export { router as siteScraperRoutes };

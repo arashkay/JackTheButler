@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageContainer } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Table,
   TableBody,
@@ -13,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Sparkles, Download, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Download, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface ParseResult {
@@ -61,6 +63,7 @@ export function SiteScraperPage() {
   const [step, setStep] = useState<Step>('urls');
   const [entries, setEntries] = useState<ProcessedEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'embedding' | 'general' | null>(null);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
 
   const addUrl = () => {
@@ -88,6 +91,7 @@ export function SiteScraperPage() {
 
   const fetchAndProcess = async () => {
     setError(null);
+    setErrorType(null);
     setStep('fetching');
 
     try {
@@ -126,7 +130,14 @@ export function SiteScraperPage() {
       setEntries(processedEntries);
       setStep('review');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      // Check if it's an embedding provider error
+      if (message.toLowerCase().includes('embedding provider')) {
+        setErrorType('embedding');
+      } else {
+        setErrorType('general');
+      }
+      setError(message);
       setStep('urls');
     }
   };
@@ -168,6 +179,7 @@ export function SiteScraperPage() {
 
   const importEntries = async () => {
     setError(null);
+    setErrorType(null);
     setStep('importing');
 
     const selectedEntries = entries.filter((e) => e.selected);
@@ -187,7 +199,13 @@ export function SiteScraperPage() {
       setImportResult(result);
       setStep('done');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      if (message.toLowerCase().includes('embedding provider')) {
+        setErrorType('embedding');
+      } else {
+        setErrorType('general');
+      }
+      setError(message);
       setStep('review');
     }
   };
@@ -197,6 +215,7 @@ export function SiteScraperPage() {
     setStep('urls');
     setEntries([]);
     setError(null);
+    setErrorType(null);
     setImportResult(null);
   };
 
@@ -204,7 +223,21 @@ export function SiteScraperPage() {
 
   return (
     <PageContainer>
-      {error && (
+      {/* Embedding provider error */}
+      {error && errorType === 'embedding' && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Embedding Required</AlertTitle>
+          <AlertDescription className="flex items-end justify-between">
+            <span>Set up embeddings to save scraped content to your knowledge base. Use Local AI (free & private) or OpenAI for faster performance.</span>
+            <Link to="/settings/extensions/ai" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
+              Configure <ArrowRight className="h-3 w-3" />
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* General error - simple alert style */}
+      {error && errorType === 'general' && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
           <span className="text-sm text-red-700">{error}</span>

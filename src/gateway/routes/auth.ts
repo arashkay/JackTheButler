@@ -25,6 +25,7 @@ const authService = new AuthService();
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 /**
@@ -39,12 +40,12 @@ const refreshSchema = z.object({
  * Authenticate with email and password
  */
 auth.post('/login', validateBody(loginSchema), async (c) => {
-  const { email, password } = c.get('validatedBody') as z.infer<typeof loginSchema>;
+  const { email, password, rememberMe } = c.get('validatedBody') as z.infer<typeof loginSchema>;
   const ip = getClientIp(c);
   const userAgent = c.req.header('user-agent');
 
   try {
-    const tokens = await authService.login(email, password);
+    const tokens = await authService.login(email, password, rememberMe);
 
     // Log successful login (userId not available from TokenPair, so we log email)
     logAuthEvent('login', undefined, { email }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});

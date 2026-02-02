@@ -129,14 +129,13 @@ describe('System Status API', () => {
         capabilities: { completion: true, embedding: true },
         createProvider: () => ({
           name: 'local',
-          completionEnabled: true, // Required for local to be used for completion
           complete: async () => ({ content: '', usage: { inputTokens: 0, outputTokens: 0 } }),
           embed: async () => ({ embedding: [], usage: { inputTokens: 0, outputTokens: 0 } }),
         }),
       };
 
       registry.register(localManifest);
-      await registry.activate('local', { enableCompletion: true });
+      await registry.activate('local', {});
 
       const res = await app.request('/system/status');
       const data = await res.json();
