@@ -36,8 +36,8 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/jack-the-butler.git
-cd jack-the-butler
+git clone git@github.com:JackTheButler/JackTheButler.git
+cd JackTheButler
 
 # Install dependencies
 pnpm install
@@ -114,7 +114,7 @@ By submitting a PR, you agree to the terms in [CLA.md](CLA.md).
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/jack-the-butler/issues)
+- **Issues**: [GitHub Issues](https://github.com/JackTheButler/JackTheButler/issues)
 - **Website**: [JackTheButler.com](https://jackthebutler.com)
 
 ---
