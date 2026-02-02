@@ -14,6 +14,9 @@ import {
   AlertCircle,
   Book,
   MoreHorizontal,
+  MessageSquare,
+  Send,
+  RefreshCw,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,6 +43,18 @@ interface Category {
   id: string;
   label: string;
   count: number;
+}
+
+interface TestMatch {
+  id: string;
+  title: string;
+  category: string;
+  similarity: number;
+}
+
+interface TestResult {
+  response: string;
+  matches: TestMatch[];
 }
 
 const CATEGORIES = [
@@ -78,6 +93,15 @@ export function KnowledgeBasePage() {
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Test knowledge base state
+  const [testQuery, setTestQuery] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [testError, setTestError] = useState<string | null>(null);
+
+  // Reindex state
+  const [reindexing, setReindexing] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -119,14 +143,25 @@ export function KnowledgeBasePage() {
   useEffect(() => {
     setActions(
       !isAddingNew && !editingEntry ? (
-        <Button size="xs" className="bg-gray-900 hover:bg-gray-800" onClick={startAdd}>
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Add Entry
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={handleReindex}
+            disabled={reindexing}
+          >
+            <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', reindexing && 'animate-spin')} />
+            {reindexing ? 'Reindexing...' : 'Reindex'}
+          </Button>
+          <Button size="xs" className="bg-gray-900 hover:bg-gray-800" onClick={startAdd}>
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add Entry
+          </Button>
+        </div>
       ) : null
     );
     return () => setActions(null);
-  }, [setActions, isAddingNew, editingEntry]);
+  }, [setActions, isAddingNew, editingEntry, reindexing]);
 
   useEffect(() => {
     fetchEntries();
@@ -212,6 +247,42 @@ export function KnowledgeBasePage() {
       fetchCategories();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete entry');
+    }
+  };
+
+  const handleTest = async () => {
+    if (!testQuery.trim()) return;
+
+    setTestLoading(true);
+    setTestError(null);
+
+    try {
+      const result = await api.post<TestResult>('/knowledge/ask', { query: testQuery });
+      setTestResult(result);
+    } catch (err) {
+      setTestError(err instanceof Error ? err.message : 'Failed to test knowledge base');
+      setTestResult(null);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
+  const handleReindex = async () => {
+    if (!confirm('This will regenerate embeddings for all entries. Continue?')) return;
+
+    setReindexing(true);
+    setError(null);
+
+    try {
+      const result = await api.post<{ message: string; total: number; success: number; failed: number }>(
+        '/knowledge/reindex',
+        {}
+      );
+      alert(`Reindex complete: ${result.success}/${result.total} entries processed`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reindex knowledge base');
+    } finally {
+      setReindexing(false);
     }
   };
 
@@ -308,6 +379,83 @@ export function KnowledgeBasePage() {
           </button>
         </div>
       )}
+
+      {/* Test Knowledge Base */}
+      <Card className="mb-6">
+        <CardContent className="pt-4">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={testQuery}
+                onChange={(e) => setTestQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !testLoading && handleTest()}
+                placeholder="Ask a question to test your knowledge base..."
+                className="pl-10"
+              />
+            </div>
+            <Button
+              onClick={handleTest}
+              disabled={testLoading || !testQuery.trim()}
+              className="bg-gray-900 hover:bg-gray-800"
+            >
+              {testLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-1.5" />
+                  Ask
+                </>
+              )}
+            </Button>
+          </div>
+
+          {testError && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {testError}
+            </div>
+          )}
+
+          {testResult && (
+            <div className="mt-4 space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="text-xs font-medium text-gray-500 mb-2">AI Response</div>
+                <div className="text-sm text-gray-900">{testResult.response}</div>
+              </div>
+
+              {testResult.matches.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-2">
+                    Matched Entries ({testResult.matches.length})
+                  </div>
+                  <div className="space-y-2">
+                    {testResult.matches.map((match) => (
+                      <div
+                        key={match.id}
+                        className="flex items-center justify-between p-2 bg-white border rounded-lg text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge className={categoryColors[match.category] || categoryColors.other}>
+                            {match.category.replace(/_/g, ' ')}
+                          </Badge>
+                          <span className="font-medium">{match.title}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{match.similarity}% match</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {testResult.matches.length === 0 && (
+                <div className="text-sm text-gray-500">
+                  No matching entries found. The AI provided a general response.
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Add/Edit Form */}
       {(isAddingNew || editingEntry) && (

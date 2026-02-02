@@ -26,3 +26,10 @@ export {
   manifest as ollamaManifest,
   type OllamaConfig,
 } from './ollama.js';
+
+export {
+  LocalAIProvider,
+  createLocalProvider,
+  manifest as localManifest,
+  type LocalConfig,
+} from './local.js';

@@ -15,18 +15,45 @@ const app = new Hono();
 app.route('/api/v1/integrations', legacyIntegrationRoutes);
 
 describe('Integration Management API', () => {
-  // Helper to clean up test data
-  const cleanupTestData = async () => {
-    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'ai')).run();
-    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'sms')).run();
-  };
+  // Store original user configs to restore after tests
+  type ConfigRow = typeof integrationConfigs.$inferSelect;
+  let savedAiConfig: ConfigRow | null = null;
+  let savedSmsConfig: ConfigRow | null = null;
 
-  beforeEach(async () => {
-    await cleanupTestData();
+  // Save user configs before tests run
+  beforeAll(async () => {
+    const aiConfigs = await db
+      .select()
+      .from(integrationConfigs)
+      .where(and(eq(integrationConfigs.integrationId, 'ai'), eq(integrationConfigs.providerId, 'anthropic')));
+    savedAiConfig = aiConfigs[0] || null;
+
+    const smsConfigs = await db
+      .select()
+      .from(integrationConfigs)
+      .where(and(eq(integrationConfigs.integrationId, 'sms'), eq(integrationConfigs.providerId, 'twilio')));
+    savedSmsConfig = smsConfigs[0] || null;
   });
 
+  // Clean up test data and restore user configs after all tests
   afterAll(async () => {
-    await cleanupTestData();
+    // Delete any test-created configs
+    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'ai')).run();
+    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'sms')).run();
+
+    // Restore original user configs if they existed
+    if (savedAiConfig) {
+      await db.insert(integrationConfigs).values(savedAiConfig).run();
+    }
+    if (savedSmsConfig) {
+      await db.insert(integrationConfigs).values(savedSmsConfig).run();
+    }
+  });
+
+  // Clean up between tests to ensure isolation
+  beforeEach(async () => {
+    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'ai')).run();
+    await db.delete(integrationConfigs).where(eq(integrationConfigs.integrationId, 'sms')).run();
   });
 
   describe('GET /api/v1/integrations', () => {

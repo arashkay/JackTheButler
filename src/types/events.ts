@@ -37,6 +37,9 @@ export const EventTypes = {
   APPROVAL_QUEUED: 'approval.queued',
   APPROVAL_DECIDED: 'approval.decided',
   APPROVAL_EXECUTED: 'approval.executed',
+
+  // Model events
+  MODEL_DOWNLOAD_PROGRESS: 'model.download.progress',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -175,6 +178,21 @@ export interface ApprovalExecutedEvent extends BaseEvent {
 }
 
 /**
+ * Model download progress event
+ */
+export interface ModelDownloadProgressEvent extends BaseEvent {
+  type: typeof EventTypes.MODEL_DOWNLOAD_PROGRESS;
+  payload: {
+    model: string;
+    status: 'initiate' | 'download' | 'progress' | 'done' | 'ready';
+    file?: string;
+    progress?: number; // 0-100
+    loaded?: number;
+    total?: number;
+  };
+}
+
+/**
  * Union of all event types
  */
 export type AppEvent =
@@ -188,7 +206,8 @@ export type AppEvent =
   | TaskCompletedEvent
   | ApprovalQueuedEvent
   | ApprovalDecidedEvent
-  | ApprovalExecutedEvent;
+  | ApprovalExecutedEvent
+  | ModelDownloadProgressEvent;
 
 /**
  * Event handler function type

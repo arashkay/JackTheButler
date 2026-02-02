@@ -239,6 +239,74 @@ describe('ExtensionRegistry', () => {
       expect(provider).toBe(mockAIProvider);
     });
 
+    it('should get completion provider (non-local priority)', () => {
+      const provider = registry.getCompletionProvider();
+      expect(provider).toBe(mockAIProvider);
+    });
+
+    it('should get embedding provider (non-local priority)', () => {
+      const provider = registry.getEmbeddingProvider();
+      expect(provider).toBe(mockAIProvider);
+    });
+
+    it('should return undefined for embedding provider when no capable provider', async () => {
+      // Create a new registry and register provider without embedding capability
+      const testRegistry = new ExtensionRegistry();
+      const noEmbeddingManifest: AIExtensionManifest = {
+        ...mockAIManifest,
+        id: 'no-embedding',
+        capabilities: { completion: true, embedding: false },
+        createProvider: vi.fn().mockReturnValue(mockAIProvider),
+      };
+      testRegistry.register(noEmbeddingManifest);
+      await testRegistry.activate('no-embedding', { apiKey: 'test' });
+
+      const provider = testRegistry.getEmbeddingProvider();
+      expect(provider).toBeUndefined();
+    });
+
+    it('should fallback to local provider for embeddings', async () => {
+      // Create registry with non-embedding provider and local
+      const testRegistry = new ExtensionRegistry();
+
+      const noEmbeddingManifest: AIExtensionManifest = {
+        ...mockAIManifest,
+        id: 'anthropic',
+        capabilities: { completion: true, embedding: false },
+        createProvider: vi.fn().mockReturnValue(mockAIProvider),
+      };
+
+      const localProvider: AIProvider = {
+        name: 'local',
+        complete: vi.fn(),
+        embed: vi.fn(),
+      };
+
+      const localManifest: AIExtensionManifest = {
+        id: 'local',
+        name: 'Local AI',
+        category: 'ai',
+        version: '1.0.0',
+        description: 'Local AI for testing',
+        configSchema: [], // No required config
+        capabilities: { completion: true, embedding: true },
+        createProvider: vi.fn().mockReturnValue(localProvider),
+      };
+
+      testRegistry.register(noEmbeddingManifest);
+      testRegistry.register(localManifest);
+      await testRegistry.activate('anthropic', { apiKey: 'test' });
+      await testRegistry.activate('local', {});
+
+      // Should get local for embeddings (anthropic doesn't support)
+      const embeddingProvider = testRegistry.getEmbeddingProvider();
+      expect(embeddingProvider).toBe(localProvider);
+
+      // Should get anthropic for completion (non-local priority)
+      const completionProvider = testRegistry.getCompletionProvider();
+      expect(completionProvider).toBe(mockAIProvider);
+    });
+
     it('should get status summary', () => {
       const summary = registry.getStatusSummary();
 

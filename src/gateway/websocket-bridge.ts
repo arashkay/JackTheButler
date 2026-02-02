@@ -8,6 +8,7 @@
  */
 
 import { events, EventTypes } from '@/events/index.js';
+import type { ModelDownloadProgressEvent } from '@/types/events.js';
 import { broadcast } from './websocket.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
@@ -74,6 +75,14 @@ export function setupWebSocketBridge() {
   events.on(EventTypes.APPROVAL_QUEUED, broadcastApprovalStats);
   events.on(EventTypes.APPROVAL_DECIDED, broadcastApprovalStats);
   events.on(EventTypes.APPROVAL_EXECUTED, broadcastApprovalStats);
+
+  // ─────────────────────────────────────────────────────────────
+  // Model Download Events
+  // ─────────────────────────────────────────────────────────────
+
+  events.on<ModelDownloadProgressEvent>(EventTypes.MODEL_DOWNLOAD_PROGRESS, (event) => {
+    broadcast({ type: 'model:download:progress', payload: event.payload });
+  });
 
   log.info('WebSocket event bridge ready');
 }

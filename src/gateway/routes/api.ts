@@ -17,6 +17,7 @@ import { knowledgeRoutes } from './knowledge.js';
 import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
 import { siteScraperRoutes } from '@/extensions/tools/site-scraper/routes.js';
+import { systemRoutes } from './system.js';
 
 const api = new Hono();
 
@@ -58,6 +59,9 @@ api.route('/reservations', reservationRoutes);
 
 // Tool routes
 api.route('/tools/site-scraper', siteScraperRoutes);
+
+// System status routes
+api.route('/system', systemRoutes);
 
 /**
  * GET /api/v1

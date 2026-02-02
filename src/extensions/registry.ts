@@ -360,6 +360,50 @@ export class ExtensionRegistry {
   }
 
   /**
+   * Get a provider that supports completion
+   * Priority: User-configured provider (non-local) > Local fallback
+   */
+  getCompletionProvider(): AIProvider | undefined {
+    // First try user's active AI provider with completion support (not local)
+    for (const [id, ext] of this.extensions) {
+      if (ext.manifest.category === 'ai' && ext.status === 'active' && id !== 'local') {
+        const manifest = ext.manifest as AIExtensionManifest;
+        if (manifest.capabilities?.completion) {
+          return this.aiProviders.get(id);
+        }
+      }
+    }
+    // Fallback to local if active
+    const localExt = this.extensions.get('local');
+    if (localExt?.status === 'active') {
+      return this.aiProviders.get('local');
+    }
+    return undefined;
+  }
+
+  /**
+   * Get a provider that supports embeddings
+   * Priority: User-configured with real embeddings (non-local) > Local fallback
+   */
+  getEmbeddingProvider(): AIProvider | undefined {
+    // First try user's active AI provider with embedding support (not local)
+    for (const [id, ext] of this.extensions) {
+      if (ext.manifest.category === 'ai' && ext.status === 'active' && id !== 'local') {
+        const manifest = ext.manifest as AIExtensionManifest;
+        if (manifest.capabilities?.embedding) {
+          return this.aiProviders.get(id);
+        }
+      }
+    }
+    // Fallback to local (which has capabilities.embedding: true)
+    const localExt = this.extensions.get('local');
+    if (localExt?.status === 'active') {
+      return this.aiProviders.get('local');
+    }
+    return undefined;
+  }
+
+  /**
    * Get a channel adapter by extension ID
    */
   getChannelAdapter(extensionId: string): ChannelAdapter | undefined {

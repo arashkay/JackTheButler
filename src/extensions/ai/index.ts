@@ -24,6 +24,11 @@ import {
   ollamaManifest,
   type OllamaConfig,
 } from './providers/index.js';
+import {
+  createLocalProvider,
+  localManifest,
+  type LocalConfig,
+} from './providers/index.js';
 
 // Re-export providers
 export {
@@ -33,11 +38,12 @@ export {
 } from './providers/anthropic.js';
 export { OpenAIProvider, createOpenAIProvider, type OpenAIConfig } from './providers/openai.js';
 export { OllamaProvider, createOllamaProvider, type OllamaConfig } from './providers/ollama.js';
+export { LocalAIProvider, createLocalProvider, type LocalConfig } from './providers/local.js';
 
 /**
  * AI provider types
  */
-export type AIProviderType = 'anthropic' | 'openai' | 'ollama';
+export type AIProviderType = 'anthropic' | 'openai' | 'ollama' | 'local';
 
 /**
  * Combined AI provider interface (AIProvider + connection testing)
@@ -51,6 +57,7 @@ export const aiManifests: Record<AIProviderType, AIExtensionManifest> = {
   anthropic: anthropicManifest,
   openai: openaiManifest,
   ollama: ollamaManifest,
+  local: localManifest,
 };
 
 /**
@@ -81,6 +88,8 @@ export function createAIProvider(
       return createOpenAIProvider(config as unknown as OpenAIConfig);
     case 'ollama':
       return createOllamaProvider(config as unknown as OllamaConfig);
+    case 'local':
+      return createLocalProvider(config as unknown as LocalConfig);
     default:
       throw new Error(`Unknown AI provider type: ${type}`);
   }

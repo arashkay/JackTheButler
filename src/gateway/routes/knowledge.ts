@@ -9,10 +9,33 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, desc, sql } from 'drizzle-orm';
-import { db, knowledgeBase } from '@/db/index.js';
+import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody } from '@/gateway/middleware/index.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import { KnowledgeService } from '@/ai/knowledge/index.js';
+import type { LLMProvider } from '@/ai/types.js';
+
+/**
+ * Generate and store embedding for a knowledge entry
+ */
+async function generateEmbedding(id: string, content: string, provider: LLMProvider): Promise<void> {
+  const response = await provider.embed({ text: content });
+
+  // Delete existing embedding if any
+  await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));
+
+  // Store new embedding
+  await db.insert(knowledgeEmbeddings).values({
+    id,
+    embedding: JSON.stringify(response.embedding),
+    model: provider.name,
+    dimensions: response.embedding.length,
+  });
+
+  log.debug({ id, dimensions: response.embedding.length }, 'Embedding generated');
+}
 
 const log = createLogger('routes:knowledge');
 
@@ -153,6 +176,133 @@ knowledgeRoutes.get('/categories', async (c) => {
 });
 
 /**
+ * Schema for testing knowledge base
+ */
+const askSchema = z.object({
+  query: z.string().min(1).max(1000),
+});
+
+/**
+ * POST /api/v1/knowledge/ask
+ * Test the knowledge base by asking a question and getting an AI response
+ */
+knowledgeRoutes.post('/ask', validateBody(askSchema), async (c) => {
+  const { query } = c.get('validatedBody') as z.infer<typeof askSchema>;
+
+  log.info({ query: query.substring(0, 50) }, 'Testing knowledge base');
+
+  // Get providers from extension registry
+  const registry = getExtensionRegistry();
+  const completionProvider = registry.getCompletionProvider();
+  const embeddingProvider = registry.getEmbeddingProvider();
+
+  if (!completionProvider) {
+    return c.json(
+      { error: 'No AI provider configured. Please configure an AI provider in Settings > Integrations.' },
+      400
+    );
+  }
+
+  if (!embeddingProvider) {
+    return c.json(
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      400
+    );
+  }
+
+  // Search knowledge base using embedding provider
+  const knowledgeService = new KnowledgeService(embeddingProvider);
+  const matches = await knowledgeService.search(query, {
+    limit: 5,
+    minSimilarity: 0.3,
+  });
+
+  // Build prompt with knowledge context
+  let systemPrompt = `You are Jack, a friendly hotel concierge. Answer the guest's question based on the hotel information provided below. Be helpful and concise.`;
+
+  if (matches.length > 0) {
+    systemPrompt += '\n\n## Hotel Information:\n';
+    for (const match of matches) {
+      systemPrompt += `\n### ${match.title}\n${match.content}\n`;
+    }
+  } else {
+    systemPrompt += '\n\nNote: No specific hotel information was found for this query. Provide a helpful general response and suggest the guest contact staff for more details.';
+  }
+
+  // Generate AI response using completion provider
+  const result = await completionProvider.complete({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: query },
+    ],
+    maxTokens: 300,
+  });
+
+  log.info(
+    { query: query.substring(0, 50), matchCount: matches.length },
+    'Knowledge base test completed'
+  );
+
+  return c.json({
+    response: result.content,
+    matches: matches.map((m) => ({
+      id: m.id,
+      title: m.title,
+      category: m.category,
+      similarity: Math.round(m.similarity * 100),
+    })),
+  });
+});
+
+/**
+ * POST /api/v1/knowledge/reindex
+ * Regenerate embeddings for all knowledge base entries
+ */
+knowledgeRoutes.post('/reindex', async (c) => {
+  // Get embedding provider
+  const registry = getExtensionRegistry();
+  const provider = registry.getEmbeddingProvider();
+
+  if (!provider) {
+    return c.json(
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      400
+    );
+  }
+
+  // Get all active entries
+  const entries = await db
+    .select()
+    .from(knowledgeBase)
+    .where(eq(knowledgeBase.status, 'active'))
+    .all();
+
+  log.info({ count: entries.length }, 'Starting knowledge base reindex');
+
+  let success = 0;
+  let failed = 0;
+
+  for (const entry of entries) {
+    try {
+      await generateEmbedding(entry.id, entry.content, provider);
+      success++;
+    } catch (err) {
+      log.warn({ id: entry.id, error: err }, 'Failed to generate embedding');
+      failed++;
+    }
+  }
+
+  log.info({ success, failed }, 'Knowledge base reindex completed');
+
+  return c.json({
+    message: 'Reindex completed',
+    total: entries.length,
+    success,
+    failed,
+  });
+});
+
+/**
  * GET /api/v1/knowledge/:id
  * Get a single knowledge base entry
  */
@@ -202,6 +352,17 @@ knowledgeRoutes.post('/', validateBody(createEntrySchema), async (c) => {
 
   log.info({ id, category: data.category, title: data.title }, 'Knowledge entry created');
 
+  // Generate embedding if embedding provider is available
+  const registry = getExtensionRegistry();
+  const embeddingProvider = registry.getEmbeddingProvider();
+  if (embeddingProvider) {
+    try {
+      await generateEmbedding(id, data.content, embeddingProvider);
+    } catch (err) {
+      log.warn({ id, error: err }, 'Failed to generate embedding for new entry');
+    }
+  }
+
   const entry = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
 
   return c.json(
@@ -243,6 +404,19 @@ knowledgeRoutes.put('/:id', validateBody(updateEntrySchema), async (c) => {
     .run();
 
   log.info({ id }, 'Knowledge entry updated');
+
+  // Regenerate embedding if content changed
+  if (data.content) {
+    const registry = getExtensionRegistry();
+    const embeddingProvider = registry.getEmbeddingProvider();
+    if (embeddingProvider) {
+      try {
+        await generateEmbedding(id, data.content, embeddingProvider);
+      } catch (err) {
+        log.warn({ id, error: err }, 'Failed to regenerate embedding');
+      }
+    }
+  }
 
   const entry = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
 
