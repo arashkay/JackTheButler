@@ -361,7 +361,7 @@ export class ExtensionRegistry {
 
   /**
    * Get a provider that supports completion
-   * Priority: User-configured provider (non-local) > Local fallback
+   * Priority: User-configured provider (non-local) > Local fallback (if completion enabled)
    */
   getCompletionProvider(): AIProvider | undefined {
     // First try user's active AI provider with completion support (not local)
@@ -373,10 +373,14 @@ export class ExtensionRegistry {
         }
       }
     }
-    // Fallback to local if active
+    // Fallback to local only if active AND completion is enabled
     const localExt = this.extensions.get('local');
     if (localExt?.status === 'active') {
-      return this.aiProviders.get('local');
+      const localProvider = this.aiProviders.get('local') as AIProvider & { completionEnabled?: boolean };
+      // Only return local for completion if explicitly enabled
+      if (localProvider?.completionEnabled) {
+        return localProvider;
+      }
     }
     return undefined;
   }

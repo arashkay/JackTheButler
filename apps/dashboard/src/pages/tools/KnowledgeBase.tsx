@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { PageContainer, DataTable, EmptyState } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
 import type { Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Plus,
   X,
@@ -17,6 +21,7 @@ import {
   MessageSquare,
   Send,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -83,6 +88,8 @@ const categoryColors: Record<string, string> = {
 
 export function KnowledgeBasePage() {
   const { setActions } = usePageActions();
+  const { providers } = useSystemStatus();
+  const navigate = useNavigate();
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +109,11 @@ export function KnowledgeBasePage() {
 
   // Reindex state
   const [reindexing, setReindexing] = useState(false);
+  const [showReindexConfirm, setShowReindexConfirm] = useState(false);
+  const [showEmbeddingWarning, setShowEmbeddingWarning] = useState(false);
+
+  // Delete state
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -147,7 +159,7 @@ export function KnowledgeBasePage() {
           <Button
             size="xs"
             variant="outline"
-            onClick={handleReindex}
+            onClick={() => providers?.embedding ? setShowReindexConfirm(true) : setShowEmbeddingWarning(true)}
             disabled={reindexing}
           >
             <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', reindexing && 'animate-spin')} />
@@ -239,14 +251,14 @@ export function KnowledgeBasePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this entry?')) return;
-
     try {
       await api.delete(`/knowledge/${id}`);
+      setDeleteEntryId(null);
       fetchEntries();
       fetchCategories();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete entry');
+      setDeleteEntryId(null);
     }
   };
 
@@ -268,8 +280,7 @@ export function KnowledgeBasePage() {
   };
 
   const handleReindex = async () => {
-    if (!confirm('This will regenerate embeddings for all entries. Continue?')) return;
-
+    setShowReindexConfirm(false);
     setReindexing(true);
     setError(null);
 
@@ -278,13 +289,16 @@ export function KnowledgeBasePage() {
         '/knowledge/reindex',
         {}
       );
-      alert(`Reindex complete: ${result.success}/${result.total} entries processed`);
+      setReindexResult(`Reindex complete: ${result.success}/${result.total} entries processed`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reindex knowledge base');
     } finally {
       setReindexing(false);
     }
   };
+
+  // Success message state
+  const [reindexResult, setReindexResult] = useState<string | null>(null);
 
   const columns: Column<KnowledgeEntry>[] = [
     {
@@ -329,7 +343,7 @@ export function KnowledgeBasePage() {
             <DropdownMenuItem onClick={() => startEdit(entry)}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDelete(entry.id)}>
+            <DropdownMenuItem onClick={() => setDeleteEntryId(entry.id)}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -370,6 +384,20 @@ export function KnowledgeBasePage() {
 
   return (
     <PageContainer>
+      {/* Embedding provider warnings */}
+      {!providers?.embedding && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Embedding Required</AlertTitle>
+          <AlertDescription className="flex items-end justify-between">
+            <span>Knowledge base requires embeddings. Select an embedding provider: Local AI (free & private) or OpenAI, then re-index the knowledge base.</span>
+            <Link to="/settings/extensions/ai" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
+              Configure <ArrowRight className="h-3 w-3" />
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
+
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
@@ -378,6 +406,12 @@ export function KnowledgeBasePage() {
             <X className="w-4 h-4 text-red-500" />
           </button>
         </div>
+      )}
+
+      {reindexResult && (
+        <Alert variant="success" className="mb-6" onDismiss={() => setReindexResult(null)}>
+          <AlertDescription>{reindexResult}</AlertDescription>
+        </Alert>
       )}
 
       {/* Test Knowledge Base */}
@@ -570,6 +604,41 @@ export function KnowledgeBasePage() {
           />
         }
       />
+
+      {/* Reindex Confirmation Dialog */}
+      <ConfirmDialog
+        open={showReindexConfirm}
+        onOpenChange={setShowReindexConfirm}
+        title="Reindex Knowledge Base"
+        description="This will regenerate embeddings for all entries. This may take a while depending on the number of entries and your embedding provider."
+        confirmLabel="Reindex"
+        onConfirm={handleReindex}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteEntryId}
+        onOpenChange={(open) => !open && setDeleteEntryId(null)}
+        title="Delete Entry"
+        description="Are you sure you want to delete this entry? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => deleteEntryId && handleDelete(deleteEntryId)}
+      />
+
+      {/* Embedding Not Configured Warning */}
+      <ConfirmDialog
+        open={showEmbeddingWarning}
+        onOpenChange={setShowEmbeddingWarning}
+        title="Embedding Required"
+        description="Please configure an embedding provider first. Enable Local AI (free & private) or OpenAI in the AI settings, then try again."
+        confirmLabel="Go to Settings"
+        onConfirm={() => {
+          setShowEmbeddingWarning(false);
+          navigate('/settings/extensions/ai');
+        }}
+      />
+
     </PageContainer>
   );
 }

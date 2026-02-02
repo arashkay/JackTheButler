@@ -79,47 +79,51 @@ function StatusIndicator({ status }: { status: IntegrationStatus }) {
 }
 
 function ExtensionCard({ integration }: { integration: Integration }) {
-  const activeProvider = integration.providers.find(
-    (p) => p.id === integration.activeProvider || p.enabled
-  );
+  const activeProviders = integration.providers.filter((p) => p.enabled);
+  const errorProvider = activeProviders.find((p) => p.lastError);
 
   return (
     <Link to={`/settings/extensions/${integration.id}`}>
       <Card className="card-hover cursor-pointer group">
         <CardContent className="p-5">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="p-2.5 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors">
-                <ExtensionIcon id={integration.id} size="lg" />
-              </div>
-              <div className="space-y-1">
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors">
+              <ExtensionIcon id={integration.id} size="lg" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-foreground">{integration.name}</h3>
                   {integration.required && (
                     <Badge variant="outline" className="text-xs">Required</Badge>
                   )}
                 </div>
-                {activeProvider ? (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <ExtensionIcon id={activeProvider.id} size="sm" />
-                    {activeProvider.name}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No provider configured</p>
-                )}
+                <div className="flex items-center gap-3">
+                  <StatusIndicator status={integration.status} />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusIndicator status={integration.status} />
-              <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+              {activeProviders.length > 0 ? (
+                <div className="text-sm text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                  {activeProviders.map((provider, index) => (
+                    <span key={provider.id} className="flex items-center gap-1">
+                      <ExtensionIcon id={provider.id} size="sm" />
+                      {provider.name}
+                      {index < activeProviders.length - 1 && <span className="text-muted-foreground/50 mx-0.5">•</span>}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No provider configured</p>
+              )}
             </div>
           </div>
 
-          {integration.status === 'error' && activeProvider?.lastError && (
+          {integration.status === 'error' && errorProvider?.lastError && (
             <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
               <p className="text-sm text-red-700 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                {activeProvider.lastError}
+                {errorProvider.lastError}
               </p>
             </div>
           )}
@@ -147,12 +151,13 @@ export function ExtensionsPage() {
       i.providers.some((p) => p.name.toLowerCase().includes(search.toLowerCase()))
   );
 
-  // Calculate stats
+  // Calculate stats - count individual providers, not integration groups
+  const allProviders = integrations.flatMap((i) => i.providers);
   const stats = {
-    connected: integrations.filter((i) => i.status === 'connected').length,
-    configured: integrations.filter((i) => i.status === 'configured').length,
-    errors: integrations.filter((i) => i.status === 'error').length,
-    total: integrations.length,
+    connected: allProviders.filter((p) => p.enabled && p.status === 'connected').length,
+    configured: allProviders.filter((p) => p.enabled && p.status === 'configured').length,
+    errors: allProviders.filter((p) => p.enabled && p.status === 'error').length,
+    total: allProviders.filter((p) => p.enabled).length,
   };
 
   // Group integrations by category

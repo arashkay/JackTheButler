@@ -3,7 +3,7 @@
 **Focus:** Add local AI provider for embeddings with automatic fallback
 **Risk:** Medium
 **Depends on:** Phase 15 (Extensions Architecture)
-**Status:** IN PROGRESS (Phase 17.1, 17.2, 17.3 Complete - Dashboard UI in 17.4 is future work)
+**Status:** COMPLETE (All phases 17.1 - 17.4 done)
 
 ---
 
@@ -404,9 +404,11 @@ const { data: status } = useQuery(['system-status'], ...);
 | `src/gateway/routes/system.ts` | Create ✅ | System status API |
 | `src/gateway/routes/api.ts` | Modify ✅ | Register system routes |
 | `tests/gateway/system.test.ts` | Create ✅ | 7 tests for system status API |
-| `apps/dashboard/src/components/CriticalIssues.tsx` | Future | Issues component |
-| `apps/dashboard/src/pages/Dashboard.tsx` | Future | Add CriticalIssues |
-| `apps/dashboard/src/pages/tools/KnowledgeBase.tsx` | Future | Add warnings |
+| `apps/dashboard/src/components/ui/alert.tsx` | Create ✅ | Alert component with variants |
+| `apps/dashboard/src/hooks/useSystemStatus.ts` | Create ✅ | System status hook |
+| `apps/dashboard/src/components/shared/ActionItems.tsx` | Create ✅ | Action items display |
+| `apps/dashboard/src/pages/home/Home.tsx` | Modify ✅ | Dashboard with status |
+| `apps/dashboard/src/pages/tools/KnowledgeBase.tsx` | Modify ✅ | Embedding warnings |
 
 ---
 
@@ -449,9 +451,11 @@ const { data: status } = useQuery(['system-status'], ...);
 - Returns provider status and actionable issues
 - **Verify:** API returns correct provider status
 
-### Phase 17.4: Dashboard Action Items (Future)
-- Create ActionItems/CriticalIssues component on Dashboard
-- Show "Configure AI Provider" prompt when none configured
+### Phase 17.4: Dashboard Action Items ✅ COMPLETE
+- Create Alert component (`apps/dashboard/src/components/ui/alert.tsx`)
+- Create useSystemStatus hook (`apps/dashboard/src/hooks/useSystemStatus.ts`)
+- Create ActionItems component (`apps/dashboard/src/components/shared/ActionItems.tsx`)
+- Update Home page with action items and system status
 - Add warnings to Knowledge Base when embeddings unavailable
 - **Verify:** UI shows appropriate prompts and warnings
 

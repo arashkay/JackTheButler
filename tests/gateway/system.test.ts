@@ -114,7 +114,6 @@ describe('System Status API', () => {
       expect(data.providers.completion).toBe('anthropic');
       expect(data.providers.embedding).toBe('local');
       expect(data.providers.embeddingIsLocal).toBe(true);
-      expect(data.issues.some((i: { type: string }) => i.type === 'using_local_embeddings')).toBe(true);
     });
 
     it('should warn when using local completion', async () => {
@@ -130,13 +129,14 @@ describe('System Status API', () => {
         capabilities: { completion: true, embedding: true },
         createProvider: () => ({
           name: 'local',
+          completionEnabled: true, // Required for local to be used for completion
           complete: async () => ({ content: '', usage: { inputTokens: 0, outputTokens: 0 } }),
           embed: async () => ({ embedding: [], usage: { inputTokens: 0, outputTokens: 0 } }),
         }),
       };
 
       registry.register(localManifest);
-      await registry.activate('local', {});
+      await registry.activate('local', { enableCompletion: true });
 
       const res = await app.request('/system/status');
       const data = await res.json();

@@ -36,6 +36,7 @@ const COMPLETION_MODEL = 'onnx-community/Llama-3.2-1B-Instruct-ONNX';
  */
 export interface LocalConfig {
   embeddingModel?: string;
+  enableCompletion?: boolean;
   completionModel?: string;
   cacheDir?: string;
 }
@@ -95,12 +96,20 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   private isLoadingEmbedding = false;
   private isLoadingCompletion = false;
 
+  /** Whether completion is enabled for this provider */
+  readonly completionEnabled: boolean;
+
   constructor(config: LocalConfig = {}) {
     this.embeddingModel = config.embeddingModel || EMBEDDING_MODEL;
     this.completionModel = config.completionModel || COMPLETION_MODEL;
+    this.completionEnabled = config.enableCompletion ?? false;
 
     log.info(
-      { embeddingModel: this.embeddingModel, completionModel: this.completionModel },
+      {
+        embeddingModel: this.embeddingModel,
+        completionModel: this.completionModel,
+        completionEnabled: this.completionEnabled,
+      },
       'Local AI provider initialized'
     );
   }
@@ -310,6 +319,10 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    * a fallback for when no cloud AI is configured.
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
+    if (!this.completionEnabled) {
+      throw new Error('Local AI completion is not enabled. Enable it in settings or configure a cloud AI provider.');
+    }
+
     const startTime = Date.now();
     log.debug(
       { messageCount: request.messages.length, maxTokens: request.maxTokens },
@@ -445,11 +458,19 @@ export const manifest: AIExtensionManifest = {
       ],
     },
     {
+      key: 'enableCompletion',
+      label: 'Enable for AI Conversations',
+      type: 'boolean',
+      required: false,
+      description: 'Use Local AI for guest conversations. Requires 4GB+ RAM. Leave disabled to use only for embeddings.',
+      default: false,
+    },
+    {
       key: 'completionModel',
       label: 'Completion Model',
       type: 'select',
       required: false,
-      description: 'Model for text generation. Larger models need more RAM (4GB+ recommended).',
+      description: 'Model for text generation. Only used if completion is enabled above.',
       default: COMPLETION_MODEL,
       options: [
         { value: 'onnx-community/Llama-3.2-1B-Instruct-ONNX', label: 'Llama 3.2 1B (1.2GB, 128K context, Default)' },

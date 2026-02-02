@@ -9,6 +9,8 @@
 import { Hono } from 'hono';
 import { getExtensionRegistry } from '@/extensions/index.js';
 import type { AIExtensionManifest } from '@/extensions/types.js';
+import { db, knowledgeBase } from '@/db/index.js';
+import { count } from 'drizzle-orm';
 
 /**
  * System issue severity levels
@@ -29,11 +31,20 @@ interface SystemIssue {
 }
 
 /**
+ * Completed setup step
+ */
+interface CompletedStep {
+  type: string;
+  message: string;
+}
+
+/**
  * System status response
  */
 interface SystemStatus {
   healthy: boolean;
   issues: SystemIssue[];
+  completedSteps: CompletedStep[];
   providers: {
     completion: string | null;
     embedding: string | null;
@@ -57,6 +68,7 @@ const systemRoutes = new Hono();
 systemRoutes.get('/status', async (c) => {
   const registry = getExtensionRegistry();
   const issues: SystemIssue[] = [];
+  const completedSteps: CompletedStep[] = [];
 
   // Get providers
   const completionProvider = registry.getCompletionProvider();
@@ -68,7 +80,12 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_completion_provider',
       severity: 'critical',
       message: 'No AI provider configured for conversations',
-      action: { label: 'Configure AI', route: '/settings/integrations' },
+      action: { label: 'Configure AI', route: '/settings/extensions/ai' },
+    });
+  } else if (completionProvider.name !== 'local') {
+    completedSteps.push({
+      type: 'completion_provider_configured',
+      message: 'AI provider configured',
     });
   }
 
@@ -77,16 +94,13 @@ systemRoutes.get('/status', async (c) => {
     issues.push({
       type: 'no_embedding_provider',
       severity: 'critical',
-      message: 'No embedding provider available for knowledge search',
-      action: { label: 'Configure AI', route: '/settings/integrations' },
+      message: 'Knowledge search disabled. Enable Local AI or OpenAI for embeddings.',
+      action: { label: 'Configure AI', route: '/settings/extensions/ai' },
     });
-  } else if (embeddingProvider.name === 'local' && completionProvider?.name !== 'local') {
-    // Using local embeddings as fallback
-    issues.push({
-      type: 'using_local_embeddings',
-      severity: 'info',
-      message: 'Using local embeddings (first search may be slow while model downloads)',
-      action: { label: 'Configure OpenAI', route: '/settings/integrations' },
+  } else {
+    completedSteps.push({
+      type: 'embedding_provider_configured',
+      message: 'Embeddings enabled',
     });
   }
 
@@ -96,7 +110,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'using_local_completion',
       severity: 'warning',
       message: 'Using local AI for responses (slower, lower quality than cloud AI)',
-      action: { label: 'Configure Cloud AI', route: '/settings/integrations' },
+      action: { label: 'Configure Cloud AI', route: '/settings/extensions/ai' },
     });
   }
 
@@ -124,13 +138,39 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_channels',
       severity: 'warning',
       message: 'No messaging channels configured',
-      action: { label: 'Configure Channels', route: '/settings/integrations' },
+      action: { label: 'Configure Channels', route: '/settings/extensions/channels' },
     });
+  } else {
+    completedSteps.push({
+      type: 'channels_configured',
+      message: 'Messaging channels connected',
+    });
+  }
+
+  // Check for empty knowledge base (only if embeddings are available)
+  let knowledgeBaseEmpty = true;
+  if (embeddingProvider) {
+    const [result] = await db.select({ count: count() }).from(knowledgeBase);
+    knowledgeBaseEmpty = !result || result.count === 0;
+    if (knowledgeBaseEmpty) {
+      issues.push({
+        type: 'empty_knowledge_base',
+        severity: 'warning',
+        message: 'Knowledge base is empty',
+        action: { label: 'Add Content', route: '/tools/site-scraper' },
+      });
+    } else {
+      completedSteps.push({
+        type: 'knowledge_base_populated',
+        message: 'Knowledge base populated',
+      });
+    }
   }
 
   const status: SystemStatus = {
     healthy: issues.filter((i) => i.severity === 'critical').length === 0,
     issues,
+    completedSteps,
     providers: {
       completion: completionProvider?.name ?? null,
       embedding: embeddingProvider?.name ?? null,
