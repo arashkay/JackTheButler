@@ -28,29 +28,15 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-md w-full max-w-sm md:max-w-2xl md:flex overflow-hidden">
-        {/* Left side - Branding (hidden on mobile, shown on md+) */}
-        <div className="hidden md:flex md:w-1/2 bg-gray-50 flex-col items-center justify-center p-8">
-          <img src="/jack-the-butler.png" alt="Jack The Butler" className="w-48 h-48 object-contain" />
-          <h1 className="text-2xl font-semibold text-gray-900 mt-4">Jack The Butler</h1>
-          <p className="text-muted-foreground mt-1">Time to wow some guests</p>
+        {/* Branding section - Top on mobile, Left on desktop */}
+        <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-gray-900 md:w-1/2">
+          <img src="/jack-the-butler-inverted.png" alt="JACK the BUTLER" className="w-40 h-40 md:w-48 md:h-48 object-contain" />
+          <h1 className="text-xl md:text-2xl font-semibold text-white mt-3 md:mt-4">JACK the BUTLER</h1>
+          <p className="text-gray-400 text-sm md:text-base mt-1">Let's create five-star moments</p>
         </div>
 
-        {/* Right side - Login form */}
+        {/* Login form - Bottom on mobile, Right on desktop */}
         <div className="p-6 md:w-1/2">
-          {/* Mobile header (shown on mobile, hidden on md+) */}
-          <div className="text-center mb-6 md:hidden">
-            <div className="flex justify-center mb-4">
-              <img src="/jack-the-butler.png" alt="Jack The Butler" className="w-32 h-32 object-contain" />
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">Jack The Butler</h1>
-            <p className="text-sm text-muted-foreground mt-1">Time to wow some guests</p>
-          </div>
-
-          {/* Desktop header */}
-          <div className="hidden md:block mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Welcome back</h2>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to your account</p>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
