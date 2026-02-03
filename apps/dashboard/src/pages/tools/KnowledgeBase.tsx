@@ -310,7 +310,7 @@ export function KnowledgeBasePage() {
       key: 'content',
       header: 'Content',
       render: (entry) => (
-        <div className="text-sm text-gray-600 truncate max-w-[300px]" title={entry.content}>
+        <div className="text-sm text-muted-foreground truncate max-w-[300px]" title={entry.content}>
           {entry.content.length > 100 ? `${entry.content.substring(0, 100)}...` : entry.content}
         </div>
       ),
@@ -322,7 +322,7 @@ export function KnowledgeBasePage() {
       render: (entry) => (
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <button className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+            <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
               <MoreHorizontal className="w-4 h-4" />
             </button>
           </DropdownMenuTrigger>
@@ -377,7 +377,7 @@ export function KnowledgeBasePage() {
         <CardContent className="pt-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={testQuery}
                 onChange={(e) => setTestQuery(e.target.value)}
@@ -409,21 +409,21 @@ export function KnowledgeBasePage() {
 
           {testResult && (
             <div className="mt-4 space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="text-xs font-medium text-gray-500 mb-2">AI Response</div>
-                <div className="text-sm text-gray-900">{testResult.response}</div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="text-xs font-medium text-muted-foreground mb-2">AI Response</div>
+                <div className="text-sm text-foreground">{testResult.response}</div>
               </div>
 
               {testResult.matches.length > 0 && (
                 <div>
-                  <div className="text-xs font-medium text-gray-500 mb-2">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">
                     Matched Entries ({testResult.matches.length})
                   </div>
                   <div className="space-y-2">
                     {testResult.matches.map((match) => (
                       <div
                         key={match.id}
-                        className="flex items-center justify-between p-2 bg-white border rounded-lg text-sm"
+                        className="flex items-center justify-between p-2 bg-card border rounded-lg text-sm"
                       >
                         <div className="flex items-center gap-2">
                           <Badge>
@@ -431,7 +431,7 @@ export function KnowledgeBasePage() {
                           </Badge>
                           <span className="font-medium">{match.title}</span>
                         </div>
-                        <span className="text-xs text-gray-500">{match.similarity}% match</span>
+                        <span className="text-xs text-muted-foreground">{match.similarity}% match</span>
                       </div>
                     ))}
                   </div>
@@ -439,7 +439,7 @@ export function KnowledgeBasePage() {
               )}
 
               {testResult.matches.length === 0 && (
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   No matching entries found. The AI provided a general response.
                 </div>
               )}

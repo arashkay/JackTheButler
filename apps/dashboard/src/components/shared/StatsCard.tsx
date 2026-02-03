@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
 const variants = {
-  success: 'text-gray-600 bg-gray-100',
-  warning: 'text-gray-600 bg-gray-100',
-  error: 'text-gray-600 bg-gray-100',
-  default: 'text-gray-600 bg-gray-100',
+  success: 'text-muted-foreground bg-muted',
+  warning: 'text-muted-foreground bg-muted',
+  error: 'text-muted-foreground bg-muted',
+  default: 'text-muted-foreground bg-muted',
 };
 
 interface StatItemProps {

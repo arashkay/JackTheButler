@@ -25,6 +25,7 @@ import {
   PanelLeft,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface NavItem {
   path: string;
@@ -150,8 +151,8 @@ export function Layout() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -216,10 +217,10 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-gray-100 flex overflow-hidden relative">
+    <div className="h-screen bg-muted flex overflow-hidden relative">
       {/* Sidebar */}
       <aside
-        className={`bg-white border-r flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
+        className={`bg-card border-r flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
           collapsed ? 'w-16' : 'w-56'
         }`}
       >
@@ -227,11 +228,11 @@ export function Layout() {
         <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b">
           {!collapsed ? (
             <div className="flex items-center gap-2">
-              <img src="/logo.svg" alt="Butler" className="w-6 h-6" />
-              <span className="font-semibold text-gray-900">Butler</span>
+              <img src="/logo.svg" alt="Butler" className="w-6 h-6 dark:invert" />
+              <span className="font-semibold text-foreground">Butler</span>
             </div>
           ) : (
-            <img src="/logo.svg" alt="Butler" className="w-6 h-6 mx-auto" />
+            <img src="/logo.svg" alt="Butler" className="w-6 h-6 mx-auto dark:invert" />
           )}
         </div>
 
@@ -251,12 +252,12 @@ export function Layout() {
                         onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
                         className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
                           hasActiveItem && !isExpanded
-                            ? 'bg-gray-100 text-gray-900'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-muted text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                         style={{ width: 'calc(100% - 16px)' }}
                       >
-                        <span className="text-gray-500">{section.icon}</span>
+                        <span className="text-muted-foreground">{section.icon}</span>
                         <span className="text-sm font-medium">{section.title}</span>
                       </button>
                     ) : (
@@ -265,11 +266,11 @@ export function Layout() {
                           onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
                           className={`flex items-center justify-center mx-auto p-2 w-fit rounded-lg transition-colors ${
                             hasActiveItem && !isExpanded
-                              ? 'bg-gray-100 text-gray-900'
-                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              ? 'bg-muted text-foreground'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
                         >
-                          <span className={isExpanded ? 'text-gray-300' : 'text-gray-500'}>{section.icon}</span>
+                          <span className={isExpanded ? 'text-muted-foreground/50' : 'text-muted-foreground'}>{section.icon}</span>
                         </button>
                       </Tooltip>
                     )}
@@ -279,12 +280,12 @@ export function Layout() {
                   <>
                     {!collapsed && (
                       <div className="px-4 mb-2">
-                        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                           {section.title}
                         </span>
                       </div>
                     )}
-                    {collapsed && <div className="mx-3 mb-2 border-t border-gray-200" />}
+                    {collapsed && <div className="mx-3 mb-2 border-t border-border" />}
                   </>
                 ) : null}
 
@@ -307,7 +308,7 @@ export function Layout() {
                             {/* Vertical line segment - only show up to active item */}
                             {showLine && (
                               <div
-                                className={`absolute left-2.5 w-px bg-gray-900 ${
+                                className={`absolute left-2.5 w-px bg-foreground ${
                                   index === 0 ? 'top-0' : '-top-1'
                                 } ${
                                   index === activeIndex ? 'bottom-1/2' : '-bottom-1'
@@ -316,23 +317,23 @@ export function Layout() {
                             )}
                             {/* Horizontal connector to active item */}
                             {section.collapsible && !collapsed && active && (
-                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-gray-900" />
+                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-foreground" />
                             )}
                             <Tooltip content={collapsed ? item.label : null} side="right">
                               <Link
                                 to={item.path}
                                 className={`flex items-center gap-3 rounded-lg transition-colors ${
                                   active
-                                    ? 'bg-gray-900 text-white'
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
                               >
                                 {(!section.collapsible || collapsed) && (
-                                  <span className={`relative ${active ? 'text-white' : 'text-gray-500'}`}>
+                                  <span className={`relative ${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                                     {item.icon}
                                     {collapsed && item.badge && item.badge > 0 && (
                                       <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
-                                        active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                        active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
                                       }`}>
                                         {item.badge > 99 ? '99+' : item.badge}
                                       </span>
@@ -344,7 +345,7 @@ export function Layout() {
                                     <span className="text-sm font-medium">{item.label}</span>
                                     {item.badge && item.badge > 0 && (
                                       <span className={`ml-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
-                                        active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                        active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
                                       }`}>
                                         {item.badge > 99 ? '99+' : item.badge}
                                       </span>
@@ -359,7 +360,7 @@ export function Layout() {
                     })()}
                     {/* Divider after submenu in collapsed mode */}
                     {section.collapsible && collapsed && (
-                      <li className="pt-1 mt-1 border-t border-gray-200 mx-4" />
+                      <li className="pt-1 mt-1 border-t border-border mx-4" />
                     )}
                   </ul>
                 </div>
@@ -376,9 +377,9 @@ export function Layout() {
                 setUserMenuOpen(false);
                 navigate('/settings');
               }}
-              className={`flex items-center gap-2 w-full p-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
+              className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
             >
-              <Settings size={16} className="text-gray-400" />
+              <Settings size={16} className="text-muted-foreground" />
               {!collapsed && <span>Settings</span>}
             </button>
             <button
@@ -386,23 +387,23 @@ export function Layout() {
                 setUserMenuOpen(false);
                 handleLogout();
               }}
-              className={`flex items-center gap-2 w-full p-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
+              className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
             >
-              <LogOut size={16} className="text-gray-400" />
+              <LogOut size={16} className="text-muted-foreground" />
               {!collapsed && <span>Logout</span>}
             </button>
           </div>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className={`flex items-center gap-2 w-full p-3 border-t text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
+            className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
           >
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-              <User size={14} className="text-gray-500" />
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <User size={14} className="text-muted-foreground" />
             </div>
             {!collapsed && (
               <>
                 <span className="flex-1 text-left text-sm truncate">{user?.name}</span>
-                <ChevronUp size={14} className={`text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronUp size={14} className={`text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </>
             )}
           </button>
@@ -412,7 +413,7 @@ export function Layout() {
       {/* Sidebar toggle button - positioned on border at header level */}
       <button
         onClick={toggleCollapsed}
-        className="absolute w-6 h-6 flex items-center justify-center bg-white border rounded-full shadow-sm text-gray-400 hover:text-gray-900 z-10 transition-all duration-200"
+        className="absolute w-6 h-6 flex items-center justify-center bg-card border rounded-full shadow-sm text-muted-foreground hover:text-foreground z-10 transition-all duration-200"
         style={{ left: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
@@ -441,19 +442,24 @@ function HeaderBar({
   isActive: (path: string) => boolean;
 }) {
   const { actions } = usePageActions();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const activeItem = navSections
     .flatMap((s) => s.items)
     .find((item) => isActive(item.path));
 
   return (
-    <header className="bg-white border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
-      <h1 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
+      <h1 className="text-lg font-medium text-foreground flex items-center gap-2">
         {activeItem && (
-          <span className="text-gray-500">{activeItem.icon}</span>
+          <span className="text-muted-foreground">{activeItem.icon}</span>
         )}
         {activeItem?.label || 'Dashboard'}
       </h1>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      <div className="flex items-center gap-2">
+        {isHomePage && <ThemeToggle />}
+        {actions}
+      </div>
     </header>
   );
 }

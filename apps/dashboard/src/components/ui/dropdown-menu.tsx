@@ -131,7 +131,7 @@ export function DropdownMenuContent({ children, align = 'end', className }: Drop
       data-dropdown
       data-dropdown-id={dropdownId}
       className={cn(
-        'fixed z-50 min-w-[120px] py-1 bg-white border rounded-md shadow-lg',
+        'fixed z-50 min-w-[120px] py-1 bg-popover border rounded-md shadow-lg',
         className
       )}
       style={{
@@ -161,7 +161,7 @@ export function DropdownMenuItem({ children, onClick, className, disabled }: Dro
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100 transition-colors',
+        'w-full px-3 py-1.5 text-sm text-left hover:bg-muted transition-colors',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}

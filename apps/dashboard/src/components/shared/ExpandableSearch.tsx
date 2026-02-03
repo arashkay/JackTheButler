@@ -48,7 +48,7 @@ export function ExpandableSearch({
     <div
       className={cn(
         'flex items-center justify-end border rounded-md transition-all duration-200 ease-out overflow-hidden',
-        open ? 'w-[200px] bg-background' : 'w-8 hover:bg-gray-100 cursor-pointer'
+        open ? 'w-[200px] bg-background' : 'w-8 hover:bg-muted cursor-pointer'
       )}
       onClick={!open ? handleOpen : undefined}
     >
@@ -79,7 +79,7 @@ export function ExpandableSearch({
             handleOpen();
           }
         }}
-        className="flex-shrink-0 p-[7px] text-gray-500 hover:text-gray-700"
+        className="flex-shrink-0 p-[7px] text-muted-foreground hover:text-foreground"
       >
         {open && value ? (
           <X className="w-4 h-4" />

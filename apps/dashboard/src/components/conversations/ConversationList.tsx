@@ -20,31 +20,31 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
           key={conv.id}
           onClick={() => onSelect(conv.id)}
           className={cn(
-            'w-full p-3 text-left border-b hover:bg-gray-50 transition-colors',
-            selectedId === conv.id && 'bg-blue-50'
+            'w-full p-3 text-left border-b hover:bg-muted transition-colors',
+            selectedId === conv.id && 'bg-accent'
           )}
         >
           {/* Top row: Name | Time */}
           <div className="flex items-center justify-between mb-1">
-            <div className="text-sm font-medium text-gray-900 truncate">
+            <div className="text-sm font-medium text-foreground truncate">
               {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
             </div>
             {conv.lastMessageAt && (
-              <span className="text-xs text-gray-400 ml-2 shrink-0">
+              <span className="text-xs text-muted-foreground ml-2 shrink-0">
                 {formatTimeAgo(conv.lastMessageAt)}
               </span>
             )}
           </div>
           {/* Bottom row: Icon + msgs + tasks | State */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-gray-500">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <ChannelIcon channel={conv.channelType} size="sm" />
-              <span className="flex items-center gap-0.5 text-xs bg-gray-100 px-1.5 py-0.5 rounded-md">
+              <span className="flex items-center gap-0.5 text-xs bg-muted px-1.5 py-0.5 rounded-md">
                 <MessageSquare className="w-3 h-3" />
                 {conv.messageCount}
               </span>
               {(conv.taskCount ?? 0) > 0 && (
-                <span className="flex items-center gap-0.5 text-xs bg-gray-100 px-1.5 py-0.5 rounded-md">
+                <span className="flex items-center gap-0.5 text-xs bg-muted px-1.5 py-0.5 rounded-md">
                   <ListTodo className="w-3 h-3" />
                   {conv.taskCount}
                 </span>

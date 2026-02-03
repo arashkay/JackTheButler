@@ -98,7 +98,7 @@ function LevelSelector({
                 ? level === 'L1'
                   ? 'bg-yellow-100 text-yellow-700'
                   : 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
             {level}
@@ -113,16 +113,16 @@ function LevelSelector({
                 ? level === 'L1'
                   ? 'border-yellow-500 bg-yellow-50'
                   : 'border-green-500 bg-green-50'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-border hover:border-border/80'
             )}
           >
             <div className="flex items-center gap-2 mb-1">
-              <Icon className={cn('w-5 h-5', isActive ? 'text-current' : 'text-gray-400')} />
+              <Icon className={cn('w-5 h-5', isActive ? 'text-current' : 'text-muted-foreground')} />
               <span className="font-semibold">{level}</span>
               {isActive && <Check className="w-4 h-4 ml-auto" />}
             </div>
             <div className="text-sm font-medium">{info.label}</div>
-            <div className="text-xs text-gray-600 mt-1">{info.description}</div>
+            <div className="text-xs text-muted-foreground mt-1">{info.description}</div>
           </button>
         );
       })}
@@ -145,7 +145,7 @@ function ThresholdSlider({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label>{label}</Label>
-        <span className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
+        <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">
           {(value * 100).toFixed(0)}%
         </span>
       </div>
@@ -155,9 +155,9 @@ function ThresholdSlider({
         max="100"
         value={value * 100}
         onChange={(e) => onChange(Number(e.target.value) / 100)}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
       />
-      <p className="text-xs text-gray-500">{description}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -292,16 +292,16 @@ export function AutonomyPage() {
                   key={actionType}
                   className={cn(
                     'flex items-center justify-between p-4 rounded-lg border',
-                    action.disabled ? 'opacity-50' : 'hover:bg-gray-50'
+                    action.disabled ? 'opacity-50' : 'hover:bg-muted/50'
                   )}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{action.label}</div>
-                    <div className="text-sm text-gray-500">{action.description}</div>
+                    <div className="text-sm text-muted-foreground">{action.description}</div>
                   </div>
                   <div className="shrink-0">
                     {action.disabled ? (
-                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded">
+                      <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded">
                         Coming Soon
                       </span>
                     ) : (
@@ -360,7 +360,7 @@ export function AutonomyPage() {
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Financial Action Limits</h2>
-            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded ml-auto">
+            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded ml-auto">
               Coming Soon
             </span>
           </div>
@@ -376,7 +376,7 @@ export function AutonomyPage() {
                 value={settings.actions.issueRefund.maxAutoAmount || 0}
                 disabled
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Refunds above this amount require approval
               </p>
             </div>
@@ -389,7 +389,7 @@ export function AutonomyPage() {
                 value={settings.actions.offerDiscount.maxAutoPercent || 0}
                 disabled
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Discounts above this percentage require approval
               </p>
             </div>

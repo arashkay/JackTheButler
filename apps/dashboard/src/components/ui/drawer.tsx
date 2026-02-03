@@ -83,7 +83,7 @@ export function DrawerContent({ children, className, title }: DrawerContentProps
       {/* Drawer panel */}
       <div
         className={cn(
-          'fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl',
+          'fixed inset-y-0 right-0 w-full max-w-md bg-card shadow-xl',
           'transform transition-transform duration-300 ease-in-out',
           'flex flex-col',
           isOpen ? 'translate-x-0' : 'translate-x-full',
@@ -95,7 +95,7 @@ export function DrawerContent({ children, className, title }: DrawerContentProps
             <h2 className="font-medium">{title}</h2>
             <button
               onClick={() => drawerContext?.onOpenChange(false)}
-              className="p-1 rounded hover:bg-gray-100 text-gray-500"
+              className="p-1 rounded hover:bg-muted text-muted-foreground"
             >
               <X className="w-4 h-4" />
             </button>

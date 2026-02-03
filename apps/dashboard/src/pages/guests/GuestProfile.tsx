@@ -155,7 +155,7 @@ export function GuestProfilePage() {
       <PageContainer>
         <div className="py-12 text-center">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-sm text-gray-500">Loading guest...</p>
+          <p className="text-sm text-muted-foreground">Loading guest...</p>
         </div>
       </PageContainer>
     );
@@ -188,7 +188,7 @@ export function GuestProfilePage() {
       {/* Back Button */}
       <Link
         to="/guests"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Guests
@@ -197,8 +197,8 @@ export function GuestProfilePage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-            <User className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <User className="w-8 h-8 text-muted-foreground" />
           </div>
           <div>
             <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ export function GuestProfilePage() {
                 <Badge variant="outline">{guest.loyaltyTier}</Badge>
               )}
             </div>
-            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
               {guest.email && (
                 <span className="flex items-center gap-1">
                   <Mail className="w-4 h-4" />
@@ -277,21 +277,21 @@ export function GuestProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <Hotel className="w-4 h-4" />
                   Total Stays
                 </span>
                 <span className="font-semibold">{guest.stayCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
                   Total Revenue
                 </span>
                 <span className="font-semibold">{formatCurrency(guest.totalRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Last Stay
                 </span>
@@ -316,14 +316,14 @@ export function GuestProfilePage() {
               ) : guest.preferences.length > 0 ? (
                 <ul className="space-y-2">
                   {guest.preferences.map((pref: string, i: number) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="text-gray-400">•</span>
+                    <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                      <span className="text-muted-foreground/70">•</span>
                       {pref}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400">No preferences recorded</p>
+                <p className="text-sm text-muted-foreground/70">No preferences recorded</p>
               )}
             </CardContent>
           </Card>
@@ -342,9 +342,9 @@ export function GuestProfilePage() {
                   className="min-h-[120px]"
                 />
               ) : guest.notes ? (
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{guest.notes}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{guest.notes}</p>
               ) : (
-                <p className="text-sm text-gray-400">No notes</p>
+                <p className="text-sm text-muted-foreground/70">No notes</p>
               )}
             </CardContent>
           </Card>
@@ -479,10 +479,10 @@ export function GuestProfilePage() {
                       <TableCell>
                         {res.roomNumber ? (
                           <span>
-                            {res.roomNumber} <span className="text-gray-400">({res.roomType})</span>
+                            {res.roomNumber} <span className="text-muted-foreground/70">({res.roomType})</span>
                           </span>
                         ) : (
-                          <span className="text-gray-400">{res.roomType}</span>
+                          <span className="text-muted-foreground/70">{res.roomType}</span>
                         )}
                       </TableCell>
                       <TableCell>{formatDate(res.arrivalDate)}</TableCell>

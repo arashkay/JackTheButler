@@ -25,7 +25,7 @@ export function ConversationsPage() {
   return (
     <div className="flex h-[calc(100vh-56px)]">
       {/* Sidebar */}
-      <div className="w-80 border-r bg-white flex flex-col">
+      <div className="w-80 border-r bg-card flex flex-col">
         {/* Filters */}
         <div className="p-3 border-b">
           <FilterTabs
@@ -39,7 +39,7 @@ export function ConversationsPage() {
         {isLoading ? (
           <ConversationListSkeleton count={6} />
         ) : conversations.length === 0 ? (
-          <div className="p-4 text-gray-500 text-sm">No conversations</div>
+          <div className="p-4 text-muted-foreground text-sm">No conversations</div>
         ) : (
           <ConversationList
             conversations={conversations}
@@ -50,11 +50,11 @@ export function ConversationsPage() {
       </div>
 
       {/* Main */}
-      <div className="flex-1 bg-gray-50">
+      <div className="flex-1 bg-muted">
         {selectedId ? (
           <ConversationView id={selectedId} />
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-500">
+          <div className="h-full flex items-center justify-center text-muted-foreground">
             Select a conversation
           </div>
         )}

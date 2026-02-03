@@ -145,15 +145,15 @@ function ExpandedRow({
       {/* Content Preview */}
       {item.type === 'response' && actionData.content && (
         <div className="space-y-2">
-          <div className="text-xs text-gray-500 uppercase font-medium">Proposed Response</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">Proposed Response</div>
           <p className="text-sm whitespace-pre-wrap">{String(actionData.content)}</p>
           {(actionData.intent || actionData.confidence) && (
             <div className="flex items-center gap-2">
               {actionData.intent && (
-                <Badge className="bg-gray-700 text-white capitalize">{String(actionData.intent)}</Badge>
+                <Badge className="bg-primary text-white capitalize">{String(actionData.intent)}</Badge>
               )}
               {actionData.confidence && (
-                <Badge className="bg-gray-700 text-white">{((actionData.confidence as number) * 100).toFixed(0)}% confident</Badge>
+                <Badge className="bg-primary text-white">{((actionData.confidence as number) * 100).toFixed(0)}% confident</Badge>
               )}
             </div>
           )}
@@ -162,14 +162,14 @@ function ExpandedRow({
 
       {item.type === 'task' && actionData.description && (
         <div className="space-y-2">
-          <div className="text-xs text-gray-500 uppercase font-medium">Task Details</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">Task Details</div>
           <p className="text-sm">{String(actionData.description)}</p>
           <div className="flex items-center gap-2">
             {actionData.department && (
-              <Badge className="bg-gray-700 text-white capitalize">{String(actionData.department)}</Badge>
+              <Badge className="bg-primary text-white capitalize">{String(actionData.department)}</Badge>
             )}
             {actionData.type && (
-              <Badge className="bg-gray-700 text-white capitalize">{String(actionData.type)}</Badge>
+              <Badge className="bg-primary text-white capitalize">{String(actionData.type)}</Badge>
             )}
           </div>
         </div>
@@ -177,7 +177,7 @@ function ExpandedRow({
 
       {item.type === 'offer' && (
         <div className="space-y-1">
-          <div className="text-xs text-gray-500 uppercase font-medium">Proposed Offer</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">Proposed Offer</div>
           <pre className="text-xs overflow-auto">{JSON.stringify(actionData, null, 2)}</pre>
         </div>
       )}
@@ -187,7 +187,7 @@ function ExpandedRow({
         <>
           <button
             onClick={() => setShowConversation(true)}
-            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             <MessageSquare className="w-3 h-3" />
             View conversation ({item.conversationMessages.length} messages)
@@ -201,11 +201,11 @@ function ExpandedRow({
                     className={cn(
                       'p-2 rounded text-sm',
                       msg.direction === 'inbound'
-                        ? 'bg-gray-100 mr-8'
+                        ? 'bg-muted mr-8'
                         : 'bg-blue-50 ml-8'
                     )}
                   >
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {msg.direction === 'inbound' ? 'Guest' : msg.senderType === 'ai' ? 'Jack' : 'Staff'}:
                     </span>{' '}
                     <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -383,7 +383,7 @@ export function ApprovalsPage() {
                     >
                       <TableCell className="px-4">
                         <Tooltip content={typeInfo?.label}>
-                          <Icon className="w-4 h-4 text-gray-500" />
+                          <Icon className="w-4 h-4 text-muted-foreground" />
                         </Tooltip>
                       </TableCell>
                       <TableCell className="px-4">
@@ -395,13 +395,13 @@ export function ApprovalsPage() {
                       </TableCell>
                       <TableCell className="px-4">
                         <div className="text-sm">
-                          <div className="font-medium">{item.guestName || <span className="text-gray-400 italic">Unknown</span>}</div>
+                          <div className="font-medium">{item.guestName || <span className="text-muted-foreground italic">Unknown</span>}</div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             {item.conversationChannel && (
                               <ChannelIcon channel={item.conversationChannel} />
                             )}
                             {(item.roomNumber || actionData.roomNumber) && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted-foreground">
                                 Room {item.roomNumber || actionData.roomNumber}
                               </span>
                             )}
@@ -409,19 +409,19 @@ export function ApprovalsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 max-w-xs">
-                        <span className="text-sm text-gray-600 truncate block">
+                        <span className="text-sm text-muted-foreground truncate block">
                           {preview || '-'}
                         </span>
                       </TableCell>
                       <TableCell className="px-4">
-                        <span className="text-sm text-gray-500">{formatTimeAgo(item.createdAt)}</span>
+                        <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt)}</span>
                       </TableCell>
                       <TableCell className="px-4">
                         {item.status === 'pending' ? (
                           <div onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger>
-                                <button className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                                <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
                                   <MoreHorizontal className="w-4 h-4" />
                                 </button>
                               </DropdownMenuTrigger>
@@ -460,7 +460,7 @@ export function ApprovalsPage() {
                     </TableRow>
                     {isExpanded && (
                       <TableRow key={`${item.id}-expanded`}>
-                        <TableCell colSpan={6} className="p-0 bg-gray-50">
+                        <TableCell colSpan={6} className="p-0 bg-muted/50">
                           <ExpandedRow
                             item={item}
                             actionData={actionData}

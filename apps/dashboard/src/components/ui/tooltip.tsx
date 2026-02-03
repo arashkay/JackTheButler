@@ -71,7 +71,7 @@ export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
   const tooltipContent = show && createPortal(
     <div
       className={cn(
-        'fixed z-[9999] px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap pointer-events-none',
+        'fixed z-[9999] px-2 py-1 text-xs bg-foreground text-background rounded shadow-lg whitespace-nowrap pointer-events-none',
         (side === 'top' || side === 'bottom') && '-translate-x-1/2',
         (side === 'left' || side === 'right') && '-translate-y-1/2',
         side === 'top' && '-translate-y-full',

@@ -74,7 +74,7 @@ export function GuestFormPage() {
       {/* Back Button */}
       <Link
         to="/guests"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Guests
@@ -185,7 +185,7 @@ export function GuestFormPage() {
           {/* Preferences */}
           <div>
             <label className="text-sm font-medium">Preferences</label>
-            <p className="text-xs text-gray-500 mb-1">Enter one preference per line</p>
+            <p className="text-xs text-muted-foreground mb-1">Enter one preference per line</p>
             <Textarea
               value={formData.preferences}
               onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
@@ -197,7 +197,7 @@ export function GuestFormPage() {
           {/* Tags */}
           <div>
             <label className="text-sm font-medium">Tags</label>
-            <p className="text-xs text-gray-500 mb-1">Comma-separated</p>
+            <p className="text-xs text-muted-foreground mb-1">Comma-separated</p>
             <Input
               value={formData.tags}
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}

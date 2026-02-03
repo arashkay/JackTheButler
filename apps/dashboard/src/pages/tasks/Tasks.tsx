@@ -90,7 +90,7 @@ export function TasksPage() {
                   e.stopPropagation();
                   setSelectedTask(task);
                 }}
-                className="text-gray-400 hover:text-primary shrink-0"
+                className="text-muted-foreground hover:text-primary shrink-0"
                 title="View details"
               >
                 <Eye className="w-4 h-4" />
@@ -195,12 +195,12 @@ export function TasksPage() {
 
               {selectedTask.assignedName && (
                 <div>
-                  <div className="text-xs text-gray-500 uppercase font-medium mb-1">Assigned To</div>
+                  <div className="text-xs text-muted-foreground uppercase font-medium mb-1">Assigned To</div>
                   <p className="text-sm">{selectedTask.assignedName}</p>
                 </div>
               )}
 
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 <div>Created {formatDateTime(selectedTask.createdAt)}</div>
                 <div className="capitalize">{selectedTask.department.replace('_', ' ')}</div>
               </div>

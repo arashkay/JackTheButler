@@ -30,13 +30,13 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-md w-full max-w-sm md:max-w-2xl md:flex overflow-hidden">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+      <div className="bg-card rounded-lg shadow-md w-full max-w-sm md:max-w-2xl md:flex overflow-hidden">
         {/* Branding section - Top on mobile, Left on desktop */}
-        <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-gray-900 md:w-1/2">
+        <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-primary md:w-1/2">
           <img src="/jack-the-butler-inverted.png" alt="JACK the BUTLER" className="w-40 h-40 md:w-48 md:h-48 object-contain" />
-          <h1 className="text-xl md:text-2xl font-semibold text-white mt-3 md:mt-4">JACK the BUTLER</h1>
-          <p className="text-gray-400 text-sm md:text-base mt-1">Let's create five-star moments</p>
+          <h1 className="text-xl md:text-2xl font-semibold text-primary-foreground mt-3 md:mt-4">JACK the BUTLER</h1>
+          <p className="text-primary-foreground/60 text-sm md:text-base mt-1">Let's create five-star moments</p>
         </div>
 
         {/* Login form - Bottom on mobile, Right on desktop */}
@@ -50,23 +50,23 @@ export function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               />
             </div>
@@ -77,7 +77,7 @@ export function LoginPage() {
                 checked={rememberMe}
                 onCheckedChange={setRememberMe}
               />
-              <label htmlFor="rememberMe" className="text-sm text-gray-600 cursor-pointer">
+              <label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
                 Remember me
               </label>
             </div>

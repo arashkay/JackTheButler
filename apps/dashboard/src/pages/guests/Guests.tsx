@@ -72,7 +72,7 @@ export function GuestsPage() {
         <div>
           <Link
             to={`/guests/${guest.id}`}
-            className="font-medium text-gray-900 hover:text-blue-600"
+            className="font-medium text-foreground hover:text-primary"
             onClick={(e) => e.stopPropagation()}
           >
             {guest.firstName} {guest.lastName}
@@ -82,13 +82,13 @@ export function GuestsPage() {
               {guest.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded"
+                  className="text-xs px-1.5 py-0.5 bg-muted text-muted-foreground rounded"
                 >
                   {tag}
                 </span>
               ))}
               {guest.tags.length > 2 && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground/70">
                   +{guest.tags.length - 2}
                 </span>
               )}
@@ -102,11 +102,11 @@ export function GuestsPage() {
       header: 'Contact',
       render: (guest) => (
         <div className="text-sm">
-          <div className="text-gray-600 truncate max-w-[200px]">
-            {guest.email || <span className="text-gray-400 italic">No email</span>}
+          <div className="text-muted-foreground truncate max-w-[200px]">
+            {guest.email || <span className="text-muted-foreground/70 italic">No email</span>}
           </div>
           {guest.phone && (
-            <div className="text-gray-500 text-xs">{guest.phone}</div>
+            <div className="text-muted-foreground text-xs">{guest.phone}</div>
           )}
         </div>
       ),
@@ -141,21 +141,21 @@ export function GuestsPage() {
       header: 'Revenue',
       className: 'text-right',
       render: (guest) => (
-        <span className="text-gray-600">{formatCurrency(guest.totalRevenue)}</span>
+        <span className="text-muted-foreground">{formatCurrency(guest.totalRevenue)}</span>
       ),
     },
     {
       key: 'lastStayDate',
       header: 'Last Stay',
       render: (guest) => (
-        <span className="text-gray-500 text-sm">{formatDate(guest.lastStayDate)}</span>
+        <span className="text-muted-foreground text-sm">{formatDate(guest.lastStayDate)}</span>
       ),
     },
     {
       key: 'actions',
       header: '',
       className: 'w-10',
-      render: () => <ChevronRight className="w-4 h-4 text-gray-400" />,
+      render: () => <ChevronRight className="w-4 h-4 text-muted-foreground" />,
     },
   ];
 

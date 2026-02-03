@@ -7,7 +7,7 @@ const inlineAlertVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-gray-50 border-gray-100 text-gray-700',
+        default: 'bg-muted/50 border-muted text-foreground',
         info: 'bg-blue-50 border-blue-100 text-blue-700',
         success: 'bg-green-50 border-green-100 text-green-700',
         warning: 'bg-yellow-50 border-yellow-100 text-yellow-700',

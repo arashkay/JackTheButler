@@ -147,22 +147,22 @@ export function ConversationView({ id }: Props) {
 
   if (!conv) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-muted-foreground">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-card">
       {/* Header */}
       <div className="p-4 border-b shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-medium text-gray-900">
+            <h2 className="font-medium text-foreground">
               {conv.guestName || conv.channelId}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {conv.channelType} · {conv.state}
               {conv.currentIntent && ` · ${conv.currentIntent}`}
             </p>
@@ -177,7 +177,7 @@ export function ConversationView({ id }: Props) {
                   : conv.state === 'resolved'
                   ? 'bg-green-50 border-green-200 text-green-700'
                   : conv.state === 'closed'
-                  ? 'bg-gray-50 border-gray-200 text-gray-500'
+                  ? 'bg-muted/50 border-border text-muted-foreground'
                   : 'bg-blue-50 border-blue-200 text-blue-700'
               )}
             >
@@ -186,7 +186,7 @@ export function ConversationView({ id }: Props) {
             </button>
 
             {stateMenuOpen && (
-              <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50">
+              <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-md shadow-lg py-1 z-50">
                 {(conv.state === 'active' || conv.state === 'new') && (
                   <button
                     onClick={() => updateStateMutation.mutate('escalated')}
@@ -218,7 +218,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('active')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     Reopen
                   </button>
@@ -232,9 +232,9 @@ export function ConversationView({ id }: Props) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loadingMessages ? (
-          <div className="text-center text-gray-500">Loading messages...</div>
+          <div className="text-center text-muted-foreground">Loading messages...</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-500">No messages yet</div>
+          <div className="text-center text-muted-foreground">No messages yet</div>
         ) : (
           messages.map((msg) => {
             const messageTasks = tasksByMessageId.get(msg.id) || [];
@@ -264,7 +264,7 @@ export function ConversationView({ id }: Props) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={sendMutation.isPending}
           />
           <Button
@@ -281,7 +281,7 @@ export function ConversationView({ id }: Props) {
         <DrawerContent title={`Tasks (${tasks.length})`}>
           <div className="p-4 space-y-3">
             {tasks.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No tasks for this conversation</p>
+              <p className="text-center text-muted-foreground py-8">No tasks for this conversation</p>
             ) : (
               tasks.map((task) => (
                 <TaskCard
@@ -316,14 +316,14 @@ function MessageBubble({ message }: { message: Message }) {
       <div
         className={cn(
           'max-w-[70%] rounded-lg px-3 py-2',
-          isInbound ? 'bg-gray-100' : 'bg-blue-600 text-white',
+          isInbound ? 'bg-muted' : 'bg-blue-600 text-white',
           message.senderType === 'ai' && !isInbound && 'bg-green-600'
         )}
       >
         <div
           className={cn(
             'text-xs mb-1',
-            isInbound ? 'text-gray-500' : 'text-white/70'
+            isInbound ? 'text-muted-foreground' : 'text-white/70'
           )}
         >
           {senderLabel}
@@ -332,7 +332,7 @@ function MessageBubble({ message }: { message: Message }) {
         <div
           className={cn(
             'text-xs mt-1',
-            isInbound ? 'text-gray-400' : 'text-white/60'
+            isInbound ? 'text-muted-foreground/70' : 'text-white/60'
           )}
         >
           {formatTime(message.createdAt)}
@@ -355,14 +355,14 @@ function TaskIndicator({
     pending: 'text-yellow-600',
     in_progress: 'text-yellow-600',
     completed: 'text-green-600',
-    cancelled: 'text-gray-400',
+    cancelled: 'text-muted-foreground/70',
   };
 
   return (
     <div className={cn('flex mt-1', isInbound ? 'justify-start' : 'justify-end')}>
       <button
         onClick={onClick}
-        className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+        className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted px-2 py-1 rounded transition-colors"
       >
         <ListTodo className="w-3 h-3" />
         <span>
@@ -371,7 +371,7 @@ function TaskIndicator({
         {tasks.map((task) => (
           <span
             key={task.id}
-            className={cn('capitalize', statusTextColors[task.status] || 'text-gray-500')}
+            className={cn('capitalize', statusTextColors[task.status] || 'text-muted-foreground')}
           >
             ({task.status.replace('_', ' ')})
           </span>
@@ -411,7 +411,7 @@ function TaskCard({
     )}>
       {/* Header row: Icon + Type + Priority + Status */}
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 text-gray-500" />
+        <Icon className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
         <Badge variant={priorityVariants[task.priority]} className="capitalize">
           {task.priority}
@@ -422,12 +422,12 @@ function TaskCard({
       </div>
 
       {/* Description */}
-      <p className="text-sm text-gray-700 mb-2">{task.description}</p>
+      <p className="text-sm text-foreground mb-2">{task.description}</p>
 
       {/* Meta row: Room + Department + Time */}
-      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
         {task.roomNumber && (
-          <Badge className="bg-gray-100 text-gray-600">Room {task.roomNumber}</Badge>
+          <Badge className="bg-muted text-muted-foreground">Room {task.roomNumber}</Badge>
         )}
         <span className="capitalize">{task.department.replace('_', ' ')}</span>
         <span>·</span>
@@ -436,8 +436,8 @@ function TaskCard({
 
       {/* Assigned */}
       {task.assignedName && (
-        <p className="text-xs text-gray-500 mb-3">
-          Assigned to: <span className="font-medium text-gray-700">{task.assignedName}</span>
+        <p className="text-xs text-muted-foreground mb-3">
+          Assigned to: <span className="font-medium text-foreground">{task.assignedName}</span>
         </p>
       )}
 
@@ -463,7 +463,7 @@ function TaskCard({
           </Button>
         )}
         {(task.status === 'completed' || task.status === 'cancelled') && (
-          <span className="text-xs text-gray-400 italic">No actions available</span>
+          <span className="text-xs text-muted-foreground/70 italic">No actions available</span>
         )}
       </div>
     </div>

@@ -31,8 +31,8 @@ export function FilterTabs<T extends string>({
             className={cn(
               'flex items-center gap-1.5 px-3 py-1 text-sm rounded whitespace-nowrap',
               value === option.value
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:bg-muted'
             )}
           >
             {Icon && <Icon className="w-4 h-4" />}

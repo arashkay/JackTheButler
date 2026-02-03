@@ -13,19 +13,22 @@ The dashboard uses a combination of:
 | Component | Purpose |
 |-----------|---------|
 | `Alert` | Page-level notifications with title, description, dismiss |
-| `InlineAlert` | Compact card-level errors/warnings |
 | `Badge` | Status indicators, labels, counts |
 | `Button` | Actions with `variant`, `size`, and `loading` props |
 | `Card` | Content containers with header, content, footer |
 | `Checkbox` | Form checkboxes |
 | `ConfirmDialog` | Confirmation modals for destructive actions |
+| `Dialog` | Modal dialogs (base component) |
+| `Drawer` | Slide-out panels |
 | `DropdownMenu` | Action menus, context menus |
-| `ErrorAlert` | Error display with optional title and dismiss |
 | `FilterTabs` | Tab-style filter buttons for tables |
+| `InlineAlert` | Compact card-level errors/warnings |
 | `Input` | Text inputs |
+| `Label` | Form field labels |
 | `SectionCard` | Card with icon + title header pattern |
 | `Skeleton` | Animated loading placeholder |
 | `Spinner` | Loading spinner with size variants (xs, sm, md, lg) |
+| `Switch` | Toggle switches |
 | `Table` | Data tables (for custom layouts) |
 | `Tabs` | Tab navigation with icon support |
 | `Textarea` | Multi-line text inputs |
@@ -35,11 +38,15 @@ The dashboard uses a combination of:
 
 | Component | Purpose |
 |-----------|---------|
-| `PageContainer` | Page wrapper with consistent padding |
+| `ActionItems` | Onboarding checklist for dashboard home |
 | `DataTable` | Full-featured table with search, filters, pagination |
 | `EmptyState` | Empty/no-data states with icon and message |
-| `StatsBar` | Row of stat cards at top of pages |
+| `PageContainer` | Page wrapper with consistent padding |
+| `PageHeader` | Page header with actions slot |
 | `SearchInput` | Search input with icon |
+| `StatsBar` | Row of stat cards at top of pages |
+| `ChannelIcon` | Icons for messaging channels (WhatsApp, SMS, Email) |
+| `ExtensionIcon` | Icons for extensions/integrations |
 
 ---
 

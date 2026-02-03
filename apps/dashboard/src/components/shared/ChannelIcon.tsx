@@ -37,7 +37,7 @@ export function ChannelIcon({ channel, className, showLabel = false, size = 'sm'
 
   if (showLabel) {
     return (
-      <span className={cn('inline-flex items-center gap-1 text-gray-500', className)}>
+      <span className={cn('inline-flex items-center gap-1 text-muted-foreground', className)}>
         <Icon className={sizeClass} />
         <span className="text-xs">{config.label}</span>
       </span>
@@ -46,7 +46,7 @@ export function ChannelIcon({ channel, className, showLabel = false, size = 'sm'
 
   return (
     <span title={config.label}>
-      <Icon className={cn(sizeClass, 'text-gray-500', className)} />
+      <Icon className={cn(sizeClass, 'text-muted-foreground', className)} />
     </span>
   );
 }

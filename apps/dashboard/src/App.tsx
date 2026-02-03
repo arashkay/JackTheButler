@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LoginPage } from '@/pages/Login';
 import { Layout } from '@/components/layout/Layout';
 import { HomePage } from '@/pages/home/Home';
@@ -17,8 +18,9 @@ import { ReservationsPage, ReservationDetailPage } from '@/pages/reservations';
 
 export function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
@@ -38,7 +40,8 @@ export function App() {
           <Route path="/tools/knowledge-base" element={<KnowledgeBasePage />} />
           <Route path="/tools/site-scraper" element={<SiteScraperPage />} />
         </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

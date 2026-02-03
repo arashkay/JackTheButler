@@ -46,7 +46,7 @@ export function DialogContent({ children, className, title }: DialogContentProps
       />
       <div
         className={cn(
-          'relative z-50 bg-white rounded-lg shadow-xl max-h-[85vh] overflow-auto',
+          'relative z-50 bg-card rounded-lg shadow-xl max-h-[85vh] overflow-auto',
           'w-full max-w-lg mx-4',
           className
         )}
@@ -56,7 +56,7 @@ export function DialogContent({ children, className, title }: DialogContentProps
             <h2 className="font-medium">{title}</h2>
             <button
               onClick={() => dialogContext?.onOpenChange(false)}
-              className="p-1 rounded hover:bg-gray-100 text-gray-500"
+              className="p-1 rounded hover:bg-muted text-muted-foreground"
             >
               <X className="w-4 h-4" />
             </button>

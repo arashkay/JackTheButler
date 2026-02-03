@@ -32,8 +32,8 @@ export function Tabs<T extends string>({
               className={cn(
                 'flex items-center gap-2 pb-3 border-b-2 text-sm font-medium transition-colors',
                 value === tab.id
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-foreground text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               )}
             >
               {Icon && <Icon className="w-4 h-4" />}
