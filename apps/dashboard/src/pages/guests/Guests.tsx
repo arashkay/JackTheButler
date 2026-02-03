@@ -18,6 +18,7 @@ import {
 import { api } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { vipVariants, loyaltyVariants } from '@/lib/config';
+import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import type { Guest } from '@/types/api';
 
 interface GuestStats {
@@ -51,14 +52,10 @@ export function GuestsPage() {
     queryFn: () => api.get<GuestStats>('/guests/stats'),
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['guests', searchQuery],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
-      params.set('limit', '50');
-      return api.get<{ guests: Guest[]; total: number }>(`/guests?${params.toString()}`);
-    },
+  const { data, isLoading } = useFilteredQuery<{ guests: Guest[]; total: number }>({
+    queryKey: 'guests',
+    endpoint: '/guests',
+    params: { search: searchQuery, limit: 50 },
   });
 
   const guests = data?.guests || [];

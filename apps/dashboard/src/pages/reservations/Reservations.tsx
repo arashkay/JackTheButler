@@ -16,6 +16,7 @@ import {
   reservationStatusFilters,
   reservationStatusVariants,
 } from '@/lib/config';
+import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import type { Reservation, ReservationStatus } from '@/types/api';
 import { Badge } from '@/components/ui/badge';
 import { FilterTabs } from '@/components/ui/filter-tabs';
@@ -29,7 +30,6 @@ interface TodayStats {
   inHouse: number;
   occupancyRate: number;
 }
-
 
 export function ReservationsPage() {
   const navigate = useNavigate();
@@ -45,18 +45,10 @@ export function ReservationsPage() {
   });
 
   // Fetch reservations list
-  const { data, isLoading } = useQuery({
-    queryKey: ['reservations', searchQuery, statusFilter],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      params.set('limit', '50');
-      const queryString = params.toString();
-      return api.get<{ reservations: Reservation[]; total: number }>(
-        `/reservations${queryString ? `?${queryString}` : ''}`
-      );
-    },
+  const { data, isLoading } = useFilteredQuery<{ reservations: Reservation[]; total: number }>({
+    queryKey: 'reservations',
+    endpoint: '/reservations',
+    params: { search: searchQuery, status: statusFilter, limit: 50 },
   });
 
   const handleSearch = () => {

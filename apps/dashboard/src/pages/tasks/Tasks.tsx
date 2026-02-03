@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListTodo, Eye } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDateTime } from '@/lib/formatters';
@@ -8,6 +8,7 @@ import {
   taskStatusVariants,
   priorityVariants,
 } from '@/lib/config';
+import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import type { Task, TaskStatus } from '@/types/api';
 import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
@@ -21,14 +22,10 @@ export function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['tasks', statusFilter],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      const queryString = params.toString();
-      return api.get<{ tasks: Task[] }>(`/tasks${queryString ? `?${queryString}` : ''}`);
-    },
+  const { data, isLoading } = useFilteredQuery<{ tasks: Task[] }>({
+    queryKey: 'tasks',
+    endpoint: '/tasks',
+    params: { status: statusFilter },
     refetchInterval: 10000,
   });
 

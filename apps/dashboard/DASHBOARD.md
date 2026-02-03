@@ -454,8 +454,8 @@ apps/dashboard/src/
 - [x] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
 - [x] Use `FilterTabs` consistently (fix Conversations, Automations pages)
 - [x] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
-- [ ] Create `useFilteredQuery()` hook - query + URLSearchParams pattern
-- [ ] Create `buildQueryString()` utility - reduce URLSearchParams duplication
+- [x] Create `useFilteredQuery()` hook - query + URLSearchParams pattern
+- [x] Create `buildQueryString()` utility - reduce URLSearchParams duplication
 
 ### Lower Priority
 - [x] ~~Create Badge variants for status types~~ - Done: default, success, warning, error, info, dark, gold

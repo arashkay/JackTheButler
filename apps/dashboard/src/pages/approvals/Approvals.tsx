@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Clock,
   CheckCircle2,
@@ -19,6 +19,7 @@ import {
   priorityVariants,
   type ApprovalStatus,
 } from '@/lib/config';
+import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -260,16 +261,10 @@ export function ApprovalsPage() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectFormId, setRejectFormId] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['approvals', filterStatus],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (filterStatus !== 'all') params.set('status', filterStatus);
-      const queryString = params.toString();
-      return api.get<{ items: ApprovalItem[]; stats: ApprovalStats }>(
-        `/approvals${queryString ? `?${queryString}` : ''}`
-      );
-    },
+  const { data, isLoading, error } = useFilteredQuery<{ items: ApprovalItem[]; stats: ApprovalStats }>({
+    queryKey: 'approvals',
+    endpoint: '/approvals',
+    params: { status: filterStatus },
     refetchInterval: 5000,
   });
 
