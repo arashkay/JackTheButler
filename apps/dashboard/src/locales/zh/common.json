@@ -18,6 +18,7 @@
     "unknown": "未知",
     "vip": "VIP",
     "cancel": "取消",
+    "close": "关闭",
     "approve": "批准",
     "reject": "拒绝",
     "approving": "批准中...",
@@ -125,6 +126,11 @@
       "using_local_completion": "升级 AI",
       "no_channels": "添加渠道",
       "empty_knowledge_base": "导入内容"
+    },
+    "demoData": {
+      "title": "使用示例数据体验",
+      "description": "添加演示客人、预订和知识库来探索系统。准备正式使用时，可以在设置中重置所有数据。",
+      "createAll": "加载示例数据"
     }
   },
   "tasks": {

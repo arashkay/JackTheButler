@@ -18,6 +18,7 @@
     "unknown": "Desconocido",
     "vip": "VIP",
     "cancel": "Cancelar",
+    "close": "Cerrar",
     "approve": "Aprobar",
     "reject": "Rechazar",
     "approving": "Aprobando...",
@@ -125,6 +126,11 @@
       "using_local_completion": "Actualizar IA",
       "no_channels": "Agregar Canal",
       "empty_knowledge_base": "Importar Contenido"
+    },
+    "demoData": {
+      "title": "Probar con datos de ejemplo",
+      "description": "Agrega huéspedes, reservas y base de conocimientos de demostración para explorar el sistema. Puedes restablecer todo en Configuración cuando estés listo para el uso real.",
+      "createAll": "Cargar datos de ejemplo"
     }
   },
   "tasks": {

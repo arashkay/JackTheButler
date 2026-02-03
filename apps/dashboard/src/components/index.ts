@@ -11,6 +11,7 @@ export type { Column, DataTableProps, SearchConfig } from './DataTable';
 export { ExpandableSearch } from './shared/ExpandableSearch';
 export { ChannelIcon } from './shared/ChannelIcon';
 export { ActionItems } from './shared/ActionItems';
+export { DemoDataCard } from './shared/DemoDataCard';
 
 // Skeletons
 export {

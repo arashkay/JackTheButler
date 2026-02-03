@@ -1,6 +1,6 @@
 import { Bot, MessageSquare, Cpu, Plug } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, PageHeader, StatsBar, ActionItems } from '@/components';
+import { PageContainer, PageHeader, StatsBar, ActionItems, DemoDataCard } from '@/components';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 
 export function HomePage() {
@@ -42,8 +42,18 @@ export function HomePage() {
         {/* System Status */}
         {!isLoading && <StatsBar items={[...stats]} />}
 
-        {/* Getting Started */}
-        <ActionItems />
+        {/* Cards Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Getting Started - 2/3 */}
+          <div className="lg:col-span-2">
+            <ActionItems />
+          </div>
+
+          {/* Demo Data - 1/3 */}
+          <div>
+            <DemoDataCard />
+          </div>
+        </div>
       </div>
     </PageContainer>
   );

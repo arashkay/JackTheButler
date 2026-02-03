@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, ArrowRight, Check } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, X } from 'lucide-react';
 import { useSystemStatus, type SystemIssue, type CompletedStep } from '@/hooks/useSystemStatus';
+import { useDismissible } from '@/hooks/useDismissible';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -106,6 +107,11 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
 export function ActionItems() {
   const { t } = useTranslation();
   const { issues, completedSteps, isLoading } = useSystemStatus();
+  const { isDismissed, dismiss, canDismiss } = useDismissible(
+    'getting-started',
+    issues.length === 0,  // can only dismiss when no issues
+    issues.length > 0     // reset if issues come back
+  );
 
   if (isLoading) {
     return (
@@ -126,6 +132,11 @@ export function ActionItems() {
     return null;
   }
 
+  // User dismissed and no issues - don't show
+  if (isDismissed && issues.length === 0) {
+    return null;
+  }
+
   // Sort issues: critical first, then warning, then info
   const sortedIssues = [...issues].sort((a, b) => {
     const order = { critical: 0, warning: 1, info: 2 };
@@ -137,7 +148,16 @@ export function ActionItems() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="relative">
+        {canDismiss && (
+          <button
+            onClick={dismiss}
+            className="absolute top-4 end-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label={t('common.close')}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         <CardTitle>{t('home.gettingStarted')}</CardTitle>
         <CardDescription>
           {t('home.stepsCompleted', { completed: completedCount, total: totalSteps })}
