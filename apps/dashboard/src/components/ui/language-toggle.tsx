@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
-import { setLanguage } from '@/lib/i18n';
+import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -8,16 +8,10 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 
-const languages = [
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'ar', label: 'العربية' },
-];
-
 export function LanguageToggle() {
   const { i18n } = useTranslation();
 
-  const currentLanguage = languages.find((l) => l.code === i18n.language) || languages[0];
+  const currentLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) || SUPPORTED_LANGUAGES[0];
 
   return (
     <DropdownMenu>
@@ -32,7 +26,7 @@ export function LanguageToggle() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {languages.map((lang) => (
+        {SUPPORTED_LANGUAGES.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}

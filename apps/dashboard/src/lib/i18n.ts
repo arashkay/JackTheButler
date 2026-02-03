@@ -5,6 +5,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '@/locales/en/common.json';
 import es from '@/locales/es/common.json';
 import ar from '@/locales/ar/common.json';
+import hi from '@/locales/hi/common.json';
+import ru from '@/locales/ru/common.json';
+import zh from '@/locales/zh/common.json';
 
 i18n
   .use(LanguageDetector)
@@ -14,9 +17,12 @@ i18n
       en: { translation: en },
       es: { translation: es },
       ar: { translation: ar },
+      hi: { translation: hi },
+      ru: { translation: ru },
+      zh: { translation: zh },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'ar'],
+    supportedLngs: ['en', 'es', 'ar', 'hi', 'ru', 'zh'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
@@ -28,6 +34,15 @@ i18n
   });
 
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+export const SUPPORTED_LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'hi', label: 'हिन्दी' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'zh', label: '中文' },
+  { code: 'ar', label: 'العربية' },
+] as const;
 
 // Set initial direction based on detected language
 document.documentElement.dir = RTL_LANGUAGES.includes(i18n.language) ? 'rtl' : 'ltr';
