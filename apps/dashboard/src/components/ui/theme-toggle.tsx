@@ -1,8 +1,15 @@
 import { useRef } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  size?: 'default' | 'sm';
+  className?: string;
+  iconOnly?: boolean;
+}
+
+export function ThemeToggle({ size = 'default', className, iconOnly = false }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -34,29 +41,53 @@ export function ThemeToggle() {
     await transition.ready;
   };
 
+  const iconSize = size === 'sm' ? 'h-5 w-5' : 'h-4 w-4';
+
+  const icons = (
+    <>
+      <Sun
+        className={cn(
+          'absolute transition-all duration-300 ease-in-out',
+          iconSize,
+          isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'
+        )}
+      />
+      <Moon
+        className={cn(
+          'absolute transition-all duration-300 ease-in-out',
+          iconSize,
+          isDark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+        )}
+      />
+    </>
+  );
+
+  if (iconOnly) {
+    return (
+      <span
+        className={cn(
+          'relative flex items-center justify-center',
+          size === 'sm' ? 'h-5 w-5' : 'h-8 w-8',
+          className
+        )}
+      >
+        {icons}
+      </span>
+    );
+  }
+
   return (
     <button
       ref={buttonRef}
       onClick={toggle}
-      className="relative h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center transition-colors"
+      className={cn(
+        'relative rounded-md flex items-center justify-center transition-colors',
+        size === 'sm' ? 'h-5 w-5' : 'h-8 w-8 hover:bg-muted',
+        className
+      )}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {/* Sun icon */}
-      <Sun
-        className={`h-4 w-4 absolute transition-all duration-300 ease-in-out ${
-          isDark
-            ? 'rotate-90 scale-0 opacity-0'
-            : 'rotate-0 scale-100 opacity-100'
-        }`}
-      />
-      {/* Moon icon */}
-      <Moon
-        className={`h-4 w-4 absolute transition-all duration-300 ease-in-out ${
-          isDark
-            ? 'rotate-0 scale-100 opacity-100'
-            : '-rotate-90 scale-0 opacity-0'
-        }`}
-      />
+      {icons}
     </button>
   );
 }

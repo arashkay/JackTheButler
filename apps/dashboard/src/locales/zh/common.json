@@ -42,7 +42,9 @@
     "configure": "配置",
     "required": "必填",
     "settings": "设置",
-    "logout": "退出"
+    "logout": "退出",
+    "switchToDark": "切换到深色",
+    "switchToLight": "切换到浅色"
   },
   "nav": {
     "home": "首页",

@@ -42,7 +42,9 @@
     "configure": "إعداد",
     "required": "مطلوب",
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "switchToDark": "التبديل إلى الداكن",
+    "switchToLight": "التبديل إلى الفاتح"
   },
   "nav": {
     "home": "الرئيسية",

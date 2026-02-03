@@ -42,7 +42,9 @@
     "configure": "Настроить",
     "required": "Обязательно",
     "settings": "Настройки",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "switchToDark": "Тёмная тема",
+    "switchToLight": "Светлая тема"
   },
   "nav": {
     "home": "Главная",

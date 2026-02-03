@@ -42,7 +42,9 @@
     "configure": "कॉन्फ़िगर करें",
     "required": "आवश्यक",
     "settings": "सेटिंग्स",
-    "logout": "लॉग आउट"
+    "logout": "लॉग आउट",
+    "switchToDark": "डार्क में बदलें",
+    "switchToLight": "लाइट में बदलें"
   },
   "nav": {
     "home": "होम",

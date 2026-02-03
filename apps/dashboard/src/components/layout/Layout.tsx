@@ -28,6 +28,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-toggle';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface NavItem {
   path: string;
@@ -58,6 +59,23 @@ export function Layout() {
   });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const themeToggleRef = useRef<HTMLDivElement>(null);
+  const toggleTheme = async () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    if (!document.startViewTransition) {
+      setTheme(newTheme);
+      return;
+    }
+    const el = themeToggleRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      document.documentElement.style.setProperty('--theme-toggle-x', `${rect.left + rect.width / 2}px`);
+      document.documentElement.style.setProperty('--theme-toggle-y', `${rect.top + rect.height / 2}px`);
+    }
+    await document.startViewTransition(() => setTheme(newTheme)).ready;
+  };
 
   // Connect to WebSocket for real-time updates
   useWebSocket();
@@ -375,42 +393,59 @@ export function Layout() {
 
         {/* User section */}
         <div className="flex-shrink-0" ref={userMenuRef}>
-          <div className={`overflow-hidden transition-all duration-200 ${userMenuOpen ? 'max-h-40 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
-            <button
-              onClick={() => {
-                setUserMenuOpen(false);
-                navigate('/settings');
-              }}
-              className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
-            >
-              <Settings size={16} className="text-muted-foreground" />
-              {!collapsed && <span>{t('common.settings')}</span>}
-            </button>
-            <button
-              onClick={() => {
-                setUserMenuOpen(false);
-                handleLogout();
-              }}
-              className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
-            >
-              <LogOut size={16} className="text-muted-foreground" />
-              {!collapsed && <span>{t('common.logout')}</span>}
-            </button>
+          <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-48 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
+            <Tooltip content={collapsed ? (isDark ? t('common.switchToLight') : t('common.switchToDark')) : undefined} side="right">
+              <div
+                onClick={toggleTheme}
+                className={`flex items-center gap-3 rounded-lg cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+              >
+                <span ref={themeToggleRef}>
+                  <ThemeToggle size="sm" iconOnly />
+                </span>
+                {!collapsed && <span className="text-sm font-medium">{isDark ? t('common.switchToLight') : t('common.switchToDark')}</span>}
+              </div>
+            </Tooltip>
+            <Tooltip content={collapsed ? t('common.settings') : undefined} side="right">
+              <button
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+              >
+                <Settings size={20} />
+                {!collapsed && <span className="text-sm font-medium">{t('common.settings')}</span>}
+              </button>
+            </Tooltip>
+            <Tooltip content={collapsed ? t('common.logout') : undefined} side="right">
+              <button
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  handleLogout();
+                }}
+                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+              >
+                <LogOut size={20} />
+                {!collapsed && <span className="text-sm font-medium">{t('common.logout')}</span>}
+              </button>
+            </Tooltip>
           </div>
-          <button
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
-          >
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <User size={14} className="text-muted-foreground" />
-            </div>
-            {!collapsed && (
-              <>
-                <span className="flex-1 text-left text-sm truncate">{user?.name}</span>
-                <ChevronUp size={14} className={`text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-              </>
-            )}
-          </button>
+          <Tooltip content={collapsed ? user?.name : undefined} side="right">
+            <button
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
+            >
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <User size={14} className="text-muted-foreground" />
+              </div>
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left text-sm truncate">{user?.name}</span>
+                  <ChevronUp size={14} className={`text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </aside>
 

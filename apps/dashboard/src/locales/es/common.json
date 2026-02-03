@@ -42,7 +42,9 @@
     "configure": "Configurar",
     "required": "Requerido",
     "settings": "Configuración",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "switchToDark": "Cambiar a oscuro",
+    "switchToLight": "Cambiar a claro"
   },
   "nav": {
     "home": "Inicio",
