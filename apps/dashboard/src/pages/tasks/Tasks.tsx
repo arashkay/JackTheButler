@@ -166,7 +166,7 @@ export function TasksPage() {
           />
         }
         loading={isLoading}
-        rowClassName={(task) => task.status === 'pending' ? 'bg-yellow-50' : undefined}
+        rowClassName={(task) => task.status === 'pending' ? 'bg-warning hover:bg-warning/80' : undefined}
         emptyState={
           <EmptyState
             icon={ListTodo}

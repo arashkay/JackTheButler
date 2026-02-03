@@ -208,7 +208,7 @@ export function GuestProfilePage() {
                 {guest.firstName} {guest.lastName}
               </h1>
               {guest.vipStatus && guest.vipStatus !== 'none' && (
-                <Badge className="bg-yellow-100 text-yellow-800">
+                <Badge variant="gold">
                   <Crown className="w-3 h-3 mr-1" />
                   {guest.vipStatus.toUpperCase()}
                 </Badge>

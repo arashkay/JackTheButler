@@ -204,7 +204,7 @@ function ExpandedRow({
                       'p-2 rounded text-sm',
                       msg.direction === 'inbound'
                         ? 'bg-muted mr-8'
-                        : 'bg-blue-50 ml-8'
+                        : 'bg-info ml-8'
                     )}
                   >
                     <span className="text-xs text-muted-foreground">
@@ -386,7 +386,7 @@ export function ApprovalsPage() {
                       className={cn(
                         'cursor-pointer',
                         isExpanded && 'bg-muted/30',
-                        item.status === 'pending' && !isExpanded && 'bg-yellow-50'
+                        item.status === 'pending' && !isExpanded && 'bg-warning hover:bg-warning/80'
                       )}
                       onClick={() => setExpandedId(isExpanded ? null : item.id)}
                     >

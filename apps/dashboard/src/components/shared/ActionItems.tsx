@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
 const severityConfig = {
   critical: {
     icon: AlertCircle,
-    containerClass: 'bg-red-50 border-red-200',
-    iconClass: 'text-red-600',
-    descClass: 'text-red-800',
+    containerClass: 'bg-error border-error-border',
+    iconClass: 'text-error-foreground',
+    descClass: 'text-error-foreground',
   },
 };
 
@@ -61,8 +61,8 @@ function CompletedStepRow({ step }: { step: CompletedStep }) {
 
   return (
     <div className="flex gap-4 py-3 border-b last:border-b-0">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-        <Check className="h-4 w-4 text-green-600" />
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-success flex items-center justify-center">
+        <Check className="h-4 w-4 text-success-foreground" />
       </div>
       <div className="flex-1 min-w-0 flex items-center">
         <h3 className="font-medium text-muted-foreground">{title}</h3>
@@ -79,7 +79,7 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
 
   return (
     <div className="flex gap-4 py-4 border-b last:border-b-0">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-info flex items-center justify-center text-sm font-medium text-info-foreground">
         {step}
       </div>
       <div className="flex-1 min-w-0">
@@ -176,7 +176,7 @@ export function ActionItemsBanner() {
       {issue.action && (
         <Link
           to={issue.action.route}
-          className="text-sm font-medium text-red-700 hover:text-red-900 flex items-center gap-1"
+          className="text-sm font-medium text-error-foreground hover:opacity-80 flex items-center gap-1"
         >
           {issue.action.label}
           <ArrowRight className="h-3 w-3" />

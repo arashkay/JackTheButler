@@ -1,5 +1,6 @@
 import { Mail, MessageSquare, Globe, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // Custom WhatsApp icon (simplified brand icon)
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -26,14 +27,16 @@ interface ChannelIconProps {
   channel: string;
   className?: string;
   showLabel?: boolean;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  boxed?: boolean;
+  inverted?: boolean;
 }
 
-export function ChannelIcon({ channel, className, showLabel = false, size = 'sm' }: ChannelIconProps) {
+export function ChannelIcon({ channel, className, showLabel = false, size = 'sm', boxed = false, inverted = false }: ChannelIconProps) {
   const config = channelConfig[channel.toLowerCase()] || { icon: MessageSquare, label: channel };
   const Icon = config.icon;
 
-  const sizeClass = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
+  const sizeClass = size === 'sm' ? 'w-3.5 h-3.5' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5';
 
   if (showLabel) {
     return (
@@ -44,9 +47,25 @@ export function ChannelIcon({ channel, className, showLabel = false, size = 'sm'
     );
   }
 
+  if (boxed) {
+    return (
+      <Tooltip content={config.label}>
+        <span className={cn(
+          'inline-flex items-center justify-center p-2 rounded-md',
+          inverted ? 'bg-foreground' : 'bg-muted',
+          className
+        )}>
+          <Icon className={cn(sizeClass, inverted ? 'text-background' : 'text-muted-foreground')} />
+        </span>
+      </Tooltip>
+    );
+  }
+
   return (
-    <span title={config.label}>
-      <Icon className={cn(sizeClass, 'text-muted-foreground', className)} />
-    </span>
+    <Tooltip content={config.label}>
+      <span>
+        <Icon className={cn(sizeClass, 'text-muted-foreground', className)} />
+      </span>
+    </Tooltip>
   );
 }

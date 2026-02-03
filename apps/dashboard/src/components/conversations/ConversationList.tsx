@@ -24,9 +24,10 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
             selectedId === conv.id && 'bg-accent'
           )}
         >
-          {/* Top row: Name | Time */}
+          {/* Top row: Icon + Name | Time */}
           <div className="flex items-center justify-between mb-1">
-            <div className="text-sm font-medium text-foreground truncate">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground truncate">
+              <ChannelIcon channel={conv.channelType} size="sm" boxed />
               {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
             </div>
             {conv.lastMessageAt && (
@@ -35,10 +36,9 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
               </span>
             )}
           </div>
-          {/* Bottom row: Icon + msgs + tasks | State */}
+          {/* Bottom row: msgs + tasks | State */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-muted-foreground">
-              <ChannelIcon channel={conv.channelType} size="sm" />
               <span className="flex items-center gap-0.5 text-xs bg-muted px-1.5 py-0.5 rounded-md">
                 <MessageSquare className="w-3 h-3" />
                 {conv.messageCount}

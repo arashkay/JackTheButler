@@ -10,6 +10,7 @@ import type { Task } from '@/types/api';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ChannelIcon } from '@/components/shared/ChannelIcon';
 
 interface Props {
   id: string;
@@ -161,31 +162,23 @@ export function ConversationView({ id }: Props) {
       <div className="p-4 border-b shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-medium text-foreground">
+            <h2 className="font-medium text-foreground flex items-center gap-3">
+              <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
               {conv.guestName || conv.channelId}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {conv.channelType} · {conv.state}
-              {conv.currentIntent && ` · ${conv.currentIntent}`}
-            </p>
+            {conv.currentIntent && (
+              <p className="text-sm text-muted-foreground">{conv.currentIntent}</p>
+            )}
           </div>
           <div className="relative" ref={stateMenuRef}>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setStateMenuOpen(!stateMenuOpen)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors',
-                conv.state === 'escalated'
-                  ? 'bg-orange-50 border-orange-200 text-orange-700'
-                  : conv.state === 'resolved'
-                  ? 'bg-green-50 border-green-200 text-green-700'
-                  : conv.state === 'closed'
-                  ? 'bg-muted/50 border-border text-muted-foreground'
-                  : 'bg-blue-50 border-blue-200 text-blue-700'
-              )}
             >
               <span className="capitalize">{conv.state}</span>
               <ChevronDown size={14} className={cn('transition-transform', stateMenuOpen && 'rotate-180')} />
-            </button>
+            </Button>
 
             {stateMenuOpen && (
               <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-md shadow-lg py-1 z-50">
@@ -193,7 +186,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('escalated')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-orange-700 hover:bg-orange-50 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.escalate')}
                   </button>
@@ -202,7 +195,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('active')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.deEscalate')}
                   </button>
@@ -211,7 +204,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('resolved')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-green-700 hover:bg-green-50 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.resolve')}
                   </button>
@@ -267,7 +260,7 @@ export function ConversationView({ id }: Props) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('conversations.typeMessage')}
-            className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
             disabled={sendMutation.isPending}
           />
           <Button
@@ -315,8 +308,8 @@ function MessageBubble({ message, t }: { message: Message; t: (key: string) => s
       <div
         className={cn(
           'max-w-[70%] rounded-lg px-3 py-2',
-          isInbound ? 'bg-muted' : 'bg-blue-600 text-white',
-          message.senderType === 'ai' && !isInbound && 'bg-green-600'
+          isInbound ? 'bg-muted' : 'bg-blue-600 dark:bg-blue-900 text-white',
+          message.senderType === 'ai' && !isInbound && 'bg-green-600 dark:bg-green-900'
         )}
       >
         <div
@@ -412,7 +405,7 @@ function TaskCard({
   return (
     <div className={cn(
       'border rounded-lg p-3',
-      task.status === 'pending' && 'bg-yellow-50 border-yellow-200'
+      task.status === 'pending' && 'bg-warning border-warning-border'
     )}>
       {/* Header row: Icon + Type + Priority + Status */}
       <div className="flex items-center gap-2 mb-2">
@@ -462,13 +455,9 @@ function TaskCard({
             size="xs"
             onClick={onComplete}
             loading={isCompletePending}
-            className="bg-green-600 hover:bg-green-700"
           >
             {t('conversations.complete')}
           </Button>
-        )}
-        {(task.status === 'completed' || task.status === 'cancelled') && (
-          <span className="text-xs text-muted-foreground/70 italic">{t('conversations.noActionsAvailable')}</span>
         )}
       </div>
     </div>

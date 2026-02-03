@@ -8,10 +8,10 @@ const inlineAlertVariants = cva(
     variants: {
       variant: {
         default: 'bg-muted/50 border-muted text-foreground',
-        info: 'bg-blue-50 border-blue-100 text-blue-700',
-        success: 'bg-green-50 border-green-100 text-green-700',
-        warning: 'bg-yellow-50 border-yellow-100 text-yellow-700',
-        error: 'bg-red-50 border-red-100 text-red-700',
+        info: 'bg-info border-info-border text-info-foreground',
+        success: 'bg-success border-success-border text-success-foreground',
+        warning: 'bg-warning border-warning-border text-warning-foreground',
+        error: 'bg-error border-error-border text-error-foreground',
       },
     },
     defaultVariants: {

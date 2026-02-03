@@ -239,7 +239,7 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-muted flex overflow-hidden relative">
+    <div className="h-screen bg-background flex overflow-hidden relative">
       {/* Sidebar */}
       <aside
         className={`bg-card border-r flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${

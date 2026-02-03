@@ -87,7 +87,7 @@ export function ExtensionIcon({ id, size = 'md', className }: ExtensionIconProps
         <img
           src={svgPath}
           alt={id}
-          className={cn(sizeClass, className)}
+          className={cn(sizeClass, 'dark:invert', className)}
         />
       );
     }

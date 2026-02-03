@@ -81,8 +81,8 @@ function LevelSelector({
               'px-2 py-1 text-xs rounded font-medium transition-colors',
               isActive
                 ? level === 'L1'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-green-100 text-green-700'
+                  ? 'bg-warning text-warning-foreground'
+                  : 'bg-success text-success-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
@@ -96,8 +96,8 @@ function LevelSelector({
               'flex-1 p-4 rounded-lg border-2 transition-all text-left',
               isActive
                 ? level === 'L1'
-                  ? 'border-yellow-500 bg-yellow-50'
-                  : 'border-green-500 bg-green-50'
+                  ? 'border-warning-border bg-warning'
+                  : 'border-success-border bg-success'
                 : 'border-border hover:border-border/80'
             )}
           >
