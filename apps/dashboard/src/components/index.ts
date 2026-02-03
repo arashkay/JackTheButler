@@ -8,8 +8,9 @@ export { StatsBar, StatsCard, StatsGrid } from './shared/StatsCard';
 export { EmptyState } from './shared/EmptyState';
 export { DataTable } from './DataTable';
 export type { Column, DataTableProps, SearchConfig } from './DataTable';
-export { ExpandableSearch } from './ExpandableSearch';
+export { ExpandableSearch } from './shared/ExpandableSearch';
 export { ChannelIcon } from './shared/ChannelIcon';
+export { ActionItems } from './shared/ActionItems';
 
 // Skeletons
 export {
@@ -17,7 +18,7 @@ export {
   ApprovalTableSkeleton,
   AutomationCardSkeleton,
   ExtensionCardSkeleton,
-} from './skeletons';
+} from './Skeletons';
 
 // Form components
 export { SearchInput } from './shared/SearchInput';

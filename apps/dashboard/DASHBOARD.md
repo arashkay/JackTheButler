@@ -15,7 +15,7 @@ The dashboard uses a combination of:
 | `Alert` | Page-level notifications with title, description, dismiss |
 | `InlineAlert` | Compact card-level errors/warnings |
 | `Badge` | Status indicators, labels, counts |
-| `Button` | Actions - use `variant` and `size` props |
+| `Button` | Actions with `variant`, `size`, and `loading` props |
 | `Card` | Content containers with header, content, footer |
 | `Checkbox` | Form checkboxes |
 | `ConfirmDialog` | Confirmation modals for destructive actions |
@@ -140,52 +140,37 @@ const categoryOptions = [
 ```tsx
 import { Button } from '@/components/ui/button';
 
-// Primary action (uses --primary CSS variable, true black)
+// Primary action
 <Button>
   <Plus className="w-4 h-4 mr-1.5" />
   Add Item
 </Button>
 
-// Secondary action
+// Secondary/Destructive
 <Button variant="outline">Cancel</Button>
-
-// Destructive action
 <Button variant="destructive">Delete</Button>
 
-// Small button (for headers)
-<Button size="xs" variant="outline">
-  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-  Refresh
+// Loading state (built-in) - auto-adds spinner & disables
+<Button loading={isPending}>Save</Button>
+<Button loading={isPending}>
+  <Save className="w-4 h-4 mr-1.5" />
+  Save
 </Button>
 
-// Header/navbar action button (standard)
-<Button size="sm">
-  <Plus className="w-4 h-4 mr-1.5" />
-  Add New
-</Button>
-
-// Compact button for tight spaces (table rows, inline)
-<Button size="xs">
-  <Plus className="w-3.5 h-3.5 mr-1.5" />
-  Add
-</Button>
-
-// Loading state (use Spinner component)
-<Button disabled={loading}>
-  {loading ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+// Loading with icon replacement (when spinner should replace icon)
+<Button disabled={saving}>
+  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
   Save
 </Button>
 ```
 
-**Important:** Never hardcode button colors like `bg-gray-900`. Always use the Button component's default variant which uses the `--primary` CSS variable from `index.css`.
-
 **Button Sizes:**
 | Size | Height | Use For |
 |------|--------|---------|
-| `sm` | 36px | Header/navbar actions, card actions |
+| `xs` | 28px | Table row actions, compact spaces |
+| `sm` | 36px | Header actions, card actions |
 | `default` | 40px | Form submit buttons, modals |
-| `xs` | 28px | Table row actions, tight inline spaces |
-| `lg` | 44px | Large CTAs, landing pages |
+| `lg` | 44px | Large CTAs |
 
 ---
 
@@ -275,10 +260,7 @@ export function MyPage() {
 
     <div className="flex justify-end gap-2 pt-4 border-t">
       <Button variant="outline" onClick={onCancel}>Cancel</Button>
-      <Button onClick={onSave} disabled={saving}>
-        {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        Save
-      </Button>
+      <Button onClick={onSave} loading={saving}>Save</Button>
     </div>
   </CardContent>
 </Card>
@@ -370,7 +352,7 @@ Use skeleton placeholders for list and table pages - they show the expected layo
 />
 
 // Custom list skeletons
-import { ConversationListSkeleton, AutomationCardSkeleton } from '@/components/skeletons';
+import { ConversationListSkeleton, AutomationCardSkeleton } from '@/components';
 
 {isLoading ? <ConversationListSkeleton count={6} /> : <ConversationList ... />}
 {isLoading ? <AutomationCardSkeleton count={3} /> : <div>...</div>}
@@ -385,18 +367,25 @@ import { ConversationListSkeleton, AutomationCardSkeleton } from '@/components/s
 | `AutomationCardSkeleton` | Automation rule cards |
 | `ExtensionCardSkeleton` | Extension cards grid |
 
-### Spinner Loading (Actions/Detail Pages)
+### Button Loading
 
-Use `Spinner` for button states, detail pages, and processing indicators.
+Use the `loading` prop on Button - it automatically shows a spinner and disables the button.
 
 ```tsx
-import { Spinner } from '@/components/ui/spinner';
+// Simple loading (adds spinner before text)
+<Button loading={isPending}>Save</Button>
 
-// Button loading (replace icon with spinner)
+// Icon replacement pattern (when spinner should replace icon)
 <Button disabled={saving}>
   {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
   Save
 </Button>
+```
+
+### Page/Section Loading
+
+```tsx
+import { Spinner } from '@/components/ui/spinner';
 
 // Detail page loading
 if (loading) {
@@ -409,23 +398,9 @@ if (loading) {
     </PageContainer>
   );
 }
-
-// Processing state
-<Card>
-  <CardContent className="py-12 text-center">
-    <Spinner size="lg" className="mx-auto mb-4 text-primary" />
-    <p className="text-lg font-medium">Processing...</p>
-  </CardContent>
-</Card>
 ```
 
-**Spinner Sizes:**
-| Size | Use For |
-|------|---------|
-| `xs` | Tiny inline spinners |
-| `sm` | Button loading states |
-| `md` | Card/section loading |
-| `lg` | Full page loading |
+**Spinner Sizes:** `xs` (12px), `sm` (16px), `md` (24px), `lg` (32px)
 
 ---
 
@@ -482,46 +457,28 @@ import { iconSize } from '@/lib/icons';
 apps/dashboard/src/
 ├── components/
 │   ├── ui/              # Base UI components (shadcn-style)
-│   │   ├── alert.tsx
-│   │   ├── inline-alert.tsx
-│   │   ├── button.tsx
-│   │   └── ...
 │   ├── shared/          # Shared business components
-│   └── layout/          # Layout components
+│   ├── layout/          # Layout components
+│   └── [domain]/        # Domain-specific (conversations/, extensions/)
 ├── pages/               # Page components by feature
-│   ├── guests/
-│   ├── settings/
-│   └── tools/
 ├── hooks/               # Custom React hooks
 ├── contexts/            # React contexts
-├── lib/                 # Utilities (api, utils)
+├── lib/                 # Utilities (api, utils, config)
 └── types/               # TypeScript types
 ```
 
----
+## Naming Conventions
 
-## Refactoring To-Do (Temporary)
+| Location | Convention | Examples |
+|----------|------------|----------|
+| `components/ui/` | lowercase kebab-case | `button.tsx`, `confirm-dialog.tsx` |
+| `components/*` (other) | PascalCase | `DataTable.tsx`, `EmptyState.tsx` |
+| `pages/` | PascalCase | `Login.tsx`, `Guests.tsx` |
+| `contexts/` | PascalCase | `PageActionsContext.tsx` |
+| `hooks/` | camelCase with `use` prefix | `useAuth.ts`, `useFilteredQuery.ts` |
+| `lib/` | lowercase | `api.ts`, `formatters.ts`, `config.ts` |
+| `types/` | lowercase | `api.ts` |
 
-### High Priority
-- [x] ~~Create `src/lib/colors.ts`~~ - Replaced with Badge component variants
-- [x] Create `src/lib/formatters.ts` - formatDate, formatDateShort, formatTime, formatDateTime, formatTimeAgo, formatCurrency
-- [x] Create `src/types/api.ts` - shared Guest, Reservation, Task, Conversation types
-- [x] Create `src/lib/config.ts` - status filter options, priority options, badge variant mappings
-
-### Medium Priority
-- [x] Create `<Spinner />` component - replace repeated spinner markup
-- [x] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
-- [x] Use `FilterTabs` consistently (fix Conversations, Automations pages)
-- [x] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
-- [x] Create `useFilteredQuery()` hook - query + URLSearchParams pattern
-- [x] Create `buildQueryString()` utility - reduce URLSearchParams duplication
-
-### Lower Priority
-- [x] ~~Create Badge variants for status types~~ - Done: default, success, warning, error, info, dark, gold
-- [x] Define icon size constants (xs, sm, md, lg, xl) - `src/lib/icons.ts`
-- [x] Extract `<GuestFormFields />` - `src/components/shared/GuestFormFields.tsx`
-- [x] Create column factory functions for DataTable - `src/components/DataTable/columns.tsx` (createStatusColumn, createDateColumn, createTextColumn, createActionsColumn)
-- [x] Extract `<SectionCard />` - `src/components/ui/section-card.tsx`
-- [x] Standardize empty states - all pages use EmptyState component
-- [x] Standardize loading states - all pages use Spinner component
-- [x] Create `<ErrorAlert />` wrapper - `src/components/ui/error-alert.tsx`
+- **Folders** are always lowercase: `guests/`, `settings/`, `ui/`
+- **`ui/`** follows shadcn/ui convention (lowercase kebab-case)
+- **All other components** use PascalCase to match React component names

@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
-import { AutomationCardSkeleton } from '@/components/skeletons';
+import { AutomationCardSkeleton } from '@/components';
 
 type TriggerType = 'time_based' | 'event_based';
 type ActionType = 'send_message' | 'create_task' | 'notify_staff' | 'webhook';

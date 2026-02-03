@@ -113,6 +113,7 @@ export function TasksPage() {
     {
       key: 'status',
       header: 'Action',
+      className: 'w-36',
       render: (task) => (
         <div onClick={(e) => e.stopPropagation()}>
           {task.status === 'pending' && (

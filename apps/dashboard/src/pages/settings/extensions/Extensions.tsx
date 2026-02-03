@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExtensionIcon, CategoryIcon } from '@/components';
 import { PageContainer, StatsBar, SearchInput, EmptyState } from '@/components';
-import { ExtensionCardSkeleton } from '@/components/skeletons';
+import { ExtensionCardSkeleton } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 

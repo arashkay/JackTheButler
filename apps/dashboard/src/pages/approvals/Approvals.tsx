@@ -42,7 +42,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
-import { ApprovalTableSkeleton } from '@/components/skeletons';
+import { ApprovalTableSkeleton } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 

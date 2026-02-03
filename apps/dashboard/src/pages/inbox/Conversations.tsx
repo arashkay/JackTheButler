@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { conversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
-import { ConversationListSkeleton } from '@/components/skeletons';
+import { ConversationListSkeleton } from '@/components';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import type { Conversation, ConversationState } from '@/types/api';
 

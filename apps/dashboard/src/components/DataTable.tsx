@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExpandableSearch } from './ExpandableSearch';
+import { ExpandableSearch } from './shared/ExpandableSearch';
 import { cn } from '@/lib/utils';
 
 export interface Column<T> {

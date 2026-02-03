@@ -1,7 +1,5 @@
 import { Bot, MessageSquare, Cpu, Plug } from 'lucide-react';
-import { PageContainer, PageHeader } from '@/components';
-import { StatsBar } from '@/components/shared/StatsCard';
-import { ActionItems } from '@/components/shared/ActionItems';
+import { PageContainer, PageHeader, StatsBar, ActionItems } from '@/components';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 
 export function HomePage() {
