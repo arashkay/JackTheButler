@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface DropdownMenuProps {
   children: React.ReactNode;
+  className?: string;
 }
 
 interface DropdownMenuTriggerProps {
@@ -14,6 +15,7 @@ interface DropdownMenuTriggerProps {
 interface DropdownMenuContentProps {
   children: React.ReactNode;
   align?: 'start' | 'center' | 'end';
+  side?: 'top' | 'bottom' | 'right' | 'left';
   className?: string;
 }
 
@@ -40,7 +42,7 @@ function emitCloseOthers(excludeId: string) {
 
 let dropdownIdCounter = 0;
 
-export function DropdownMenu({ children }: DropdownMenuProps) {
+export function DropdownMenu({ children, className }: DropdownMenuProps) {
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const dropdownId = React.useRef(`dropdown-${++dropdownIdCounter}`);
@@ -82,7 +84,7 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
 
   return (
     <DropdownMenuContext.Provider value={{ open, setOpen: handleSetOpen, triggerRef, dropdownId: dropdownId.current }}>
-      <div ref={triggerRef} className="relative inline-block" data-dropdown data-dropdown-id={dropdownId.current}>
+      <div ref={triggerRef} className={cn("relative inline-block", className)} data-dropdown data-dropdown-id={dropdownId.current}>
         {children}
       </div>
     </DropdownMenuContext.Provider>
@@ -110,25 +112,73 @@ export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerPr
   );
 }
 
-export function DropdownMenuContent({ children, align = 'end', className }: DropdownMenuContentProps) {
+export function DropdownMenuContent({ children, align = 'end', side = 'bottom', className }: DropdownMenuContentProps) {
   const { open, triggerRef, dropdownId } = React.useContext(DropdownMenuContext);
-  const [position, setPosition] = React.useState({ top: 0, left: 0 });
+  const [position, setPosition] = React.useState({ top: 0, left: 0, transform: '' });
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      const isRtl = document.documentElement.dir === 'rtl';
+
       let left = rect.left + window.scrollX;
-      if (align === 'end') {
-        left = rect.right + window.scrollX;
-      } else if (align === 'center') {
-        left = rect.left + rect.width / 2 + window.scrollX;
+      let transform = '';
+      let top = rect.bottom + window.scrollY;
+
+      // Handle horizontal sides (right/left)
+      if (side === 'right' || side === 'left') {
+        const effectiveSide = isRtl ? (side === 'right' ? 'left' : 'right') : side;
+
+        if (effectiveSide === 'right') {
+          left = rect.right + window.scrollX;
+        } else {
+          left = rect.left + window.scrollX;
+          transform = 'translateX(-100%)';
+        }
+
+        // Vertical alignment for horizontal sides
+        if (align === 'start') {
+          top = rect.top + window.scrollY;
+        } else if (align === 'center') {
+          top = rect.top + rect.height / 2 + window.scrollY;
+          transform = transform ? `${transform} translateY(-50%)` : 'translateY(-50%)';
+        } else if (align === 'end') {
+          top = rect.bottom + window.scrollY;
+          transform = transform ? `${transform} translateY(-100%)` : 'translateY(-100%)';
+        }
+      } else {
+        // Handle vertical sides (top/bottom)
+        if (align === 'end') {
+          if (isRtl) {
+            left = rect.left + window.scrollX;
+          } else {
+            left = rect.right + window.scrollX;
+            transform = 'translateX(-100%)';
+          }
+        } else if (align === 'center') {
+          left = rect.left + rect.width / 2 + window.scrollX;
+          transform = 'translateX(-50%)';
+        } else if (align === 'start') {
+          if (isRtl) {
+            left = rect.right + window.scrollX;
+            transform = 'translateX(-100%)';
+          }
+        }
+
+        if (side === 'top') {
+          top = rect.top + window.scrollY;
+          transform = transform ? `${transform} translateY(-100%)` : 'translateY(-100%)';
+        }
       }
+
       setPosition({
-        top: rect.bottom + window.scrollY,
+        top,
         left,
+        transform,
       });
     }
-  }, [open, align, triggerRef]);
+  }, [open, align, side, triggerRef]);
 
   if (!open) return null;
 
@@ -137,13 +187,13 @@ export function DropdownMenuContent({ children, align = 'end', className }: Drop
       data-dropdown
       data-dropdown-id={dropdownId}
       className={cn(
-        'fixed z-50 min-w-[120px] py-1 bg-popover border rounded-md shadow-lg',
+        'fixed z-50 min-w-[120px] w-max py-1 bg-popover border rounded-md shadow-lg',
         className
       )}
       style={{
         top: position.top,
         left: position.left,
-        transform: align === 'end' ? 'translateX(-100%)' : align === 'center' ? 'translateX(-50%)' : undefined,
+        transform: position.transform || undefined,
       }}
     >
       {children}
@@ -167,7 +217,7 @@ export function DropdownMenuItem({ children, onClick, className, disabled }: Dro
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'w-full px-3 py-1.5 text-sm text-left hover:bg-muted transition-colors',
+        'block w-full px-3 py-1.5 text-sm text-start hover:bg-muted transition-colors whitespace-nowrap',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}

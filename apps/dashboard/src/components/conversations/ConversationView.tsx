@@ -176,17 +176,17 @@ export function ConversationView({ id }: Props) {
               size="sm"
               onClick={() => setStateMenuOpen(!stateMenuOpen)}
             >
-              <span className="capitalize">{conv.state}</span>
+              <span className="capitalize">{t(`conversations.states.${conv.state}`)}</span>
               <ChevronDown size={14} className={cn('transition-transform', stateMenuOpen && 'rotate-180')} />
             </Button>
 
             {stateMenuOpen && (
-              <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-md shadow-lg py-1 z-50">
+              <div className="absolute end-0 mt-1 w-40 bg-card border border-border rounded-md shadow-lg py-1 z-50">
                 {(conv.state === 'active' || conv.state === 'new') && (
                   <button
                     onClick={() => updateStateMutation.mutate('escalated')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    className="w-full px-3 py-2 text-start text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.escalate')}
                   </button>
@@ -195,7 +195,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('active')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    className="w-full px-3 py-2 text-start text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.deEscalate')}
                   </button>
@@ -204,7 +204,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('resolved')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    className="w-full px-3 py-2 text-start text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.resolve')}
                   </button>
@@ -213,7 +213,7 @@ export function ConversationView({ id }: Props) {
                   <button
                     onClick={() => updateStateMutation.mutate('active')}
                     disabled={updateStateMutation.isPending}
-                    className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    className="w-full px-3 py-2 text-start text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {t('conversations.reopen')}
                   </button>
@@ -367,9 +367,9 @@ function TaskIndicator({
         {tasks.map((task) => (
           <span
             key={task.id}
-            className={cn('capitalize', statusTextColors[task.status] || 'text-muted-foreground')}
+            className={cn(statusTextColors[task.status] || 'text-muted-foreground')}
           >
-            ({task.status.replace('_', ' ')})
+            ({t(`tasks.statuses.${task.status}`)})
           </span>
         ))}
       </button>
@@ -414,8 +414,8 @@ function TaskCard({
         <Badge variant={priorityVariants[task.priority]} className="capitalize">
           {task.priority}
         </Badge>
-        <Badge variant={taskStatusVariants[task.status]} className="capitalize">
-          {task.status.replace('_', ' ')}
+        <Badge variant={taskStatusVariants[task.status]}>
+          {t(`tasks.statuses.${task.status}`)}
         </Badge>
       </div>
 

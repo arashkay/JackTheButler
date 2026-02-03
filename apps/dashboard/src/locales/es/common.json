@@ -43,6 +43,7 @@
     "required": "Requerido",
     "settings": "Configuración",
     "logout": "Cerrar sesión",
+    "language": "Idioma",
     "switchToDark": "Cambiar a oscuro",
     "switchToLight": "Cambiar a claro"
   },
@@ -87,7 +88,44 @@
     "aiProvider": "Proveedor de IA",
     "embeddings": "Embeddings",
     "channels": "Canales",
-    "extensions": "Extensiones"
+    "extensions": "Extensiones",
+    "gettingStarted": "Primeros Pasos",
+    "stepsCompleted": "{{completed}} de {{total}} pasos completados",
+    "issues": {
+      "no_completion_provider": {
+        "title": "Configurar Proveedor de IA",
+        "description": "Conecta un proveedor de IA para habilitar conversaciones con huéspedes. Elige entre Anthropic Claude, OpenAI o ejecución local."
+      },
+      "no_embedding_provider": {
+        "title": "Habilitar Búsqueda de Conocimiento",
+        "description": "Configura embeddings para potenciar la búsqueda inteligente en la base de conocimiento. Usa Local AI (gratis y privado) u OpenAI para mayor rendimiento."
+      },
+      "using_local_completion": {
+        "title": "Actualizar Proveedor de IA",
+        "description": "Local AI está activo pero los proveedores en la nube ofrecen respuestas más rápidas y mejor calidad. Considera agregar Anthropic u OpenAI."
+      },
+      "no_channels": {
+        "title": "Conectar Canales de Mensajería",
+        "description": "Configura WhatsApp, SMS o Email para comenzar a recibir y responder mensajes de huéspedes."
+      },
+      "empty_knowledge_base": {
+        "title": "Construir Base de Conocimiento",
+        "description": "Extrae de tu sitio web del hotel para importar automáticamente FAQs, amenidades, políticas y otra información que ayude a la IA a responder preguntas de los huéspedes."
+      }
+    },
+    "completed": {
+      "completion_provider_configured": "Proveedor de IA Configurado",
+      "embedding_provider_configured": "Búsqueda de Conocimiento Habilitada",
+      "channels_configured": "Canales de Mensajería Conectados",
+      "knowledge_base_populated": "Base de Conocimiento Lista"
+    },
+    "actions": {
+      "no_completion_provider": "Configurar IA",
+      "no_embedding_provider": "Habilitar Embeddings",
+      "using_local_completion": "Actualizar IA",
+      "no_channels": "Agregar Canal",
+      "empty_knowledge_base": "Importar Contenido"
+    }
   },
   "tasks": {
     "type": "Tipo",
@@ -100,7 +138,13 @@
     "details": "Detalles de la tarea",
     "assignedTo": "Asignado a",
     "noTasks": "No se encontraron tareas",
-    "noTasksDescription": "Las tareas aparecerán aquí cuando sean creadas"
+    "noTasksDescription": "Las tareas aparecerán aquí cuando sean creadas",
+    "statuses": {
+      "pending": "Pendiente",
+      "in_progress": "En Progreso",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    }
   },
   "approvals": {
     "pending": "Pendiente",
@@ -464,6 +508,12 @@
       "disabled": "Desactivado",
       "error": "Error",
       "notSetUp": "No Configurado"
+    },
+    "fields": {
+      "embeddingModel": "Modelo de Embedding",
+      "completionModel": "Modelo de Completado",
+      "enableEmbedding": "Habilitar Embedding",
+      "enableCompletion": "Habilitar Completado"
     }
   },
   "siteScraper": {
@@ -536,6 +586,13 @@
       "ai": "Jack (IA)",
       "staff": "Personal",
       "system": "Sistema"
+    },
+    "states": {
+      "new": "Nuevo",
+      "active": "Activo",
+      "escalated": "Escalado",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
     }
   },
   "reservationDetail": {

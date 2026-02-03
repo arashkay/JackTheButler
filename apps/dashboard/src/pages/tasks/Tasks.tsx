@@ -191,8 +191,8 @@ export function TasksPage() {
                 <Badge variant={priorityVariants[selectedTask.priority]} className="capitalize">
                   {selectedTask.priority}
                 </Badge>
-                <Badge variant={taskStatusVariants[selectedTask.status]} className="capitalize">
-                  {selectedTask.status.replace('_', ' ')}
+                <Badge variant={taskStatusVariants[selectedTask.status]}>
+                  {t(`tasks.statuses.${selectedTask.status}`)}
                 </Badge>
               </div>
 

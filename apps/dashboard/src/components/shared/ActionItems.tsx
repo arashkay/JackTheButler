@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { useSystemStatus, type SystemIssue, type CompletedStep } from '@/hooks/useSystemStatus';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,46 +19,34 @@ const severityConfig = {
 };
 
 /**
- * Extended information for each issue type
+ * Issue types that have translations
  */
-const issueDetails: Record<string, { title: string; description: string }> = {
-  no_completion_provider: {
-    title: 'Configure AI Provider',
-    description: 'Connect an AI provider to enable guest conversations. Choose from Anthropic Claude, OpenAI, or run locally with Local AI.',
-  },
-  no_embedding_provider: {
-    title: 'Enable Knowledge Search',
-    description: 'Set up embeddings to power intelligent knowledge base search. Use Local AI (free & private) or OpenAI for faster performance.',
-  },
-  using_local_completion: {
-    title: 'Upgrade AI Provider',
-    description: 'Local AI is active but cloud providers offer faster responses and better quality. Consider adding Anthropic or OpenAI.',
-  },
-  no_channels: {
-    title: 'Connect Messaging Channels',
-    description: 'Set up WhatsApp, SMS, or Email to start receiving and responding to guest messages.',
-  },
-  empty_knowledge_base: {
-    title: 'Build Your Knowledge Base',
-    description: 'Scrape your hotel website to automatically import FAQs, amenities, policies, and other information that helps the AI answer guest questions.',
-  },
-};
+const issueTypes = [
+  'no_completion_provider',
+  'no_embedding_provider',
+  'using_local_completion',
+  'no_channels',
+  'empty_knowledge_base',
+] as const;
 
 /**
- * Titles for completed steps
+ * Completed step types that have translations
  */
-const completedStepTitles: Record<string, string> = {
-  completion_provider_configured: 'AI Provider Configured',
-  embedding_provider_configured: 'Knowledge Search Enabled',
-  channels_configured: 'Messaging Channels Connected',
-  knowledge_base_populated: 'Knowledge Base Ready',
-};
+const completedStepTypes = [
+  'completion_provider_configured',
+  'embedding_provider_configured',
+  'channels_configured',
+  'knowledge_base_populated',
+] as const;
 
 /**
  * Completed step row
  */
 function CompletedStepRow({ step }: { step: CompletedStep }) {
-  const title = completedStepTitles[step.type] || step.message;
+  const { t } = useTranslation();
+  const title = completedStepTypes.includes(step.type as typeof completedStepTypes[number])
+    ? t(`home.completed.${step.type}`)
+    : step.message;
 
   return (
     <div className="flex gap-4 py-3 border-b last:border-b-0">
@@ -72,10 +61,22 @@ function CompletedStepRow({ step }: { step: CompletedStep }) {
 }
 
 /**
+ * Route overrides for specific issue types
+ */
+const routeOverrides: Record<string, string> = {
+  no_embedding_provider: '/settings/extensions/ai?provider=local',
+};
+
+/**
  * Pending setup step
  */
 function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
-  const details = issueDetails[issue.type] || { title: issue.message, description: '' };
+  const { t } = useTranslation();
+  const hasTranslation = issueTypes.includes(issue.type as typeof issueTypes[number]);
+  const title = hasTranslation ? t(`home.issues.${issue.type}.title`) : issue.message;
+  const description = hasTranslation ? t(`home.issues.${issue.type}.description`) : '';
+  const actionLabel = hasTranslation ? t(`home.actions.${issue.type}`) : issue.action?.label;
+  const route = routeOverrides[issue.type] || issue.action?.route;
 
   return (
     <div className="flex gap-4 py-4 border-b last:border-b-0">
@@ -83,13 +84,13 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
         {step}
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-foreground">{details.title}</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">{details.description}</p>
-        {issue.action && (
-          <Link to={issue.action.route} className="inline-block mt-3">
+        <h3 className="font-medium text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+        {route && (
+          <Link to={route} className="inline-block mt-3">
             <Button size="sm">
-              {issue.action.label}
-              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+              {actionLabel}
+              <ArrowRight className="h-3.5 w-3.5 ms-1.5 rtl:rotate-180" />
             </Button>
           </Link>
         )}
@@ -103,6 +104,7 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
  * Shows completed steps and remaining setup tasks
  */
 export function ActionItems() {
+  const { t } = useTranslation();
   const { issues, completedSteps, isLoading } = useSystemStatus();
 
   if (isLoading) {
@@ -136,9 +138,9 @@ export function ActionItems() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Getting Started</CardTitle>
+        <CardTitle>{t('home.gettingStarted')}</CardTitle>
         <CardDescription>
-          {completedCount} of {totalSteps} steps completed
+          {t('home.stepsCompleted', { completed: completedCount, total: totalSteps })}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
@@ -179,7 +181,7 @@ export function ActionItemsBanner() {
           className="text-sm font-medium text-error-foreground hover:opacity-80 flex items-center gap-1"
         >
           {issue.action.label}
-          <ArrowRight className="h-3 w-3" />
+          <ArrowRight className="h-3 w-3 rtl:rotate-180" />
         </Link>
       )}
     </div>

@@ -83,10 +83,10 @@ export function DrawerContent({ children, className, title }: DrawerContentProps
       {/* Drawer panel */}
       <div
         className={cn(
-          'fixed inset-y-0 right-0 w-full max-w-md bg-card shadow-xl',
+          'fixed inset-y-0 end-0 w-full max-w-md bg-card shadow-xl',
           'transform transition-transform duration-300 ease-in-out',
           'flex flex-col',
-          isOpen ? 'translate-x-0' : 'translate-x-full',
+          isOpen ? 'translate-x-0' : 'ltr:translate-x-full rtl:-translate-x-full',
           className
         )}
       >

@@ -29,7 +29,7 @@ export function ConversationsPage() {
   return (
     <div className="flex h-[calc(100vh-56px)]">
       {/* Sidebar */}
-      <div className="w-80 border-r bg-card flex flex-col">
+      <div className="w-80 border-e bg-card flex flex-col">
         {/* Filters */}
         <div className="p-3 border-b">
           <FilterTabs

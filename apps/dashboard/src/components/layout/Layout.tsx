@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { PageActionsProvider, usePageActions } from '@/contexts/PageActionsContext';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import {
   Home,
   MessageSquare,
@@ -29,6 +30,13 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { useTheme } from '@/contexts/ThemeContext';
+import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 interface NavItem {
   path: string;
@@ -169,7 +177,8 @@ export function Layout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) || SUPPORTED_LANGUAGES[0];
 
   if (isLoading) {
     return (
@@ -242,7 +251,7 @@ export function Layout() {
     <div className="h-screen bg-background flex overflow-hidden relative">
       {/* Sidebar */}
       <aside
-        className={`bg-card border-r flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
+        className={`bg-card border-e flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
           collapsed ? 'w-16' : 'w-56'
         }`}
       >
@@ -393,7 +402,30 @@ export function Layout() {
 
         {/* User section */}
         <div className="flex-shrink-0" ref={userMenuRef}>
-          <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-48 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
+          <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-64 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
+            <DropdownMenu className={collapsed ? 'flex justify-center' : 'block w-full'}>
+              <Tooltip content={collapsed ? t('common.language') : undefined} side="right">
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                  >
+                    <Globe size={20} />
+                    {!collapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
+                  </button>
+                </DropdownMenuTrigger>
+              </Tooltip>
+              <DropdownMenuContent align="end" side="right" className="min-w-[120px]">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={lang.code === i18n.language ? 'bg-muted' : ''}
+                  >
+                    {lang.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Tooltip content={collapsed ? (isDark ? t('common.switchToLight') : t('common.switchToDark')) : undefined} side="right">
               <div
                 onClick={toggleTheme}
@@ -453,10 +485,10 @@ export function Layout() {
       <button
         onClick={toggleCollapsed}
         className="absolute w-6 h-6 flex items-center justify-center bg-card border rounded-full shadow-sm text-muted-foreground hover:text-foreground z-10 transition-all duration-200"
-        style={{ left: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
+        style={{ insetInlineStart: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
         title={collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
       >
-        <PanelLeft size={14} className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} />
+        <PanelLeft size={14} className={cn('transition-transform duration-200', collapsed ? 'rotate-180 rtl:rotate-0' : 'rtl:rotate-180')} />
       </button>
 
       {/* Main content */}

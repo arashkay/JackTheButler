@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExtensionIcon } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
@@ -120,6 +121,16 @@ function Toast({
   );
 }
 
+/**
+ * Map field keys to translation keys
+ */
+const fieldLabelKeys: Record<string, string> = {
+  embeddingModel: 'extensionEdit.fields.embeddingModel',
+  completionModel: 'extensionEdit.fields.completionModel',
+  enableEmbedding: 'extensionEdit.fields.enableEmbedding',
+  enableCompletion: 'extensionEdit.fields.enableCompletion',
+};
+
 function ConfigForm({
   provider,
   extensionId,
@@ -169,12 +180,14 @@ function ConfigForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {provider.configSchema.map((field) => (
+      {provider.configSchema.map((field) => {
+        const fieldLabel = fieldLabelKeys[field.key] ? t(fieldLabelKeys[field.key]) : field.label;
+        return (
         <div key={field.key} className="space-y-2">
           {field.type === 'boolean' ? (
             <div className="flex items-center justify-between py-2">
               <div className="space-y-0.5">
-                <Label htmlFor={field.key}>{field.label}</Label>
+                <Label htmlFor={field.key}>{fieldLabel}</Label>
                 {field.helpText && (
                   <p className="text-sm text-muted-foreground">{field.helpText}</p>
                 )}
@@ -188,25 +201,27 @@ function ConfigForm({
           ) : (
             <>
               <div className="flex items-center gap-1">
-                <Label htmlFor={field.key}>{field.label}</Label>
+                <Label htmlFor={field.key}>{fieldLabel}</Label>
                 {field.required && <span className="text-red-500">*</span>}
               </div>
 
               {field.type === 'select' && field.options ? (
-                <select
-                  id={field.key}
+                <Select
                   value={String(formData[field.key] || '')}
-                  onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onValueChange={(value) => setFormData({ ...formData, [field.key]: value })}
                   required={field.required}
                 >
-                  <option value="">{t('extensionEdit.select')}</option>
-                  {field.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id={field.key}>
+                    <SelectValue placeholder={t('extensionEdit.select')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <div className="relative">
                   <Input
@@ -240,7 +255,8 @@ function ConfigForm({
             </>
           )}
         </div>
-      ))}
+        );
+      })}
 
       <div className="pt-4 space-y-4">
         <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">

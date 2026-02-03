@@ -423,7 +423,7 @@ export function ApprovalsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="px-4">
-                        <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt)}</span>
+                        <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt, t)}</span>
                       </TableCell>
                       <TableCell className="px-4">
                         {item.status === 'pending' ? (
@@ -456,7 +456,7 @@ export function ApprovalsPage() {
                           <Tooltip
                             content={
                               (item.staffName || item.decidedAt || item.rejectionReason)
-                                ? `${item.staffName ? `By ${item.staffName}` : ''}${item.decidedAt ? ` • ${formatTimeAgo(item.decidedAt)}` : ''}${item.rejectionReason ? ` • ${item.rejectionReason}` : ''}`
+                                ? `${item.staffName ? `By ${item.staffName}` : ''}${item.decidedAt ? ` • ${formatTimeAgo(item.decidedAt, t)}` : ''}${item.rejectionReason ? ` • ${item.rejectionReason}` : ''}`
                                 : null
                             }
                           >

@@ -1,4 +1,5 @@
 import { MessageSquare, ListTodo } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/formatters';
 import { conversationStateVariants } from '@/lib/config';
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export function ConversationList({ conversations, selectedId, onSelect }: Props) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex-1 overflow-y-auto">
       {conversations.map((conv) => (
@@ -32,7 +35,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
             </div>
             {conv.lastMessageAt && (
               <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                {formatTimeAgo(conv.lastMessageAt)}
+                {formatTimeAgo(conv.lastMessageAt, t)}
               </span>
             )}
           </div>
@@ -51,7 +54,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
               )}
             </div>
             <Badge variant={conversationStateVariants[conv.state] || 'default'}>
-              {conv.state}
+              {t(`conversations.states.${conv.state}`)}
             </Badge>
           </div>
         </button>

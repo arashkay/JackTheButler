@@ -48,18 +48,31 @@ export function formatDateTime(dateStr: string): string {
 }
 
 /**
+ * Translation function type for i18n support
+ */
+type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
+
+/**
  * Format a date as relative time: "Just now", "5m ago", "2h ago", "3d ago"
  * Falls back to date string for older dates.
+ * Pass a translation function (t) for i18n support.
  */
-export function formatTimeAgo(dateStr: string): string {
+export function formatTimeAgo(dateStr: string, t?: TranslateFunction): string {
   const date = new Date(dateStr);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`; // < 7 days
+  if (t) {
+    if (seconds < 60) return t('time.justNow');
+    if (seconds < 3600) return t('time.minutesAgo', { count: Math.floor(seconds / 60) });
+    if (seconds < 86400) return t('time.hoursAgo', { count: Math.floor(seconds / 3600) });
+    if (seconds < 604800) return t('time.daysAgo', { count: Math.floor(seconds / 86400) });
+  } else {
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+  }
   return date.toLocaleDateString();
 }
 

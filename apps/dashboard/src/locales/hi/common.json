@@ -43,6 +43,7 @@
     "required": "आवश्यक",
     "settings": "सेटिंग्स",
     "logout": "लॉग आउट",
+    "language": "भाषा",
     "switchToDark": "डार्क में बदलें",
     "switchToLight": "लाइट में बदलें"
   },
@@ -87,7 +88,44 @@
     "aiProvider": "AI प्रदाता",
     "embeddings": "एम्बेडिंग्स",
     "channels": "चैनल",
-    "extensions": "एक्सटेंशन"
+    "extensions": "एक्सटेंशन",
+    "gettingStarted": "शुरू करें",
+    "stepsCompleted": "{{total}} में से {{completed}} चरण पूर्ण",
+    "issues": {
+      "no_completion_provider": {
+        "title": "AI प्रदाता कॉन्फ़िगर करें",
+        "description": "अतिथि वार्तालाप सक्षम करने के लिए AI प्रदाता कनेक्ट करें। Anthropic Claude, OpenAI, या स्थानीय AI में से चुनें।"
+      },
+      "no_embedding_provider": {
+        "title": "ज्ञान खोज सक्षम करें",
+        "description": "बुद्धिमान ज्ञान आधार खोज के लिए एम्बेडिंग सेट करें। Local AI (मुफ्त और निजी) या तेज़ प्रदर्शन के लिए OpenAI का उपयोग करें।"
+      },
+      "using_local_completion": {
+        "title": "AI प्रदाता अपग्रेड करें",
+        "description": "Local AI सक्रिय है लेकिन क्लाउड प्रदाता तेज़ प्रतिक्रियाएं और बेहतर गुणवत्ता प्रदान करते हैं। Anthropic या OpenAI जोड़ने पर विचार करें।"
+      },
+      "no_channels": {
+        "title": "मैसेजिंग चैनल कनेक्ट करें",
+        "description": "अतिथि संदेश प्राप्त करने और जवाब देने के लिए WhatsApp, SMS, या ईमेल सेट करें।"
+      },
+      "empty_knowledge_base": {
+        "title": "ज्ञान आधार बनाएं",
+        "description": "FAQ, सुविधाएं, नीतियां और अन्य जानकारी स्वचालित रूप से आयात करने के लिए अपनी होटल वेबसाइट से स्क्रैप करें जो AI को अतिथि प्रश्नों का उत्तर देने में मदद करे।"
+      }
+    },
+    "completed": {
+      "completion_provider_configured": "AI प्रदाता कॉन्फ़िगर किया गया",
+      "embedding_provider_configured": "ज्ञान खोज सक्षम",
+      "channels_configured": "मैसेजिंग चैनल कनेक्टेड",
+      "knowledge_base_populated": "ज्ञान आधार तैयार"
+    },
+    "actions": {
+      "no_completion_provider": "AI सेट करें",
+      "no_embedding_provider": "एम्बेडिंग सक्षम करें",
+      "using_local_completion": "AI अपग्रेड करें",
+      "no_channels": "चैनल जोड़ें",
+      "empty_knowledge_base": "सामग्री आयात करें"
+    }
   },
   "tasks": {
     "type": "प्रकार",
@@ -100,7 +138,13 @@
     "details": "कार्य विवरण",
     "assignedTo": "को सौंपा गया",
     "noTasks": "कोई कार्य नहीं मिला",
-    "noTasksDescription": "कार्य यहां दिखाई देंगे जब बनाए जाएंगे"
+    "noTasksDescription": "कार्य यहां दिखाई देंगे जब बनाए जाएंगे",
+    "statuses": {
+      "pending": "लंबित",
+      "in_progress": "प्रगति में",
+      "completed": "पूर्ण",
+      "cancelled": "रद्द"
+    }
   },
   "approvals": {
     "pending": "लंबित",
@@ -464,6 +508,12 @@
       "disabled": "अक्षम",
       "error": "त्रुटि",
       "notSetUp": "सेटअप नहीं"
+    },
+    "fields": {
+      "embeddingModel": "एम्बेडिंग मॉडल",
+      "completionModel": "कम्प्लीशन मॉडल",
+      "enableEmbedding": "एम्बेडिंग सक्षम करें",
+      "enableCompletion": "कम्प्लीशन सक्षम करें"
     }
   },
   "siteScraper": {
@@ -536,6 +586,13 @@
       "ai": "जैक (AI)",
       "staff": "कर्मचारी",
       "system": "सिस्टम"
+    },
+    "states": {
+      "new": "नया",
+      "active": "सक्रिय",
+      "escalated": "बढ़ाया गया",
+      "resolved": "हल किया गया",
+      "closed": "बंद"
     }
   },
   "reservationDetail": {

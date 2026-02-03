@@ -299,8 +299,8 @@ export function ReservationDetailPage() {
                           {task.description}
                         </p>
                       </div>
-                      <Badge variant={taskStatusVariants[task.status]} className="capitalize">
-                        {task.status.replace('_', ' ')}
+                      <Badge variant={taskStatusVariants[task.status]}>
+                        {t(`tasks.statuses.${task.status}`)}
                       </Badge>
                     </Link>
                   ))}
