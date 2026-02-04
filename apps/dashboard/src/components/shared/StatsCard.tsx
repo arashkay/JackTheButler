@@ -19,13 +19,13 @@ interface StatItemProps {
 
 function StatItem({ label, value, icon: Icon, variant = 'default', subtitle }: StatItemProps) {
   return (
-    <div className="flex-1 flex items-center gap-3 px-4 py-3">
+    <div className="flex-1 flex items-center gap-3 px-4 py-3 min-w-[180px]">
       <div className={cn('p-2 rounded-lg', variants[variant])}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
         <p className="text-xl font-semibold">{value}{subtitle && <span className="text-xs font-normal text-muted-foreground ml-1">{subtitle}</span>}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground whitespace-nowrap">{label}</p>
       </div>
     </div>
   );
@@ -37,10 +37,12 @@ interface StatsBarProps {
 
 export function StatsBar({ items }: StatsBarProps) {
   return (
-    <Card className="flex divide-x">
-      {items.map((item, index) => (
-        <StatItem key={index} {...item} />
-      ))}
+    <Card className="overflow-x-auto scrollbar-hide">
+      <div className="flex divide-x min-w-full">
+        {items.map((item, index) => (
+          <StatItem key={index} {...item} />
+        ))}
+      </div>
     </Card>
   );
 }
