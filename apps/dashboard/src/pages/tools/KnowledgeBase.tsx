@@ -23,6 +23,10 @@ import {
   RefreshCw,
   ArrowRight,
   AlertTriangle,
+  Check,
+  Search,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -64,6 +68,8 @@ interface TestResult {
   matches: TestMatch[];
 }
 
+type AskStep = 'idle' | 'searching' | 'found' | 'generating' | 'complete';
+
 const CATEGORIES = [
   'faq',
   'policy',
@@ -98,6 +104,9 @@ export function KnowledgeBasePage() {
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
+  const [askStep, setAskStep] = useState<AskStep>('idle');
+  const [searchMatches, setSearchMatches] = useState<TestMatch[]>([]);
+  const [matchesExpanded, setMatchesExpanded] = useState(true);
 
   // Reindex state
   const [reindexing, setReindexing] = useState(false);
@@ -259,13 +268,30 @@ export function KnowledgeBasePage() {
 
     setTestLoading(true);
     setTestError(null);
+    setTestResult(null);
+    setSearchMatches([]);
+    setAskStep('searching');
+    setMatchesExpanded(true);
 
     try {
+      // Step 1: Search for matches
+      const searchResult = await api.post<{ matches: TestMatch[] }>('/knowledge/search', { query: testQuery });
+      setSearchMatches(searchResult.matches);
+      setAskStep('found');
+
+      // Brief pause to show the matches
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      // Step 2: Generate AI response
+      setAskStep('generating');
       const result = await api.post<TestResult>('/knowledge/ask', { query: testQuery });
       setTestResult(result);
+      setAskStep('complete');
+      setMatchesExpanded(false);
     } catch (err) {
       setTestError(err instanceof Error ? err.message : 'Failed to test knowledge base');
       setTestResult(null);
+      setAskStep('idle');
     } finally {
       setTestLoading(false);
     }
@@ -439,39 +465,162 @@ export function KnowledgeBasePage() {
             </Alert>
           )}
 
-          {testResult && (
-            <div className="mt-4 space-y-4">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="text-xs font-medium text-muted-foreground mb-2">{t('knowledge.aiResponse')}</div>
-                <div className="text-sm text-foreground">{testResult.response}</div>
+          {/* Progress Stepper */}
+          {askStep !== 'idle' && (
+            <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                {/* Step 1: Searching */}
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    askStep === 'searching' && 'bg-primary text-primary-foreground animate-pulse',
+                    askStep !== 'searching' && 'bg-primary text-primary-foreground'
+                  )}>
+                    {askStep === 'searching' ? (
+                      <Search className="w-3.5 h-3.5 animate-pulse" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    'text-sm',
+                    askStep === 'searching' ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  )}>
+                    {askStep === 'searching' ? t('knowledge.searching') : t('knowledge.searched')}
+                  </span>
+                </div>
+
+                {/* Connector */}
+                <div className={cn(
+                  'flex-1 h-0.5 mx-3 transition-all',
+                  askStep !== 'searching' ? 'bg-primary' : 'bg-muted'
+                )} />
+
+                {/* Step 2: Found */}
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    askStep === 'searching' && 'bg-muted text-muted-foreground',
+                    askStep === 'found' && 'bg-primary text-primary-foreground animate-pulse',
+                    (askStep === 'generating' || askStep === 'complete') && 'bg-primary text-primary-foreground'
+                  )}>
+                    {askStep !== 'searching' ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <span>2</span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    'text-sm',
+                    askStep === 'found' ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  )}>
+                    {askStep !== 'searching'
+                      ? t('knowledge.foundMatches', { count: searchMatches.length })
+                      : t('knowledge.analyzing')}
+                  </span>
+                </div>
+
+                {/* Connector */}
+                <div className={cn(
+                  'flex-1 h-0.5 mx-3 transition-all',
+                  (askStep === 'generating' || askStep === 'complete') ? 'bg-primary' : 'bg-muted'
+                )} />
+
+                {/* Step 3: Generating */}
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    askStep === 'generating' && 'bg-primary text-primary-foreground animate-pulse',
+                    askStep === 'complete' && 'bg-primary text-primary-foreground',
+                    (askStep === 'searching' || askStep === 'found') && 'bg-muted text-muted-foreground'
+                  )}>
+                    {askStep === 'generating' ? (
+                      <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                    ) : askStep === 'complete' ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <span>3</span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    'text-sm',
+                    askStep === 'generating' ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  )}>
+                    {t('knowledge.generating')}
+                  </span>
+                </div>
               </div>
 
-              {testResult.matches.length > 0 && (
-                <div>
-                  <div className="text-xs font-medium text-muted-foreground mb-2">
-                    {t('knowledge.matchedEntries')} ({testResult.matches.length})
-                  </div>
-                  <div className="space-y-2">
-                    {testResult.matches.map((match) => (
-                      <div
-                        key={match.id}
-                        className="flex items-center justify-between p-2 bg-card border rounded-lg text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge>
-                            {match.category.replace(/_/g, ' ')}
-                          </Badge>
-                          <span className="font-medium">{match.title}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{match.similarity}% {t('knowledge.match')}</span>
+              {/* Show matches */}
+              {askStep !== 'searching' && searchMatches.length > 0 && (
+                <div className="pt-3 border-t border-border/50">
+                  {/* Collapsible header - only clickable when complete */}
+                  {askStep === 'complete' ? (
+                    <button
+                      onClick={() => setMatchesExpanded(!matchesExpanded)}
+                      className="flex items-center justify-between w-full text-left mb-2 group"
+                    >
+                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                        {t('knowledge.matchedEntries')} ({searchMatches.length})
+                      </span>
+                      <ChevronDown className={cn(
+                        'w-4 h-4 text-muted-foreground group-hover:text-foreground transition-all duration-300',
+                        matchesExpanded && 'rotate-180'
+                      )} />
+                    </button>
+                  ) : null}
+
+                  {/* Matches list with smooth height animation */}
+                  <div
+                    className="grid transition-[grid-template-rows] duration-300 ease-out"
+                    style={{ gridTemplateRows: matchesExpanded ? '1fr' : '0fr' }}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="space-y-1.5">
+                        {searchMatches.map((match, index) => (
+                          <div
+                            key={match.id}
+                            className="flex items-center justify-between py-1.5 px-2 bg-background/50 rounded text-sm"
+                            style={{
+                              opacity: askStep === 'complete' ? 1 : 0,
+                              transform: askStep === 'complete' ? 'translateY(0)' : 'translateY(-8px)',
+                              animation: askStep !== 'complete' ? `fadeSlideIn 0.3s ease-out ${index * 150}ms forwards` : 'none',
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {match.category.replace(/_/g, ' ')}
+                              </Badge>
+                              <span className="text-foreground">{match.title}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full"
+                                  style={{ width: `${match.similarity}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground w-8">{match.similarity}%</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {testResult.matches.length === 0 && (
-                <div className="text-sm text-muted-foreground">
+              {/* AI Response - appears in complete state */}
+              {askStep === 'complete' && testResult && (
+                <div className="mt-4 p-4 bg-background/50 rounded-lg border border-border/50 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">{t('knowledge.aiResponse')}</div>
+                  <div className="text-sm text-foreground">{testResult.response}</div>
+                </div>
+              )}
+
+              {/* No matches message */}
+              {askStep === 'complete' && searchMatches.length === 0 && (
+                <div className="text-sm text-muted-foreground pt-3 border-t border-border/50">
                   {t('knowledge.noMatches')}
                 </div>
               )}

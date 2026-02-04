@@ -256,7 +256,12 @@
     "keywordsHint": "Keywords (comma-separated)",
     "entryTitle": "Entry title",
     "reindexNeeded": "Reindex Needed",
-    "indexedStats": "{{indexed}} of {{total}} entries indexed"
+    "indexedStats": "{{indexed}} of {{total}} entries indexed",
+    "searching": "Searching knowledge base...",
+    "searched": "Searched",
+    "analyzing": "Analyzing",
+    "foundMatches": "Found {{count}} matches",
+    "generating": "Generating response..."
   },
   "extensions": {
     "connected": "Connected",

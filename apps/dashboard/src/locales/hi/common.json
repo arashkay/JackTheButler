@@ -256,7 +256,12 @@
     "keywordsHint": "कीवर्ड (अल्पविराम से अलग)",
     "entryTitle": "प्रविष्टि शीर्षक",
     "reindexNeeded": "पुनः अनुक्रमण आवश्यक",
-    "indexedStats": "{{indexed}} में से {{total}} प्रविष्टियां अनुक्रमित"
+    "indexedStats": "{{indexed}} में से {{total}} प्रविष्टियां अनुक्रमित",
+    "searching": "ज्ञान आधार में खोज रहे हैं...",
+    "searched": "खोजा गया",
+    "analyzing": "विश्लेषण",
+    "foundMatches": "{{count}} मिलान मिले",
+    "generating": "प्रतिक्रिया उत्पन्न कर रहे हैं..."
   },
   "extensions": {
     "connected": "कनेक्टेड",

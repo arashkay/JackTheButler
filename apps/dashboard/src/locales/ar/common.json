@@ -256,7 +256,12 @@
     "keywordsHint": "الكلمات المفتاحية (مفصولة بفواصل)",
     "entryTitle": "عنوان المدخل",
     "reindexNeeded": "إعادة الفهرسة مطلوبة",
-    "indexedStats": "{{indexed}} من {{total}} مدخل مفهرس"
+    "indexedStats": "{{indexed}} من {{total}} مدخل مفهرس",
+    "searching": "جاري البحث في قاعدة المعرفة...",
+    "searched": "تم البحث",
+    "analyzing": "تحليل",
+    "foundMatches": "تم العثور على {{count}} نتيجة",
+    "generating": "جاري إنشاء الرد..."
   },
   "extensions": {
     "connected": "متصل",

@@ -256,7 +256,12 @@
     "keywordsHint": "Palabras clave (separadas por coma)",
     "entryTitle": "Título de entrada",
     "reindexNeeded": "Reindexación Necesaria",
-    "indexedStats": "{{indexed}} de {{total}} entradas indexadas"
+    "indexedStats": "{{indexed}} de {{total}} entradas indexadas",
+    "searching": "Buscando en la base de conocimiento...",
+    "searched": "Buscado",
+    "analyzing": "Analizando",
+    "foundMatches": "{{count}} coincidencias encontradas",
+    "generating": "Generando respuesta..."
   },
   "extensions": {
     "connected": "Conectado",

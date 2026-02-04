@@ -256,7 +256,12 @@
     "keywordsHint": "关键词（逗号分隔）",
     "entryTitle": "条目标题",
     "reindexNeeded": "需要重新索引",
-    "indexedStats": "已索引 {{indexed}}/{{total}} 条目"
+    "indexedStats": "已索引 {{indexed}}/{{total}} 条目",
+    "searching": "正在搜索知识库...",
+    "searched": "已搜索",
+    "analyzing": "分析中",
+    "foundMatches": "找到 {{count}} 个匹配",
+    "generating": "正在生成回复..."
   },
   "extensions": {
     "connected": "已连接",

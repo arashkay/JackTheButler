@@ -256,7 +256,12 @@
     "keywordsHint": "Ключевые слова (через запятую)",
     "entryTitle": "Заголовок записи",
     "reindexNeeded": "Требуется переиндексация",
-    "indexedStats": "{{indexed}} из {{total}} записей проиндексировано"
+    "indexedStats": "{{indexed}} из {{total}} записей проиндексировано",
+    "searching": "Поиск в базе знаний...",
+    "searched": "Поиск завершен",
+    "analyzing": "Анализ",
+    "foundMatches": "Найдено {{count}} совпадений",
+    "generating": "Генерация ответа..."
   },
   "extensions": {
     "connected": "Подключено",

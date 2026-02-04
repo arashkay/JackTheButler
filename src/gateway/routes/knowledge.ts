@@ -176,17 +176,56 @@ knowledgeRoutes.get('/categories', async (c) => {
 });
 
 /**
- * Schema for testing knowledge base
+ * Schema for search/ask queries
  */
-const askSchema = z.object({
+const querySchema = z.object({
   query: z.string().min(1).max(1000),
+});
+
+/**
+ * POST /api/v1/knowledge/search
+ * Semantic search against the knowledge base - returns matches without AI response
+ */
+knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
+  const { query } = c.get('validatedBody') as z.infer<typeof querySchema>;
+
+  log.info({ query: query.substring(0, 50) }, 'Searching knowledge base');
+
+  // Get embedding provider from extension registry
+  const registry = getExtensionRegistry();
+  const embeddingProvider = registry.getEmbeddingProvider();
+
+  if (!embeddingProvider) {
+    return c.json(
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      400
+    );
+  }
+
+  // Search knowledge base using embedding provider
+  const knowledgeService = new KnowledgeService(embeddingProvider);
+  const matches = await knowledgeService.search(query, {
+    limit: 5,
+    minSimilarity: 0.3,
+  });
+
+  log.info({ query: query.substring(0, 50), matchCount: matches.length }, 'Knowledge search completed');
+
+  return c.json({
+    matches: matches.map((m) => ({
+      id: m.id,
+      title: m.title,
+      category: m.category,
+      similarity: Math.round(m.similarity * 100),
+    })),
+  });
 });
 
 /**
  * POST /api/v1/knowledge/ask
  * Test the knowledge base by asking a question and getting an AI response
  */
-knowledgeRoutes.post('/ask', validateBody(askSchema), async (c) => {
+knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
   const { query } = c.get('validatedBody') as z.infer<typeof askSchema>;
 
   log.info({ query: query.substring(0, 50) }, 'Testing knowledge base');
