@@ -101,11 +101,18 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
   );
 }
 
+interface ActionItemsProps {
+  /** Show the card regardless of dismissed state (for settings page) */
+  showAlways?: boolean;
+  /** Render without card border (for settings page) */
+  borderless?: boolean;
+}
+
 /**
  * Onboarding checklist for the dashboard
  * Shows completed steps and remaining setup tasks
  */
-export function ActionItems() {
+export function ActionItems({ showAlways = false, borderless = false }: ActionItemsProps) {
   const { t } = useTranslation();
   const { issues, completedSteps, isLoading } = useSystemStatus();
   const { isDismissed, dismiss, canDismiss } = useDismissible(
@@ -128,13 +135,13 @@ export function ActionItems() {
     );
   }
 
-  // No items at all - don't show anything
-  if (issues.length === 0 && completedSteps.length === 0) {
+  // No items at all - don't show anything (unless showAlways)
+  if (!showAlways && issues.length === 0 && completedSteps.length === 0) {
     return null;
   }
 
-  // User dismissed and no issues - don't show
-  if (isDismissed && issues.length === 0) {
+  // User dismissed and no issues - don't show (unless showAlways)
+  if (!showAlways && isDismissed && issues.length === 0) {
     return null;
   }
 
@@ -147,10 +154,14 @@ export function ActionItems() {
   const totalSteps = completedSteps.length + sortedIssues.length;
   const completedCount = completedSteps.length;
 
+  const Wrapper = borderless ? 'div' : Card;
+  const Header = borderless ? 'div' : CardHeader;
+  const Content = borderless ? 'div' : CardContent;
+
   return (
-    <Card>
-      <CardHeader className="relative">
-        {canDismiss && (
+    <Wrapper>
+      <Header className="relative">
+        {canDismiss && !showAlways && (
           <button
             onClick={dismiss}
             className="absolute top-4 end-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -159,12 +170,22 @@ export function ActionItems() {
             <X className="h-4 w-4" />
           </button>
         )}
-        <CardTitle>{t('home.gettingStarted')}</CardTitle>
-        <CardDescription>
-          {t('home.stepsCompleted', { completed: completedCount, total: totalSteps })}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
+        {borderless ? (
+          <h3 className="text-base font-semibold">{t('home.gettingStarted')}</h3>
+        ) : (
+          <CardTitle>{t('home.gettingStarted')}</CardTitle>
+        )}
+        {borderless ? (
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('home.stepsCompleted', { completed: completedCount, total: totalSteps })}
+          </p>
+        ) : (
+          <CardDescription>
+            {t('home.stepsCompleted', { completed: completedCount, total: totalSteps })}
+          </CardDescription>
+        )}
+      </Header>
+      <Content className={borderless ? 'mt-4' : 'pt-0'}>
         {/* Completed steps first */}
         {completedSteps.map((step) => (
           <CompletedStepRow key={step.type} step={step} />
@@ -173,8 +194,8 @@ export function ActionItems() {
         {sortedIssues.map((issue, index) => (
           <PendingStepRow key={issue.type} issue={issue} step={completedSteps.length + index + 1} />
         ))}
-      </CardContent>
-    </Card>
+      </Content>
+    </Wrapper>
   );
 }
 

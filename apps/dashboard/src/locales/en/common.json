@@ -624,6 +624,10 @@
     }
   },
   "settings": {
+    "quickSetup": {
+      "title": "Quick Setup",
+      "description": "Setup wizards to help you configure your system. These are always available here even if dismissed from the home page."
+    },
     "dangerZone": {
       "title": "Danger Zone",
       "description": "Destructive actions that cannot be undone",

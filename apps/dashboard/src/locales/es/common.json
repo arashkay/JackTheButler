@@ -624,6 +624,10 @@
     }
   },
   "settings": {
+    "quickSetup": {
+      "title": "Configuración Rápida",
+      "description": "Asistentes de configuración para ayudarte a configurar tu sistema. Siempre están disponibles aquí incluso si los cerraste en la página de inicio."
+    },
     "dangerZone": {
       "title": "Zona de Peligro",
       "description": "Acciones destructivas que no se pueden deshacer",

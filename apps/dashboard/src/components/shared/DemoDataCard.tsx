@@ -30,12 +30,19 @@ interface DemoDataResponse {
 
 const COMPLETED_KEY = 'demo-data-loaded';
 
+interface DemoDataCardProps {
+  /** Show the card regardless of dismissed state (for settings page) */
+  showAlways?: boolean;
+  /** Render without card border (for settings page) */
+  borderless?: boolean;
+}
+
 /**
  * Card that allows users to populate the system with demo data for testing.
  * Once data is loaded, state is persisted to localStorage so the button
  * is replaced with a success message. User can close the card with X.
  */
-export function DemoDataCard() {
+export function DemoDataCard({ showAlways = false, borderless = false }: DemoDataCardProps) {
   const { t } = useTranslation();
   const { isDismissed, dismiss } = useDismissible('demo-data', true);
   const { knowledgeBase } = useSystemStatus();
@@ -62,29 +69,39 @@ export function DemoDataCard() {
     mutation.mutate();
   };
 
-  if (isDismissed) {
+  if (isDismissed && !showAlways) {
     return null;
   }
 
+  const Wrapper = borderless ? 'div' : Card;
+  const Header = borderless ? 'div' : CardHeader;
+  const Content = borderless ? 'div' : CardContent;
+
   return (
     <>
-    <Card>
-      <CardHeader className="relative">
-        <button
-          onClick={dismiss}
-          className="absolute top-4 end-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label={t('common.close')}
-        >
-          <X className="h-4 w-4" />
-        </button>
+    <Wrapper>
+      <Header className="relative">
+        {!showAlways && (
+          <button
+            onClick={dismiss}
+            className="absolute top-4 end-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label={t('common.close')}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-info">
             <FlaskConical className="h-5 w-5 text-info-foreground" />
           </div>
-          <CardTitle>{t('home.demoData.title')}</CardTitle>
+          {borderless ? (
+            <h3 className="text-base font-semibold">{t('home.demoData.title')}</h3>
+          ) : (
+            <CardTitle>{t('home.demoData.title')}</CardTitle>
+          )}
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
+      </Header>
+      <Content className={borderless ? 'mt-4' : 'pt-0'}>
         <p className="text-sm text-muted-foreground mb-4">
           {t('home.demoData.description')}
         </p>
@@ -125,8 +142,8 @@ export function DemoDataCard() {
             {t('home.demoData.createAll')}
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </Content>
+    </Wrapper>
 
     <DialogRoot open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
       <DialogContent className="p-6">

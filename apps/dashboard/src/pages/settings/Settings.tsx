@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
-import { PageContainer } from '@/components';
+import { PageContainer, ActionItems, DemoDataCard } from '@/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 interface ResetResponse {
   success: boolean;
@@ -23,8 +24,11 @@ interface ResetResponse {
   error?: string;
 }
 
+type SettingsTab = 'quick-setup' | 'danger-zone';
+
 export function SettingsPage() {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('quick-setup');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [resetComplete, setResetComplete] = useState(false);
@@ -49,41 +53,98 @@ export function SettingsPage() {
 
   const isConfirmValid = confirmText === 'RESET';
 
+  const tabs = [
+    { id: 'quick-setup' as const, label: t('settings.quickSetup.title'), icon: Sparkles },
+    { id: 'danger-zone' as const, label: t('settings.dangerZone.title'), icon: AlertTriangle, variant: 'destructive' },
+  ];
+
   return (
     <PageContainer>
-      {/* Danger Zone Section */}
-      <Card className="border-destructive">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-destructive">
-              <AlertTriangle className="h-5 w-5 text-destructive-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-destructive">{t('settings.dangerZone.title')}</CardTitle>
-              <CardDescription>{t('settings.dangerZone.description')}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {resetComplete ? (
-            <Alert variant="success">
-              <AlertDescription>{t('settings.dangerZone.resetSuccess')}</AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
-                <h3 className="font-medium mb-2">{t('settings.dangerZone.resetDatabase')}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('settings.dangerZone.resetDescription')}
-                </p>
-                <Button variant="destructive" onClick={() => setShowConfirmDialog(true)}>
-                  {t('settings.dangerZone.resetButton')}
-                </Button>
+      <div className="flex gap-8">
+        {/* Vertical Tab Navigation */}
+        <nav className="w-48 flex-shrink-0">
+          <ul className="space-y-1">
+            {tabs.map((tab) => (
+              <li key={tab.id}>
+                <button
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors text-start',
+                    activeTab === tab.id
+                      ? tab.variant === 'destructive'
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Tab Content */}
+        <div className="flex-1 min-w-0">
+          {/* Quick Setup Tab */}
+          {activeTab === 'quick-setup' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">{t('settings.quickSetup.title')}</h2>
+                <p className="text-sm text-muted-foreground">{t('settings.quickSetup.description')}</p>
+              </div>
+
+              <div className="divide-y divide-border">
+                <div className="pb-6">
+                  <ActionItems showAlways borderless />
+                </div>
+                <div className="pt-6">
+                  <DemoDataCard showAlways borderless />
+                </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Danger Zone Tab */}
+          {activeTab === 'danger-zone' && (
+            <div className="space-y-6">
+              <Card className="border-destructive">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-destructive">
+                      <AlertTriangle className="h-5 w-5 text-destructive-foreground" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-destructive">{t('settings.dangerZone.title')}</CardTitle>
+                      <CardDescription>{t('settings.dangerZone.description')}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {resetComplete ? (
+                    <Alert variant="success">
+                      <AlertDescription>{t('settings.dangerZone.resetSuccess')}</AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
+                        <h3 className="font-medium mb-2">{t('settings.dangerZone.resetDatabase')}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t('settings.dangerZone.resetDescription')}
+                        </p>
+                        <Button variant="destructive" onClick={() => setShowConfirmDialog(true)}>
+                          {t('settings.dangerZone.resetButton')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
 
       <DialogRoot open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="p-6">

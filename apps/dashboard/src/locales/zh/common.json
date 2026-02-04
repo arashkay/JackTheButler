@@ -624,6 +624,10 @@
     }
   },
   "settings": {
+    "quickSetup": {
+      "title": "快速设置",
+      "description": "帮助您配置系统的设置向导。即使在主页关闭后，这些向导也始终在此可用。"
+    },
     "dangerZone": {
       "title": "危险区域",
       "description": "无法撤销的破坏性操作",
