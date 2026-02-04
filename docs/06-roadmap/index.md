@@ -68,6 +68,8 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **17** | **1.8.0** | **Smart Embed** | Local embeddings, capability fallback | **Offline-first AI** |
 | **18** | **1.9.0** | **Polyglot** | Dashboard internationalization (i18n) | **Multi-language UI** |
 | **19** | **1.10.0** | **Sandbox** | Demo data & database reset | **Test & reset** |
+| **20** | **1.11.0** | **Smart Auto** | AI-generated automation rules | **Natural language rules** |
+| **21** | **1.12.0** | **Namespace** | i18n namespace splitting | **Smaller locale files** |
 
 ---
 
@@ -98,6 +100,8 @@ Phase 16 (Easy Mail)   → Gmail connected with one click, email works
 Phase 17 (Smart Embed) → Knowledge base search works without OpenAI
 Phase 18 (Polyglot)    → Dashboard displays in user's language
 Phase 19 (Sandbox)     → Demo data loads, database can be reset
+Phase 20 (Smart Auto)  → AI generates automation rules from natural language
+Phase 21 (Namespace)   → Locale files split, translations load on demand
 ```
 
 ### Implementation Rules
@@ -133,6 +137,8 @@ Phase 19 (Sandbox)     → Demo data loads, database can be reset
 | [Phase 17: Local Embeddings](phase-17-local-embeddings.md) | Local AI for embeddings |
 | [Phase 18: Internationalization](phase-18-i18n.md) | Multi-language dashboard |
 | [Phase 19: Demo Data & Reset](phase-19-demo-data.md) | Sample data and database reset |
+| [Phase 20: Smart Automation](phase-20-smart-automation.md) | AI-generated automation rules |
+| [Phase 21: i18n Namespaces](phase-21-i18n-namespaces.md) | Locale file splitting |
 
 ### Phase 15 Sub-Phases
 
@@ -158,6 +164,12 @@ Phase 19 (Sandbox)     → Demo data loads, database can be reset
 | Document | Description |
 |----------|-------------|
 | [Phase 11.1: Site Scraper](phase-11-1-site-scraper.md) | Auto-import knowledge base from hotel websites |
+
+### Phase 20 Sub-Phases
+
+| Document | Description |
+|----------|-------------|
+| [Phase 20.1: Automation UI](phase-20-1-automation-ui.md) | AI generation UI, action chaining, retry config |
 
 ---
 
@@ -257,6 +269,16 @@ Phase 19 (Sandbox)     → Demo data loads, database can be reset
                     ┌────────────────▼──────────────┐
                     │      Phase 19: Sandbox        │
                     │   Demo data & database reset  │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │     Phase 20: Smart Auto      │
+                    │  AI-generated automation      │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │     Phase 21: Namespace       │
+                    │   i18n namespace splitting    │
                     └───────────────────────────────┘
 ```
 
@@ -288,6 +310,8 @@ Phase 19 (Sandbox)     → Demo data loads, database can be reset
 | 1.8.0 | "Knowledge base works without external AI" | **Self-contained AI** |
 | 1.9.0 | "Dashboard displays in Spanish/French/etc" | **Global accessibility** |
 | 1.10.0 | "Load sample data, reset for production" | **Easy testing & cleanup** |
+| 1.11.0 | "AI generates automation from natural language" | **Smart automation** |
+| 1.12.0 | "Translations load on demand, smaller files" | **Developer efficiency** |
 
 ---
 

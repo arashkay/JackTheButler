@@ -467,11 +467,18 @@ export const automationRules = sqliteTable(
     // JSON object with trigger-specific config
     triggerConfig: text('trigger_config').notNull(),
 
-    // Action configuration
+    // Action configuration (legacy - single action)
     // Type: send_message, create_task, notify_staff, webhook
     actionType: text('action_type').notNull(),
     // JSON object with action-specific config
     actionConfig: text('action_config').notNull(),
+
+    // Action chaining (Phase 20) - JSON array of ActionDefinition[]
+    // When populated, this takes precedence over actionType/actionConfig
+    actions: text('actions'),
+
+    // Retry configuration (Phase 20) - JSON: RetryConfig
+    retryConfig: text('retry_config'),
 
     // Status
     enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
@@ -480,6 +487,8 @@ export const automationRules = sqliteTable(
     lastRunAt: text('last_run_at'),
     lastError: text('last_error'),
     runCount: integer('run_count').notNull().default(0),
+    // Track consecutive failures for monitoring (Phase 20)
+    consecutiveFailures: integer('consecutive_failures').notNull().default(0),
 
     createdAt: text('created_at')
       .notNull()
@@ -529,6 +538,50 @@ export type NewAutomationRule = typeof automationRules.$inferInsert;
 
 export type AutomationLog = typeof automationLogs.$inferSelect;
 export type NewAutomationLog = typeof automationLogs.$inferInsert;
+
+/**
+ * Automation executions for tracking action chains and retries (Phase 20)
+ */
+export const automationExecutions = sqliteTable(
+  'automation_executions',
+  {
+    id: text('id').primaryKey(),
+    ruleId: text('rule_id')
+      .notNull()
+      .references(() => automationRules.id, { onDelete: 'cascade' }),
+
+    // Trigger information
+    triggeredAt: text('triggered_at').notNull(),
+    triggerData: text('trigger_data'), // JSON: trigger event data
+
+    // Execution status: pending, running, completed, failed, partial
+    status: text('status').notNull(),
+
+    // Action results (for chained actions) - JSON: ActionResult[]
+    actionResults: text('action_results'),
+
+    // Retry tracking
+    attemptNumber: integer('attempt_number').notNull().default(1),
+    nextRetryAt: text('next_retry_at'), // ISO timestamp for next retry
+    errorMessage: text('error_message'),
+
+    // Completion
+    completedAt: text('completed_at'),
+    executionTimeMs: integer('execution_time_ms'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_automation_executions_rule').on(table.ruleId),
+    index('idx_automation_executions_status').on(table.status),
+    index('idx_automation_executions_retry').on(table.nextRetryAt),
+  ]
+);
+
+export type AutomationExecution = typeof automationExecutions.$inferSelect;
+export type NewAutomationExecution = typeof automationExecutions.$inferInsert;
 
 // ===================
 // Integration Configs

@@ -40,6 +40,16 @@ export const EventTypes = {
 
   // Model events
   MODEL_DOWNLOAD_PROGRESS: 'model.download.progress',
+
+  // Reservation events
+  RESERVATION_CREATED: 'reservation.created',
+  RESERVATION_UPDATED: 'reservation.updated',
+  RESERVATION_CHECKED_IN: 'reservation.checked_in',
+  RESERVATION_CHECKED_OUT: 'reservation.checked_out',
+  RESERVATION_CANCELLED: 'reservation.cancelled',
+
+  // Staff notification events
+  STAFF_NOTIFICATION: 'staff.notification',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -193,6 +203,76 @@ export interface ModelDownloadProgressEvent extends BaseEvent {
 }
 
 /**
+ * Reservation created event
+ */
+export interface ReservationCreatedEvent extends BaseEvent {
+  type: typeof EventTypes.RESERVATION_CREATED;
+  reservationId: string;
+  guestId: string;
+  roomNumber?: string;
+  arrivalDate: string;
+  departureDate: string;
+}
+
+/**
+ * Reservation updated event
+ */
+export interface ReservationUpdatedEvent extends BaseEvent {
+  type: typeof EventTypes.RESERVATION_UPDATED;
+  reservationId: string;
+  guestId: string;
+  changes: {
+    roomNumber?: string;
+    arrivalDate?: string;
+    departureDate?: string;
+    status?: string;
+  };
+}
+
+/**
+ * Reservation checked in event
+ */
+export interface ReservationCheckedInEvent extends BaseEvent {
+  type: typeof EventTypes.RESERVATION_CHECKED_IN;
+  reservationId: string;
+  guestId: string;
+  roomNumber: string;
+}
+
+/**
+ * Reservation checked out event
+ */
+export interface ReservationCheckedOutEvent extends BaseEvent {
+  type: typeof EventTypes.RESERVATION_CHECKED_OUT;
+  reservationId: string;
+  guestId: string;
+  roomNumber: string;
+}
+
+/**
+ * Reservation cancelled event
+ */
+export interface ReservationCancelledEvent extends BaseEvent {
+  type: typeof EventTypes.RESERVATION_CANCELLED;
+  reservationId: string;
+  guestId: string;
+}
+
+/**
+ * Staff notification event
+ */
+export interface StaffNotificationEvent extends BaseEvent {
+  type: typeof EventTypes.STAFF_NOTIFICATION;
+  payload: {
+    role?: string;
+    staffId?: string;
+    message: string;
+    priority: 'low' | 'standard' | 'high' | 'urgent';
+    automationRuleId?: string;
+  };
+}
+
+/**
  * Union of all event types
  */
 export type AppEvent =
@@ -207,7 +287,13 @@ export type AppEvent =
   | ApprovalQueuedEvent
   | ApprovalDecidedEvent
   | ApprovalExecutedEvent
-  | ModelDownloadProgressEvent;
+  | ModelDownloadProgressEvent
+  | ReservationCreatedEvent
+  | ReservationUpdatedEvent
+  | ReservationCheckedInEvent
+  | ReservationCheckedOutEvent
+  | ReservationCancelledEvent
+  | StaffNotificationEvent;
 
 /**
  * Event handler function type

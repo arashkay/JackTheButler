@@ -13,6 +13,8 @@ import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/services/scheduler.js';
 import { extensionConfigService } from '@/services/extension-config.js';
 import { resetResponder } from '@/ai/index.js';
+import { getAutomationEngine } from '@/automation/index.js';
+import { subscribeAutomationToEvents } from '@/automation/event-subscriber.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = '1.0.0';
@@ -105,21 +107,34 @@ async function main(): Promise<void> {
     logger.info({ port: config.port }, 'HTTP server listening');
     logger.info({ path: '/ws' }, 'WebSocket server ready');
 
-    // Start background scheduler
+    // Start background scheduler (PMS sync)
     scheduler.start();
     logger.info('Background scheduler started');
+
+    // Start automation engine
+    const automationEngine = getAutomationEngine();
+    automationEngine.startScheduler(60000); // Check time-based rules every 60 seconds
+    logger.info('Automation engine started');
+
+    // Subscribe automation engine to system events
+    subscribeAutomationToEvents();
+    logger.info('Automation event subscribers registered');
 
     // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
     // Inbound email uses webhooks instead of IMAP polling
 
-    logger.info('Ready! (Phase 8 - Polish)');
+    logger.info('Ready! (Phase 20 - Smart Automation)');
   });
 
   // Graceful shutdown
   const shutdown = () => {
     logger.info('Shutting down...');
 
-    // Stop scheduler first
+    // Stop automation engine
+    getAutomationEngine().stopScheduler();
+    logger.info('Automation engine stopped');
+
+    // Stop scheduler
     scheduler.stop();
     logger.info('Scheduler stopped');
 

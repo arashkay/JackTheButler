@@ -22,6 +22,9 @@ import type {
 } from './types.js';
 import { matchesTrigger, getTargetDateForTrigger, matchesTriggerTime } from './triggers.js';
 import { executeAction } from './actions.js';
+import { executeActionChain, convertLegacyAction } from './chain-executor.js';
+import { processPendingRetries, createExecution, scheduleRetry, updateExecutionStatus } from './retry-handler.js';
+import type { ActionDefinition } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
 
@@ -35,6 +38,7 @@ const log = createLogger('automation');
  */
 export class AutomationEngine {
   private schedulerInterval: NodeJS.Timeout | null = null;
+  private retryInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     log.info('Automation engine initialized');
@@ -61,15 +65,80 @@ export class AutomationEngine {
         // Build execution context
         const context = await this.buildContext(rule, event);
 
-        // Execute action
-        const result = await executeAction(rule, context);
-        results.push(result);
+        // Create execution record for tracking
+        const executionId = await createExecution(rule.id, {
+          event,
+          guest: context.guest,
+          reservation: context.reservation,
+        });
 
-        // Log execution
-        await this.logExecution(rule, result, event);
+        try {
+          // Get actions (new chained format or convert legacy)
+          const actions: ActionDefinition[] = rule.actions
+            ? JSON.parse(rule.actions)
+            : convertLegacyAction(rule.actionType as any, JSON.parse(rule.actionConfig));
 
-        // Update rule stats
-        await this.updateRuleStats(rule, result);
+          // Execute action chain
+          const chainResult = await executeActionChain(actions, context);
+
+          // Update execution record
+          await updateExecutionStatus(
+            executionId,
+            chainResult.status,
+            chainResult.results,
+            chainResult.status === 'failed' ? chainResult.results.find(r => r.status === 'failed')?.error : undefined,
+            chainResult.totalDurationMs
+          );
+
+          // Convert to legacy result format for backwards compatibility
+          const failedActionError = chainResult.status === 'failed'
+            ? chainResult.results.find(r => r.status === 'failed')?.error
+            : undefined;
+          const result: ExecutionResult = {
+            success: chainResult.status === 'completed',
+            ruleId: rule.id,
+            actionType: rule.actionType as any,
+            result: chainResult.results,
+            executionTimeMs: chainResult.totalDurationMs,
+          };
+          if (failedActionError) {
+            result.error = failedActionError;
+          }
+
+          results.push(result);
+
+          // Log execution (legacy format)
+          await this.logExecution(rule, result, event);
+
+          // Update rule stats
+          await this.updateRuleStats(rule, result);
+
+          // Schedule retry if failed
+          if (chainResult.status === 'failed') {
+            const failedAction = chainResult.results.find(r => r.status === 'failed');
+            await scheduleRetry(executionId, rule.id, 1, failedAction?.error || 'Unknown error');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+
+          // Update execution as failed
+          await updateExecutionStatus(executionId, 'failed', undefined, errorMessage);
+
+          const result: ExecutionResult = {
+            success: false,
+            ruleId: rule.id,
+            actionType: rule.actionType as any,
+            error: errorMessage,
+            executionTimeMs: 0,
+          };
+
+          results.push(result);
+          await this.logExecution(rule, result, event);
+          await this.updateRuleStats(rule, result);
+
+          // Schedule retry
+          await scheduleRetry(executionId, rule.id, 1, errorMessage);
+        }
       }
     }
 
@@ -158,6 +227,7 @@ export class AutomationEngine {
       return;
     }
 
+    // Main scheduler for time-based triggers
     this.schedulerInterval = setInterval(async () => {
       try {
         await this.runScheduledTriggers();
@@ -166,7 +236,16 @@ export class AutomationEngine {
       }
     }, intervalMs);
 
-    log.info({ intervalMs }, 'Automation scheduler started');
+    // Retry processor runs every 30 seconds
+    this.retryInterval = setInterval(async () => {
+      try {
+        await processPendingRetries();
+      } catch (error) {
+        log.error({ err: error }, 'Retry processor error');
+      }
+    }, 30000);
+
+    log.info({ intervalMs, retryIntervalMs: 30000 }, 'Automation scheduler started with retry processing');
   }
 
   /**
@@ -176,8 +255,12 @@ export class AutomationEngine {
     if (this.schedulerInterval) {
       clearInterval(this.schedulerInterval);
       this.schedulerInterval = null;
-      log.info('Automation scheduler stopped');
     }
+    if (this.retryInterval) {
+      clearInterval(this.retryInterval);
+      this.retryInterval = null;
+    }
+    log.info('Automation scheduler stopped');
   }
 
   /**
@@ -499,4 +582,6 @@ export function resetAutomationEngine(): void {
 // Re-export types
 export * from './types.js';
 export { matchesTrigger, getTargetDateForTrigger, matchesTriggerTime } from './triggers.js';
-export { executeAction, getAvailableTemplates } from './actions.js';
+export { executeAction, getAvailableTemplates, executeActionByType } from './actions.js';
+export { executeActionChain, convertLegacyAction } from './chain-executor.js';
+export { processPendingRetries, scheduleRetry, createExecution, updateExecutionStatus } from './retry-handler.js';

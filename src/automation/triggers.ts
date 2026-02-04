@@ -93,6 +93,12 @@ export interface TimeTriggeredReservation {
 
 /**
  * Calculate the target date for a time-based trigger relative to today
+ *
+ * Examples:
+ * - before_arrival with offsetDays=3: Find arrivals 3 days from now (today + 3)
+ * - after_arrival with offsetDays=1: Find arrivals that were 1 day ago (today - 1)
+ * - before_departure with offsetDays=0: Find departures today (checkout day reminders)
+ * - after_departure with offsetDays=1: Find departures that were 1 day ago (post-stay follow-up)
  */
 export function getTargetDateForTrigger(config: TimeTriggerConfig): Date | null {
   const now = new Date();
@@ -100,17 +106,18 @@ export function getTargetDateForTrigger(config: TimeTriggerConfig): Date | null 
 
   switch (config.type) {
     case 'before_arrival':
-      // We want arrivals that are offsetDays in the future
-      // e.g., offsetDays=-3 means arrivals 3 days from now
+      // Looking for arrivals in the future
+      // offsetDays=3 means arrivals that are 3 days from now
       if (config.offsetDays !== undefined) {
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate() - config.offsetDays);
+        targetDate.setDate(targetDate.getDate() + config.offsetDays);
         return targetDate;
       }
       break;
 
     case 'after_arrival':
-      // We want arrivals that were offsetDays in the past
+      // Looking for arrivals in the past
+      // offsetDays=1 means arrivals that were 1 day ago
       if (config.offsetDays !== undefined) {
         const targetDate = new Date(today);
         targetDate.setDate(targetDate.getDate() - config.offsetDays);
@@ -119,16 +126,19 @@ export function getTargetDateForTrigger(config: TimeTriggerConfig): Date | null 
       break;
 
     case 'before_departure':
-      // We want departures that are offsetDays in the future
+      // Looking for departures in the future
+      // offsetDays=0 means departures today (same-day checkout reminder)
+      // offsetDays=1 means departures 1 day from now
       if (config.offsetDays !== undefined) {
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate() - config.offsetDays);
+        targetDate.setDate(targetDate.getDate() + config.offsetDays);
         return targetDate;
       }
       break;
 
     case 'after_departure':
-      // We want departures that were offsetDays in the past
+      // Looking for departures in the past
+      // offsetDays=1 means departures that were 1 day ago
       if (config.offsetDays !== undefined) {
         const targetDate = new Date(today);
         targetDate.setDate(targetDate.getDate() - config.offsetDays);

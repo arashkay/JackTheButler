@@ -19,6 +19,8 @@ import {
   type ActionConfig,
 } from '@/automation/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
+import { generateId } from '@/utils/id.js';
 
 const log = createLogger('api:automation');
 
@@ -441,5 +443,164 @@ automationRoutes.post('/rules/:ruleId/test', async (c) => {
       success: false,
       message: `Rule configuration invalid: ${message}`,
     });
+  }
+});
+
+// ==================
+// Generate Rule from Natural Language
+// ==================
+
+const generateRuleSchema = z.object({
+  prompt: z.string().min(10).max(1000),
+});
+
+/**
+ * POST /api/v1/automation/generate
+ * Generate an automation rule from natural language description
+ */
+automationRoutes.post('/generate', async (c) => {
+  const body = await c.req.json();
+  const parsed = generateRuleSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid request body', details: parsed.error.issues }, 400);
+  }
+
+  const { prompt } = parsed.data;
+
+  try {
+    const registry = getExtensionRegistry();
+    const aiProvider = registry.getCompletionProvider();
+
+    if (!aiProvider) {
+      return c.json({ error: 'No AI provider available' }, 503);
+    }
+
+    const systemPrompt = `You are an automation rule generator for a hotel management system called Jack The Butler.
+Given a natural language description, generate a JSON automation rule.
+
+Available trigger types:
+- time_based: {type: 'before_arrival'|'after_arrival'|'before_departure'|'after_departure', offsetDays: number, time: 'HH:MM'}
+  - before_arrival: offsetDays is how many days before arrival (e.g., 3 = 3 days before)
+  - after_arrival: offsetDays is how many days after arrival (e.g., 1 = 1 day after check-in)
+  - before_departure: offsetDays is how many days before departure (e.g., 0 = checkout day)
+  - after_departure: offsetDays is how many days after departure (e.g., 1 = 1 day after checkout)
+- event_based: {eventType: 'reservation.created'|'reservation.checked_in'|'reservation.checked_out'|'conversation.escalated'|'task.created'|'task.completed'}
+
+Available action types (can chain multiple):
+- send_message: {template: 'custom'|'pre_arrival_welcome'|'checkout_reminder'|'post_stay_thank_you', message?: string, channel: 'preferred'|'sms'|'email'|'whatsapp'}
+  - Use template: 'custom' with message field for custom messages
+- create_task: {type: 'housekeeping'|'maintenance'|'concierge'|'room_service'|'other', department: string, description: string, priority?: 'low'|'standard'|'high'|'urgent'}
+- notify_staff: {role?: string, staffId?: string, message: string, priority?: 'low'|'standard'|'high'|'urgent'}
+- webhook: {url: string, method: 'GET'|'POST', bodyTemplate?: string, headers?: object}
+
+Action chaining: The "actions" array contains multiple actions with order (1,2,3...). Each action can have:
+- id: unique identifier for the action
+- type: action type
+- config: action-specific config
+- order: execution order
+- continueOnError: boolean (optional, continue chain if this action fails)
+- condition: {type: 'previous_success'|'previous_failed'|'always'} (optional, when to run)
+
+Retry config (optional):
+- retryConfig: {enabled: true, maxAttempts: 3, backoffType: 'exponential'|'fixed', initialDelayMs: 60000, maxDelayMs: 3600000}
+
+Variables available in messages/descriptions: {{firstName}}, {{lastName}}, {{roomNumber}}, {{arrivalDate}}, {{departureDate}}
+Chain variables: {{actions.ACTION_ID.output.FIELD}} to reference previous action outputs (e.g., {{actions.send_welcome.output.messageId}})
+
+Output format:
+{
+  "name": "Rule name",
+  "description": "Brief description",
+  "triggerType": "time_based" or "event_based",
+  "triggerConfig": { ... },
+  "actions": [
+    { "id": "action_1", "type": "send_message", "config": { ... }, "order": 1 },
+    { "id": "action_2", "type": "create_task", "config": { ... }, "order": 2, "condition": { "type": "previous_success" } }
+  ],
+  "retryConfig": { "enabled": true, "maxAttempts": 3, "backoffType": "exponential", "initialDelayMs": 60000, "maxDelayMs": 3600000 }
+}
+
+For simple single-action rules, also include legacy fields for backwards compatibility:
+  "actionType": "send_message",
+  "actionConfig": { ... }
+
+Return ONLY valid JSON, no explanation or markdown.`;
+
+    const response = await aiProvider.complete({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+      ],
+      maxTokens: 1500,
+      temperature: 0.3,
+    });
+
+    // Parse the AI response
+    let generatedRule;
+    try {
+      // Extract JSON from the response (handle markdown code blocks)
+      let jsonStr = response.content.trim();
+      if (jsonStr.startsWith('```json')) {
+        jsonStr = jsonStr.slice(7);
+      }
+      if (jsonStr.startsWith('```')) {
+        jsonStr = jsonStr.slice(3);
+      }
+      if (jsonStr.endsWith('```')) {
+        jsonStr = jsonStr.slice(0, -3);
+      }
+      generatedRule = JSON.parse(jsonStr.trim());
+    } catch (parseError) {
+      log.error({ response: response.content, error: parseError }, 'Failed to parse AI-generated rule');
+      return c.json({
+        error: 'Failed to parse generated rule',
+        details: 'The AI response was not valid JSON',
+        raw: response.content,
+      }, 422);
+    }
+
+    // Validate the generated rule has required fields
+    if (!generatedRule.name || !generatedRule.triggerType || !generatedRule.triggerConfig) {
+      return c.json({
+        error: 'Invalid generated rule',
+        details: 'Missing required fields (name, triggerType, triggerConfig)',
+        rule: generatedRule,
+      }, 422);
+    }
+
+    // Ensure actions array exists (convert legacy if needed)
+    if (!generatedRule.actions && generatedRule.actionType && generatedRule.actionConfig) {
+      generatedRule.actions = [{
+        id: generateId('action'),
+        type: generatedRule.actionType,
+        config: generatedRule.actionConfig,
+        order: 1,
+      }];
+    }
+
+    // Generate IDs for actions if missing
+    if (generatedRule.actions) {
+      for (const action of generatedRule.actions) {
+        if (!action.id) {
+          action.id = generateId('action');
+        }
+      }
+    }
+
+    log.info({ prompt, ruleName: generatedRule.name }, 'Generated automation rule from natural language');
+
+    return c.json({
+      rule: generatedRule,
+      prompt,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    log.error({ error, prompt }, 'Failed to generate automation rule');
+
+    return c.json({
+      error: 'Failed to generate rule',
+      details: message,
+    }, 500);
   }
 });

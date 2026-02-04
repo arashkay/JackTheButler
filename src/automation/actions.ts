@@ -7,6 +7,7 @@
 import type { AutomationRule } from '@/db/schema.js';
 import type {
   ActionType,
+  ActionConfig,
   SendMessageActionConfig,
   CreateTaskActionConfig,
   NotifyStaffActionConfig,
@@ -15,7 +16,10 @@ import type {
   ExecutionResult,
 } from './types.js';
 import { createLogger } from '@/utils/logger.js';
-import { generateId } from '@/utils/id.js';
+import { taskService, type TaskType, type TaskPriority } from '@/services/task.js';
+import { conversationService } from '@/services/conversation.js';
+import { events, EventTypes } from '@/events/index.js';
+import type { ChannelType } from '@/types/index.js';
 
 const log = createLogger('automation:actions');
 
@@ -132,16 +136,10 @@ export async function executeAction(
 async function executeSendMessage(
   rule: AutomationRule,
   context: ExecutionContext
-): Promise<{ messageContent: string; channel: string }> {
+): Promise<{ messageContent: string; channel: string; messageId: string; conversationId: string }> {
   const config = JSON.parse(rule.actionConfig) as SendMessageActionConfig;
 
-  // Get template
-  const template = messageTemplates[config.template];
-  if (!template) {
-    throw new Error(`Unknown message template: ${config.template}`);
-  }
-
-  // Build variables for template
+  // Build variables for template replacement
   const variables: Record<string, string> = {
     firstName: context.guest?.firstName || 'Guest',
     lastName: context.guest?.lastName || '',
@@ -151,8 +149,19 @@ async function executeSendMessage(
     ...config.variables,
   };
 
-  // Replace variables in template
-  let messageContent = template;
+  // Get message content from template or custom message
+  let messageContent: string;
+  if (config.template === 'custom' && config.message) {
+    messageContent = config.message;
+  } else {
+    const template = messageTemplates[config.template];
+    if (!template) {
+      throw new Error(`Unknown message template: ${config.template}`);
+    }
+    messageContent = template;
+  }
+
+  // Replace variables in message content
   for (const [key, value] of Object.entries(variables)) {
     messageContent = messageContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
@@ -162,11 +171,11 @@ async function executeSendMessage(
   if (channel === 'preferred') {
     // Determine preferred channel based on guest's available contact info
     if (context.guest?.phone) {
-      channel = 'sms';
+      channel = 'whatsapp'; // Prefer WhatsApp if phone available
     } else if (context.guest?.email) {
       channel = 'email';
     } else {
-      channel = 'sms'; // Default
+      channel = 'sms'; // Default fallback
     }
   }
 
@@ -176,17 +185,87 @@ async function executeSendMessage(
       guestId: context.guest?.id,
       channel,
       template: config.template,
+      contentLength: messageContent.length,
     },
-    'Sending automated message'
+    'Executing send_message action'
   );
 
-  // In a real implementation, this would use the channel adapters
-  // For now, we just log and return the result
-  // TODO: Integrate with channel adapters when they're ready for proactive messaging
+  // Determine channel ID (phone for WhatsApp/SMS, email for email)
+  const channelId = channel === 'email' ? context.guest?.email : context.guest?.phone;
+
+  if (!channelId) {
+    log.warn(
+      { ruleId: rule.id, channel, guestId: context.guest?.id },
+      'No contact info for channel, message cannot be sent'
+    );
+    throw new Error(`No contact info available for channel: ${channel}`);
+  }
+
+  if (!context.guest) {
+    throw new Error('Guest context required to send message');
+  }
+
+  // Find or create a conversation for this guest on this channel
+  const conversation = await conversationService.findOrCreate(
+    channel as ChannelType,
+    channelId,
+    context.guest.id
+  );
+
+  log.info(
+    { ruleId: rule.id, conversationId: conversation.id, channel, guestId: context.guest.id },
+    'Found/created conversation for automation message'
+  );
+
+  // Add the message to the conversation
+  const message = await conversationService.addMessage(conversation.id, {
+    direction: 'outbound',
+    senderType: 'system',
+    content: messageContent,
+    contentType: 'text',
+  });
+
+  log.info(
+    { ruleId: rule.id, messageId: message.id, conversationId: conversation.id },
+    'Automation message saved to conversation'
+  );
+
+  // Send via channel adapter
+  try {
+    const { getExtensionRegistry } = await import('@/extensions/index.js');
+    const registry = getExtensionRegistry();
+    const channelAdapter = registry.getChannelAdapter(channel);
+
+    if (channelAdapter) {
+      await channelAdapter.send({
+        conversationId: conversation.id,
+        content: messageContent,
+        contentType: 'text',
+      });
+
+      log.info(
+        { ruleId: rule.id, channel, messageId: message.id, conversationId: conversation.id },
+        'Automation message sent via channel adapter'
+      );
+    } else {
+      log.warn(
+        { ruleId: rule.id, channel },
+        'Channel adapter not available, message saved but not delivered'
+      );
+    }
+  } catch (error) {
+    log.error(
+      { ruleId: rule.id, channel, error, conversationId: conversation.id },
+      'Failed to send via channel adapter, message saved but delivery failed'
+    );
+    // Don't throw - message is saved, delivery can be retried
+  }
 
   return {
     messageContent,
     channel,
+    messageId: message.id,
+    conversationId: conversation.id,
   };
 }
 
@@ -201,30 +280,56 @@ async function executeCreateTask(
 
   // Replace variables in description
   let description = config.description;
-  if (context.guest) {
-    description = description.replace(/{{firstName}}/g, context.guest.firstName);
-    description = description.replace(/{{lastName}}/g, context.guest.lastName);
-  }
-  if (context.reservation) {
-    description = description.replace(/{{roomNumber}}/g, context.reservation.roomNumber || '');
-  }
+  const variables: Record<string, string> = {
+    firstName: context.guest?.firstName || 'Guest',
+    lastName: context.guest?.lastName || '',
+    roomNumber: context.reservation?.roomNumber || '',
+    arrivalDate: context.reservation?.arrivalDate || '',
+    departureDate: context.reservation?.departureDate || '',
+    ruleId: context.ruleId,
+    ruleName: context.ruleName,
+  };
 
-  const taskId = generateId('task');
+  for (const [key, value] of Object.entries(variables)) {
+    description = description.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  }
 
   log.info(
     {
       ruleId: rule.id,
-      taskId,
       type: config.type,
       department: config.department,
+      priority: config.priority,
     },
-    'Creating automated task'
+    'Executing create_task action'
   );
 
-  // In a real implementation, this would create a task in the database
-  // TODO: Integrate with task service
+  // Validate task type
+  const validTypes: TaskType[] = ['housekeeping', 'maintenance', 'concierge', 'room_service', 'other'];
+  const taskType = validTypes.includes(config.type as TaskType) ? (config.type as TaskType) : 'other';
 
-  return { taskId };
+  // Validate priority
+  const validPriorities: TaskPriority[] = ['urgent', 'high', 'standard', 'low'];
+  const priority = validPriorities.includes(config.priority as TaskPriority)
+    ? (config.priority as TaskPriority)
+    : 'standard';
+
+  // Create the task using the task service
+  const task = await taskService.create({
+    type: taskType,
+    department: config.department,
+    description,
+    priority,
+    roomNumber: context.reservation?.roomNumber,
+    source: 'automation',
+  });
+
+  log.info(
+    { ruleId: rule.id, taskId: task.id, type: taskType, department: config.department },
+    'Task created successfully via automation'
+  );
+
+  return { taskId: task.id };
 }
 
 /**
@@ -233,32 +338,80 @@ async function executeCreateTask(
 async function executeNotifyStaff(
   rule: AutomationRule,
   context: ExecutionContext
-): Promise<{ notificationSent: boolean }> {
+): Promise<{ notificationSent: boolean; notificationId: string }> {
   const config = JSON.parse(rule.actionConfig) as NotifyStaffActionConfig;
 
   // Replace variables in message
   let message = config.message;
-  if (context.guest) {
-    message = message.replace(/{{firstName}}/g, context.guest.firstName);
-    message = message.replace(/{{lastName}}/g, context.guest.lastName);
+  const variables: Record<string, string> = {
+    firstName: context.guest?.firstName || 'Guest',
+    lastName: context.guest?.lastName || '',
+    roomNumber: context.reservation?.roomNumber || '',
+    arrivalDate: context.reservation?.arrivalDate || '',
+    departureDate: context.reservation?.departureDate || '',
+    ruleId: context.ruleId,
+    ruleName: context.ruleName,
+  };
+
+  for (const [key, value] of Object.entries(variables)) {
+    message = message.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
-  if (context.reservation) {
-    message = message.replace(/{{roomNumber}}/g, context.reservation.roomNumber || '');
-  }
+
+  // Validate priority
+  const validPriorities = ['low', 'standard', 'high', 'urgent'] as const;
+  const priority = validPriorities.includes(config.priority as typeof validPriorities[number])
+    ? (config.priority as typeof validPriorities[number])
+    : 'standard';
 
   log.info(
     {
       ruleId: rule.id,
       role: config.role,
       staffId: config.staffId,
+      priority,
     },
-    'Sending staff notification'
+    'Executing notify_staff action'
   );
 
-  // In a real implementation, this would send a notification to staff
-  // TODO: Integrate with notification system
+  // Generate notification ID for tracking
+  const { generateId } = await import('@/utils/id.js');
+  const notificationId = generateId('notification');
 
-  return { notificationSent: true };
+  // Build payload with optional properties only if they have values
+  const payload: {
+    message: string;
+    priority: 'low' | 'standard' | 'high' | 'urgent';
+    role?: string;
+    staffId?: string;
+    automationRuleId?: string;
+  } = {
+    message,
+    priority,
+  };
+
+  if (config.role) {
+    payload.role = config.role;
+  }
+  if (config.staffId) {
+    payload.staffId = config.staffId;
+  }
+  if (context.ruleId) {
+    payload.automationRuleId = context.ruleId;
+  }
+
+  // Emit notification event (WebSocket bridge will push to dashboard)
+  events.emit({
+    type: EventTypes.STAFF_NOTIFICATION,
+    payload,
+    timestamp: new Date(),
+  });
+
+  log.info(
+    { ruleId: rule.id, notificationId, role: config.role },
+    'Staff notification emitted'
+  );
+
+  return { notificationSent: true, notificationId };
 }
 
 /**
@@ -337,4 +490,298 @@ async function executeWebhook(
  */
 export function getAvailableTemplates(): string[] {
   return Object.keys(messageTemplates);
+}
+
+/**
+ * Execute an action by type (used by chain executor)
+ */
+export async function executeActionByType(
+  actionType: ActionType,
+  config: ActionConfig,
+  context: ExecutionContext
+): Promise<unknown> {
+  switch (actionType) {
+    case 'send_message':
+      return executeSendMessageDirect(config as SendMessageActionConfig, context);
+    case 'create_task':
+      return executeCreateTaskDirect(config as CreateTaskActionConfig, context);
+    case 'notify_staff':
+      return executeNotifyStaffDirect(config as NotifyStaffActionConfig, context);
+    case 'webhook':
+      return executeWebhookDirect(config as WebhookActionConfig, context);
+    default:
+      throw new Error(`Unknown action type: ${actionType}`);
+  }
+}
+
+/**
+ * Direct execution functions for chain executor
+ */
+async function executeSendMessageDirect(
+  config: SendMessageActionConfig,
+  context: ExecutionContext
+): Promise<{ messageContent: string; channel: string; messageId: string; conversationId: string }> {
+  // Build variables for template replacement
+  const variables: Record<string, string> = {
+    firstName: context.guest?.firstName || 'Guest',
+    lastName: context.guest?.lastName || '',
+    roomNumber: context.reservation?.roomNumber || '',
+    arrivalDate: context.reservation?.arrivalDate || '',
+    departureDate: context.reservation?.departureDate || '',
+    ...config.variables,
+  };
+
+  // Get message content from template or custom message
+  let messageContent: string;
+  if (config.template === 'custom' && config.message) {
+    messageContent = config.message;
+  } else {
+    const template = messageTemplates[config.template];
+    if (!template) {
+      throw new Error(`Unknown message template: ${config.template}`);
+    }
+    messageContent = template;
+  }
+
+  // Replace variables in message content
+  for (const [key, value] of Object.entries(variables)) {
+    messageContent = messageContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  }
+
+  // Determine channel
+  let channel = config.channel;
+  if (channel === 'preferred') {
+    if (context.guest?.phone) {
+      channel = 'whatsapp';
+    } else if (context.guest?.email) {
+      channel = 'email';
+    } else {
+      channel = 'sms';
+    }
+  }
+
+  // Determine channel ID (phone for WhatsApp/SMS, email for email)
+  const channelId = channel === 'email' ? context.guest?.email : context.guest?.phone;
+
+  if (!channelId) {
+    log.warn(
+      { ruleId: context.ruleId, channel, guestId: context.guest?.id },
+      'No contact info for channel, message cannot be sent'
+    );
+    throw new Error(`No contact info available for channel: ${channel}`);
+  }
+
+  if (!context.guest) {
+    throw new Error('Guest context required to send message');
+  }
+
+  // Find or create a conversation for this guest on this channel
+  const conversation = await conversationService.findOrCreate(
+    channel as ChannelType,
+    channelId,
+    context.guest.id
+  );
+
+  log.info(
+    { ruleId: context.ruleId, conversationId: conversation.id, channel, guestId: context.guest.id },
+    'Found/created conversation for automation message'
+  );
+
+  // Add the message to the conversation
+  const message = await conversationService.addMessage(conversation.id, {
+    direction: 'outbound',
+    senderType: 'system',
+    content: messageContent,
+    contentType: 'text',
+  });
+
+  log.info(
+    { ruleId: context.ruleId, messageId: message.id, conversationId: conversation.id },
+    'Automation message saved to conversation'
+  );
+
+  // Send via channel adapter
+  try {
+    const { getExtensionRegistry } = await import('@/extensions/index.js');
+    const registry = getExtensionRegistry();
+    const channelAdapter = registry.getChannelAdapter(channel);
+
+    if (channelAdapter) {
+      await channelAdapter.send({
+        conversationId: conversation.id,
+        content: messageContent,
+        contentType: 'text',
+      });
+
+      log.info(
+        { ruleId: context.ruleId, channel, messageId: message.id, conversationId: conversation.id },
+        'Automation message sent via channel adapter'
+      );
+    } else {
+      log.warn(
+        { ruleId: context.ruleId, channel },
+        'Channel adapter not available, message saved but not delivered'
+      );
+    }
+  } catch (error) {
+    log.error(
+      { ruleId: context.ruleId, channel, error, conversationId: conversation.id },
+      'Failed to send via channel adapter, message saved but delivery failed'
+    );
+    // Don't throw - message is saved, delivery can be retried
+  }
+
+  return {
+    messageContent,
+    channel,
+    messageId: message.id,
+    conversationId: conversation.id,
+  };
+}
+
+async function executeCreateTaskDirect(
+  config: CreateTaskActionConfig,
+  context: ExecutionContext
+): Promise<{ taskId: string }> {
+  // Replace variables in description
+  let description = config.description;
+  const variables: Record<string, string> = {
+    firstName: context.guest?.firstName || 'Guest',
+    lastName: context.guest?.lastName || '',
+    roomNumber: context.reservation?.roomNumber || '',
+    arrivalDate: context.reservation?.arrivalDate || '',
+    departureDate: context.reservation?.departureDate || '',
+    ruleId: context.ruleId,
+    ruleName: context.ruleName,
+  };
+
+  for (const [key, value] of Object.entries(variables)) {
+    description = description.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  }
+
+  const validTypes: TaskType[] = ['housekeeping', 'maintenance', 'concierge', 'room_service', 'other'];
+  const taskType = validTypes.includes(config.type as TaskType) ? (config.type as TaskType) : 'other';
+
+  const validPriorities: TaskPriority[] = ['urgent', 'high', 'standard', 'low'];
+  const priority = validPriorities.includes(config.priority as TaskPriority)
+    ? (config.priority as TaskPriority)
+    : 'standard';
+
+  const task = await taskService.create({
+    type: taskType,
+    department: config.department,
+    description,
+    priority,
+    roomNumber: context.reservation?.roomNumber,
+    source: 'automation',
+  });
+
+  return { taskId: task.id };
+}
+
+async function executeNotifyStaffDirect(
+  config: NotifyStaffActionConfig,
+  context: ExecutionContext
+): Promise<{ notificationSent: boolean; notificationId: string }> {
+  // Replace variables in message
+  let message = config.message;
+  const variables: Record<string, string> = {
+    firstName: context.guest?.firstName || 'Guest',
+    lastName: context.guest?.lastName || '',
+    roomNumber: context.reservation?.roomNumber || '',
+    arrivalDate: context.reservation?.arrivalDate || '',
+    departureDate: context.reservation?.departureDate || '',
+    ruleId: context.ruleId,
+    ruleName: context.ruleName,
+  };
+
+  for (const [key, value] of Object.entries(variables)) {
+    message = message.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  }
+
+  const validPriorities = ['low', 'standard', 'high', 'urgent'] as const;
+  const priority = validPriorities.includes(config.priority as typeof validPriorities[number])
+    ? (config.priority as typeof validPriorities[number])
+    : 'standard';
+
+  const { generateId } = await import('@/utils/id.js');
+  const notificationId = generateId('notification');
+
+  // Build payload with optional properties only if they have values
+  const payload: {
+    message: string;
+    priority: 'low' | 'standard' | 'high' | 'urgent';
+    role?: string;
+    staffId?: string;
+    automationRuleId?: string;
+  } = {
+    message,
+    priority,
+  };
+
+  if (config.role) {
+    payload.role = config.role;
+  }
+  if (config.staffId) {
+    payload.staffId = config.staffId;
+  }
+  if (context.ruleId) {
+    payload.automationRuleId = context.ruleId;
+  }
+
+  events.emit({
+    type: EventTypes.STAFF_NOTIFICATION,
+    payload,
+    timestamp: new Date(),
+  });
+
+  return { notificationSent: true, notificationId };
+}
+
+async function executeWebhookDirect(
+  config: WebhookActionConfig,
+  context: ExecutionContext
+): Promise<{ status: number; response?: unknown }> {
+  let body: string | undefined;
+  if (config.bodyTemplate) {
+    body = config.bodyTemplate;
+    body = body.replace(/{{ruleId}}/g, context.ruleId);
+    body = body.replace(/{{ruleName}}/g, context.ruleName);
+    if (context.guest) {
+      body = body.replace(/{{guestId}}/g, context.guest.id);
+      body = body.replace(/{{firstName}}/g, context.guest.firstName);
+      body = body.replace(/{{lastName}}/g, context.guest.lastName);
+    }
+    if (context.reservation) {
+      body = body.replace(/{{reservationId}}/g, context.reservation.id);
+    }
+  }
+
+  const fetchOptions: RequestInit = {
+    method: config.method || 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...config.headers,
+    },
+  };
+
+  if (body) {
+    fetchOptions.body = body;
+  }
+
+  const response = await fetch(config.url, fetchOptions);
+  const status = response.status;
+
+  let responseData: unknown;
+  try {
+    responseData = await response.json();
+  } catch {
+    responseData = await response.text();
+  }
+
+  if (!response.ok) {
+    throw new Error(`Webhook returned status ${status}`);
+  }
+
+  return { status, response: responseData };
 }

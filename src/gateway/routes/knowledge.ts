@@ -226,7 +226,7 @@ knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
  * Test the knowledge base by asking a question and getting an AI response
  */
 knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
-  const { query } = c.get('validatedBody') as z.infer<typeof askSchema>;
+  const { query } = c.get('validatedBody') as z.infer<typeof querySchema>;
 
   log.info({ query: query.substring(0, 50) }, 'Testing knowledge base');
 

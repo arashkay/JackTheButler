@@ -55,8 +55,10 @@ export interface EventTriggerConfig {
  * Send message action configuration
  */
 export interface SendMessageActionConfig {
-  // Template name to use
+  // Template name to use ('custom' for custom message)
   template: string;
+  // Custom message content (used when template='custom')
+  message?: string;
   // Channel to send on: 'preferred' uses guest's preferred channel
   channel: 'preferred' | 'whatsapp' | 'sms' | 'email';
   // Template variables (optional)
@@ -81,6 +83,7 @@ export interface NotifyStaffActionConfig {
   role?: string;
   staffId?: string;
   message: string;
+  priority?: 'low' | 'standard' | 'high' | 'urgent';
 }
 
 /**
@@ -169,4 +172,95 @@ export interface ExecutionResult {
   result?: unknown;
   error?: string;
   executionTimeMs: number;
+}
+
+// ===================
+// Action Chaining (Phase 20)
+// ===================
+
+/**
+ * Action definition for chained actions
+ */
+export interface ActionDefinition {
+  // Unique ID for this action in the chain
+  id: string;
+  // Action type
+  type: ActionType;
+  // Action-specific configuration
+  config: ActionConfig;
+  // Execution order (1, 2, 3...)
+  order: number;
+  // If true, continue to next action even if this fails
+  continueOnError?: boolean;
+  // Optional condition to run this action
+  condition?: ActionCondition;
+}
+
+/**
+ * Condition for executing an action
+ */
+export interface ActionCondition {
+  type: 'previous_success' | 'previous_failed' | 'always' | 'expression';
+  // For complex conditions (e.g., "{{actions.send_welcome.output.messageId}} != null")
+  expression?: string;
+}
+
+/**
+ * Result of a single action execution
+ */
+export interface ActionResult {
+  actionId: string;
+  status: 'success' | 'failed' | 'skipped';
+  output?: Record<string, unknown>;
+  error?: string;
+  executedAt: string;
+  durationMs: number;
+}
+
+/**
+ * Result of executing an action chain
+ */
+export interface ChainExecutionResult {
+  status: 'completed' | 'failed' | 'partial';
+  results: ActionResult[];
+  totalDurationMs: number;
+}
+
+// ===================
+// Retry Logic (Phase 20)
+// ===================
+
+/**
+ * Retry configuration for automation rules
+ */
+export interface RetryConfig {
+  enabled: boolean;
+  // Max retry attempts (default: 3)
+  maxAttempts: number;
+  // Backoff type
+  backoffType: 'fixed' | 'exponential';
+  // Initial delay in milliseconds (default: 60000 = 1 min)
+  initialDelayMs: number;
+  // Max delay cap in milliseconds (default: 3600000 = 1 hour)
+  maxDelayMs: number;
+  // Only retry on specific error types (optional)
+  retryableErrors?: string[];
+}
+
+/**
+ * Default retry configuration
+ */
+export const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  enabled: true,
+  maxAttempts: 3,
+  backoffType: 'exponential',
+  initialDelayMs: 60000, // 1 minute
+  maxDelayMs: 3600000, // 1 hour
+};
+
+/**
+ * Extended execution context with previous action results
+ */
+export interface ChainExecutionContext extends ExecutionContext {
+  previousResults: Record<string, ActionResult>;
 }
