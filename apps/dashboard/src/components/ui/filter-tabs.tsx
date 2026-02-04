@@ -1,4 +1,5 @@
-import { useRef, useState, useLayoutEffect, useCallback } from 'react';
+import { useRef, useState, useLayoutEffect, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export function FilterTabs<T extends string>({
   onChange,
   className,
 }: FilterTabsProps<T>) {
+  const { i18n } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
   const [ready, setReady] = useState(false);
@@ -43,6 +45,12 @@ export function FilterTabs<T extends string>({
       requestAnimationFrame(() => setReady(true));
     }
   }, [value, updateIndicator, ready]);
+
+  // Update indicator when language/direction changes
+  useEffect(() => {
+    const timer = setTimeout(updateIndicator, 50);
+    return () => clearTimeout(timer);
+  }, [i18n.language, updateIndicator]);
 
   return (
     <div ref={containerRef} className={cn('flex gap-1 flex-nowrap relative', className)}>

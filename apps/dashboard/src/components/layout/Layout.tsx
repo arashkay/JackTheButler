@@ -70,7 +70,9 @@ export function Layout() {
   const navRef = useRef<HTMLElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; left: number; width: number; height: number; opacity: number }>({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
   const [indicatorReady, setIndicatorReady] = useState(false);
+  const [transitionsEnabled, setTransitionsEnabled] = useState(false);
   const [sectionAnimating, setSectionAnimating] = useState(false);
+  const [collapseAnimating, setCollapseAnimating] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const themeToggleRef = useRef<HTMLDivElement>(null);
@@ -129,6 +131,7 @@ export function Layout() {
   };
 
   const toggleCollapsed = () => {
+    setCollapseAnimating(true);
     setCollapsed((prev) => {
       const next = !prev;
       localStorage.setItem('sidebar-collapsed', String(next));
@@ -177,22 +180,31 @@ export function Layout() {
   }, []);
 
   useLayoutEffect(() => {
-    if (sectionAnimating) {
-      // Hide indicator during section animation, then show after animation completes
+    if (sectionAnimating || collapseAnimating) {
+      // Hide indicator during animation, then show after animation completes
       setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      setTransitionsEnabled(false);
       const timer = setTimeout(() => {
         setSectionAnimating(false);
+        setCollapseAnimating(false);
         updateIndicator();
+        // Re-enable transitions after paint
+        setTimeout(() => setTransitionsEnabled(true), 50);
       }, 210);
+      return () => clearTimeout(timer);
+    } else if (!indicatorReady) {
+      // Wait for layout to settle on initial page load (including section expansion)
+      const timer = setTimeout(() => {
+        setIndicatorReady(true);
+        updateIndicator();
+        // Enable transitions after paint so initial position has no animation
+        setTimeout(() => setTransitionsEnabled(true), 50);
+      }, 250);
       return () => clearTimeout(timer);
     } else {
       updateIndicator();
-      // Enable transitions after first position is set
-      if (!indicatorReady) {
-        requestAnimationFrame(() => setIndicatorReady(true));
-      }
     }
-  }, [location.pathname, collapsed, expandedSections, updateIndicator, indicatorReady, sectionAnimating]);
+  }, [location.pathname, collapsed, expandedSections, updateIndicator, indicatorReady, sectionAnimating, collapseAnimating]);
 
   // Also update on scroll and resize
   useEffect(() => {
@@ -327,7 +339,7 @@ export function Layout() {
           <div
             className={cn(
               'absolute bg-primary rounded-lg pointer-events-none',
-              indicatorReady && 'transition-all duration-200'
+              transitionsEnabled && 'transition-all duration-200'
             )}
             style={{
               top: indicatorStyle.top,
@@ -397,7 +409,7 @@ export function Layout() {
                       : ''
                   }
                 >
-                  <ul className={`space-y-1 ${section.collapsible ? 'overflow-hidden mt-1' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}>
+                  <ul className={`space-y-1 ${section.collapsible ? 'overflow-hidden mt-1' : ''} ${section.collapsible && !collapsed ? 'ms-5' : ''}`}>
                     {(() => {
                       const activeIndex = section.items.findIndex((item) => isActive(item.path));
                       return section.items.map((item, index) => {
@@ -408,7 +420,7 @@ export function Layout() {
                             {/* Vertical line segment - only show up to active item */}
                             {showLine && (
                               <div
-                                className={`absolute left-2.5 w-px bg-foreground ${
+                                className={`absolute start-2.5 w-px bg-foreground ${
                                   index === 0 ? 'top-0' : '-top-1'
                                 } ${
                                   index === activeIndex ? 'bottom-1/2' : '-bottom-1'
@@ -417,7 +429,7 @@ export function Layout() {
                             )}
                             {/* Horizontal connector to active item */}
                             {section.collapsible && !collapsed && active && (
-                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-foreground" />
+                              <div className="absolute start-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-foreground" />
                             )}
                             <Tooltip content={collapsed ? item.label : null} side="right">
                               <Link
@@ -427,13 +439,13 @@ export function Layout() {
                                   active
                                     ? 'text-primary-foreground'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
+                                } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ms-5' : ''}`}
                               >
                                 {(!section.collapsible || collapsed) && (
                                   <span className={`relative ${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                                     {item.icon}
                                     {collapsed && item.badge && item.badge > 0 && (
-                                      <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
+                                      <span className={`absolute -top-1 -end-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
                                         active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
                                       }`}>
                                         {item.badge > 99 ? '99+' : item.badge}
@@ -445,7 +457,7 @@ export function Layout() {
                                   <>
                                     <span className="text-sm font-medium">{item.label}</span>
                                     {item.badge && item.badge > 0 && (
-                                      <span className={`ml-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
+                                      <span className={`ms-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
                                         active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
                                       }`}>
                                         {item.badge > 99 ? '99+' : item.badge}
@@ -544,7 +556,7 @@ export function Layout() {
               </div>
               {!collapsed && (
                 <>
-                  <span className="flex-1 text-left text-sm truncate">{user?.name}</span>
+                  <span className="flex-1 text-start text-sm truncate">{user?.name}</span>
                   <ChevronUp size={14} className={`text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </>
               )}
