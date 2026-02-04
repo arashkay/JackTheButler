@@ -2,6 +2,7 @@
   "automations": {
     "newRule": "New Rule",
     "createRule": "Create Rule",
+    "aiGenerate": "AI Generate",
     "active": "Active",
     "inactive": "Inactive",
     "errors": "Errors",
@@ -21,6 +22,8 @@
     "filterAll": "All",
     "filterScheduled": "Scheduled",
     "filterEvents": "Events",
+    "retryEnabled": "Retry enabled",
+    "actions": "actions",
     "triggers": {
       "scheduled": "Scheduled",
       "event": "Event",
@@ -120,6 +123,85 @@
     "dangerZone": "Danger Zone",
     "deleteAutomation": "Delete this automation",
     "deleteConfirm": "Are you sure you want to delete this automation rule?",
-    "cannotBeUndone": "This action cannot be undone"
+    "cannotBeUndone": "This action cannot be undone",
+    "actions": "Actions",
+    "addAction": "Add Action",
+    "removeAction": "Remove",
+    "actionOrder": "Action {{number}}",
+    "continueOnError": "Continue on error",
+    "continueOnErrorDesc": "Run next action even if this one fails",
+    "runCondition": "Run condition",
+    "conditions": {
+      "always": "Always run",
+      "previousSuccess": "Only if previous succeeded",
+      "previousFailed": "Only if previous failed"
+    },
+    "customMessage": "Custom Message",
+    "customMessagePlaceholder": "Hi {{firstName}}, we're looking forward to your stay...",
+    "insertVariable": "Insert variable",
+    "messagePreview": "Preview",
+    "variables": {
+      "firstName": "Guest First Name",
+      "lastName": "Guest Last Name",
+      "roomNumber": "Room Number",
+      "arrivalDate": "Arrival Date",
+      "departureDate": "Departure Date"
+    },
+    "retry": {
+      "title": "Retry on Failure",
+      "enabled": "Enable retries",
+      "maxAttempts": "Max Attempts",
+      "backoffType": "Backoff Type",
+      "exponential": "Exponential",
+      "fixed": "Fixed",
+      "initialDelay": "Initial Delay",
+      "maxDelay": "Max Delay",
+      "minutes": "minutes",
+      "hour": "hour",
+      "hours": "hours",
+      "retryPattern": "Retries: {{pattern}}"
+    },
+    "taskTypes": {
+      "housekeeping": "Housekeeping",
+      "maintenance": "Maintenance",
+      "concierge": "Concierge",
+      "roomService": "Room Service",
+      "other": "Other"
+    }
+  },
+  "automationGenerate": {
+    "title": "Create Automation",
+    "description": "Describe what you want to automate in plain English",
+    "placeholder": "e.g., Send a welcome message 2 days before arrival at 10am",
+    "generate": "Generate Automation",
+    "generating": "Generating...",
+    "examples": "Try an example:",
+    "examplesList": [
+      "Send a welcome message 2 days before arrival at 10am",
+      "Create a housekeeping task when guest checks out",
+      "Notify the manager when a conversation is escalated",
+      "Send checkout reminder at 8am on departure day",
+      "Create a maintenance task when guest reports an issue",
+      "Send a thank you message 1 day after checkout"
+    ],
+    "generatedRule": "Generated Rule",
+    "reviewRule": "Review the generated rule below. You can edit it or create it as-is.",
+    "ruleName": "Name",
+    "triggerSummary": "Trigger",
+    "actionsSummary": "Actions",
+    "editRule": "Edit Rule",
+    "createRule": "Create Rule",
+    "startOver": "Start Over",
+    "failedToGenerate": "Failed to generate automation",
+    "noAiProvider": "No AI provider configured. Please set up an AI provider in Extensions.",
+    "goToExtensions": "Go to Extensions",
+    "preferManual": "Prefer to set up manually?",
+    "createManually": "Create Rule Manually",
+    "backToAutomations": "Back to Automations",
+    "clickToUse": "Click any example to use it",
+    "retryAttempts": "Retry: {{count}} attempts",
+    "day": "day",
+    "days": "days",
+    "at": "at"
   }
 }

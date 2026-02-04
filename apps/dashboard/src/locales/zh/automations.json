@@ -121,5 +121,40 @@
     "deleteAutomation": "删除此自动化",
     "deleteConfirm": "确定要删除此自动化规则吗？",
     "cannotBeUndone": "此操作无法撤消"
+  },
+  "automationGenerate": {
+    "title": "创建自动化",
+    "description": "用简单的中文描述您想要自动化的内容",
+    "placeholder": "例如：在到达前2天上午10点发送欢迎消息",
+    "generate": "生成自动化",
+    "generating": "生成中...",
+    "examples": "尝试一个示例：",
+    "examplesList": [
+      "在到达前2天上午10点发送欢迎消息",
+      "客人退房时创建客房清洁任务",
+      "对话升级时通知经理",
+      "离店当天上午8点发送退房提醒",
+      "客人报告问题时创建维护任务",
+      "退房后1天发送感谢消息"
+    ],
+    "generatedRule": "生成的规则",
+    "reviewRule": "查看下方生成的规则。您可以编辑它或直接创建。",
+    "ruleName": "名称",
+    "triggerSummary": "触发器",
+    "actionsSummary": "操作",
+    "editRule": "编辑规则",
+    "createRule": "创建规则",
+    "startOver": "重新开始",
+    "failedToGenerate": "生成自动化失败",
+    "noAiProvider": "未配置 AI 提供商。请在扩展中设置 AI 提供商。",
+    "goToExtensions": "前往扩展",
+    "preferManual": "更喜欢手动设置？",
+    "createManually": "手动创建规则",
+    "backToAutomations": "返回自动化",
+    "clickToUse": "点击任何示例即可使用",
+    "retryAttempts": "重试：{{count}} 次",
+    "day": "天",
+    "days": "天",
+    "at": "于"
   }
 }

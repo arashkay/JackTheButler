@@ -121,5 +121,40 @@
     "deleteAutomation": "Eliminar esta automatización",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar esta regla de automatización?",
     "cannotBeUndone": "Esta acción no se puede deshacer"
+  },
+  "automationGenerate": {
+    "title": "Crear Automatización",
+    "description": "Describe lo que quieres automatizar en español sencillo",
+    "placeholder": "ej., Enviar un mensaje de bienvenida 2 días antes de la llegada a las 10am",
+    "generate": "Generar Automatización",
+    "generating": "Generando...",
+    "examples": "Prueba un ejemplo:",
+    "examplesList": [
+      "Enviar un mensaje de bienvenida 2 días antes de la llegada a las 10am",
+      "Crear una tarea de limpieza cuando el huésped haga checkout",
+      "Notificar al gerente cuando una conversación sea escalada",
+      "Enviar recordatorio de checkout a las 8am el día de salida",
+      "Crear una tarea de mantenimiento cuando el huésped reporte un problema",
+      "Enviar un mensaje de agradecimiento 1 día después del checkout"
+    ],
+    "generatedRule": "Regla Generada",
+    "reviewRule": "Revisa la regla generada a continuación. Puedes editarla o crearla tal cual.",
+    "ruleName": "Nombre",
+    "triggerSummary": "Disparador",
+    "actionsSummary": "Acciones",
+    "editRule": "Editar Regla",
+    "createRule": "Crear Regla",
+    "startOver": "Empezar de Nuevo",
+    "failedToGenerate": "Error al generar automatización",
+    "noAiProvider": "No hay proveedor de IA configurado. Por favor configura un proveedor de IA en Extensiones.",
+    "goToExtensions": "Ir a Extensiones",
+    "preferManual": "¿Prefieres configurar manualmente?",
+    "createManually": "Crear Regla Manualmente",
+    "backToAutomations": "Volver a Automatizaciones",
+    "clickToUse": "Haz clic en cualquier ejemplo para usarlo",
+    "retryAttempts": "Reintentos: {{count}} intentos",
+    "day": "día",
+    "days": "días",
+    "at": "a las"
   }
 }

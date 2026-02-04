@@ -38,27 +38,33 @@ export const automationRoutes = new Hono();
  * List all automation rules
  */
 automationRoutes.get('/rules', async (c) => {
-  const engine = getAutomationEngine();
-  const rules = await engine.getRules();
+  try {
+    const engine = getAutomationEngine();
+    const rules = await engine.getRules();
 
-  // Transform for API response
-  const response = rules.map((rule) => ({
-    id: rule.id,
-    name: rule.name,
-    description: rule.description,
-    triggerType: rule.triggerType,
-    triggerConfig: JSON.parse(rule.triggerConfig),
-    actionType: rule.actionType,
-    actionConfig: JSON.parse(rule.actionConfig),
-    enabled: rule.enabled,
-    runCount: rule.runCount || 0,
-    lastRunAt: rule.lastRunAt,
-    lastError: rule.lastError,
-    createdAt: rule.createdAt,
-    updatedAt: rule.updatedAt,
-  }));
+    // Transform for API response (safely parse JSON fields)
+    const response = rules.map((rule) => ({
+      id: rule.id,
+      name: rule.name,
+      description: rule.description,
+      triggerType: rule.triggerType,
+      triggerConfig: rule.triggerConfig ? JSON.parse(rule.triggerConfig) : {},
+      actionType: rule.actionType,
+      actionConfig: rule.actionConfig ? JSON.parse(rule.actionConfig) : {},
+      enabled: rule.enabled,
+      runCount: rule.runCount || 0,
+      lastRunAt: rule.lastRunAt,
+      lastError: rule.lastError,
+      createdAt: rule.createdAt,
+      updatedAt: rule.updatedAt,
+    }));
 
-  return c.json({ rules: response });
+    return c.json({ rules: response });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    log.error({ error, message }, 'Failed to list automation rules');
+    return c.json({ error: 'Failed to load automation rules', details: message }, 500);
+  }
 });
 
 // ==================

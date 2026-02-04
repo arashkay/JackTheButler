@@ -54,7 +54,7 @@ export function ConversationsPage() {
       </div>
 
       {/* Main */}
-      <div className="flex-1 bg-background">
+      <div className={`flex-1 ${selectedId ? 'bg-background' : 'bg-muted/50'}`}>
         {selectedId ? (
           <ConversationView id={selectedId} />
         ) : (

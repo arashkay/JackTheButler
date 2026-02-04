@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -63,10 +63,14 @@ export function Layout() {
   });
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('sidebar-expanded-sections');
-    return saved ? JSON.parse(saved) : { tools: false, settings: false };
+    return saved ? JSON.parse(saved) : { content: false, settings: false };
   });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; left: number; width: number; height: number; opacity: number }>({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
+  const [indicatorReady, setIndicatorReady] = useState(false);
+  const [sectionAnimating, setSectionAnimating] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const themeToggleRef = useRef<HTMLDivElement>(null);
@@ -116,6 +120,7 @@ export function Layout() {
     const isOpening = !expandedSections[sectionId];
     const next = { ...expandedSections, [sectionId]: isOpening };
     localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
+    setSectionAnimating(true);
     setExpandedSections(next);
     // Navigate to first item when opening
     if (isOpening && firstItemPath) {
@@ -152,10 +157,59 @@ export function Layout() {
     }
   }, [isLoading, isAuthenticated, navigate]);
 
+  // Update indicator position when active item changes
+  const updateIndicator = useCallback(() => {
+    if (!navRef.current) return;
+    const activeLink = navRef.current.querySelector('[data-nav-active="true"]') as HTMLElement;
+    if (activeLink && activeLink.offsetHeight > 0) {
+      const navRect = navRef.current.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
+      setIndicatorStyle({
+        top: linkRect.top - navRect.top + navRef.current.scrollTop,
+        left: linkRect.left - navRect.left,
+        width: linkRect.width,
+        height: linkRect.height,
+        opacity: 1,
+      });
+    } else {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (sectionAnimating) {
+      // Hide indicator during section animation, then show after animation completes
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      const timer = setTimeout(() => {
+        setSectionAnimating(false);
+        updateIndicator();
+      }, 210);
+      return () => clearTimeout(timer);
+    } else {
+      updateIndicator();
+      // Enable transitions after first position is set
+      if (!indicatorReady) {
+        requestAnimationFrame(() => setIndicatorReady(true));
+      }
+    }
+  }, [location.pathname, collapsed, expandedSections, updateIndicator, indicatorReady, sectionAnimating]);
+
+  // Also update on scroll and resize
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    nav.addEventListener('scroll', updateIndicator);
+    window.addEventListener('resize', updateIndicator);
+    return () => {
+      nav.removeEventListener('scroll', updateIndicator);
+      window.removeEventListener('resize', updateIndicator);
+    };
+  }, [updateIndicator]);
+
   // Auto-expand active section and collapse others when navigating
   useEffect(() => {
     const collapsibleSections = [
-      { id: 'tools', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
+      { id: 'content', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
       { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy'] },
     ];
 
@@ -268,7 +322,22 @@ export function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav ref={navRef} className="flex-1 py-4 overflow-y-auto relative">
+          {/* Sliding indicator */}
+          <div
+            className={cn(
+              'absolute bg-primary rounded-lg pointer-events-none',
+              indicatorReady && 'transition-all duration-200'
+            )}
+            style={{
+              top: indicatorStyle.top,
+              left: indicatorStyle.left,
+              width: indicatorStyle.width,
+              height: indicatorStyle.height,
+              opacity: indicatorStyle.opacity,
+              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
           {navSections.map((section, sectionIndex) => {
             const isExpanded = section.id ? expandedSections[section.id] : true;
             const hasActiveItem = section.items.some((item) => isActive(item.path));
@@ -353,9 +422,10 @@ export function Layout() {
                             <Tooltip content={collapsed ? item.label : null} side="right">
                               <Link
                                 to={item.path}
-                                className={`flex items-center gap-3 rounded-lg transition-colors ${
+                                data-nav-active={active || undefined}
+                                className={`flex items-center gap-3 rounded-lg transition-colors relative z-10 ${
                                   active
-                                    ? 'bg-primary text-primary-foreground'
+                                    ? 'text-primary-foreground'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
                               >
@@ -405,14 +475,16 @@ export function Layout() {
           <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-64 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
             <DropdownMenu className={collapsed ? 'flex justify-center' : 'block w-full'}>
               <Tooltip content={collapsed ? t('common.language') : undefined} side="right">
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
-                  >
-                    <Globe size={20} />
-                    {!collapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
-                  </button>
-                </DropdownMenuTrigger>
+                <span className={collapsed ? 'flex justify-center' : 'block'}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                    >
+                      <Globe size={20} />
+                      {!collapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
+                    </button>
+                  </DropdownMenuTrigger>
+                </span>
               </Tooltip>
               <DropdownMenuContent align="end" side="right" className="min-w-[120px]">
                 {SUPPORTED_LANGUAGES.map((lang) => (

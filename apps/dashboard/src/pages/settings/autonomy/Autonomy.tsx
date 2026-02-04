@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,7 +16,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { PageContainer, PageHeader, EmptyState } from '@/components';
+import { PageContainer, EmptyState } from '@/components';
+import { usePageActions } from '@/contexts/PageActionsContext';
 
 type AutonomyLevel = 'L1' | 'L2';
 
@@ -149,6 +150,7 @@ function ThresholdSlider({
 
 export function AutonomyPage() {
   const { t } = useTranslation();
+  const { setActions } = usePageActions();
   const queryClient = useQueryClient();
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -197,6 +199,34 @@ export function AutonomyPage() {
     },
   });
 
+  const { mutate: save, isPending: isSaving } = saveMutation;
+  const { mutate: reset, isPending: isResetting } = resetMutation;
+
+  useEffect(() => {
+    setActions(
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => reset()}
+          disabled={isResetting}
+        >
+          <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', isResetting && 'animate-spin')} />
+          {t('autonomy.resetToDefaults')}
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => settings && save(settings)}
+          disabled={!hasChanges}
+          loading={isSaving}
+        >
+          {t('autonomy.saveChanges')}
+        </Button>
+      </div>
+    );
+    return () => setActions(null);
+  }, [setActions, t, hasChanges, settings, save, reset, isSaving, isResetting]);
+
   if (isLoading) {
     return (
       <PageContainer>
@@ -232,26 +262,6 @@ export function AutonomyPage() {
 
   return (
     <PageContainer>
-      <PageHeader>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => resetMutation.mutate()}
-          disabled={resetMutation.isPending}
-        >
-          <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', resetMutation.isPending && 'animate-spin')} />
-          {t('autonomy.resetToDefaults')}
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => settings && saveMutation.mutate(settings)}
-          disabled={!hasChanges}
-          loading={saveMutation.isPending}
-        >
-          {t('autonomy.saveChanges')}
-        </Button>
-      </PageHeader>
-
       {/* Global Level */}
       <Card>
         <CardContent className="p-6">

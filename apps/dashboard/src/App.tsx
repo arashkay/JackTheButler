@@ -9,6 +9,7 @@ import { ExtensionsPage } from '@/pages/settings/extensions/Extensions';
 import { ExtensionEditPage } from '@/pages/settings/extensions/ExtensionEdit';
 import { AutomationsPage } from '@/pages/settings/automations/Automations';
 import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit';
+import { AutomationGeneratePage } from '@/pages/settings/automations/AutomationGenerate';
 import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
 import { SettingsPage } from '@/pages/settings/Settings';
 import { ApprovalsPage } from '@/pages/approvals/Approvals';
@@ -30,6 +31,7 @@ export function App() {
           <Route path="/settings/extensions" element={<ExtensionsPage />} />
           <Route path="/settings/extensions/:extensionId" element={<ExtensionEditPage />} />
           <Route path="/settings/automations" element={<AutomationsPage />} />
+          <Route path="/settings/automations/generate" element={<AutomationGeneratePage />} />
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
           <Route path="/settings" element={<SettingsPage />} />

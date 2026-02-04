@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExtensionIcon } from '@/components';
+import { ExtensionIcon, PageContainer } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -491,15 +491,15 @@ export function ExtensionEditPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <PageContainer className="flex items-center justify-center">
         <Spinner size="lg" />
-      </div>
+      </PageContainer>
     );
   }
 
   if (error || !integration) {
     return (
-      <div className="p-6 ">
+      <PageContainer>
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
           <p className="text-lg font-medium">{t('extensionEdit.failedToLoad')}</p>
@@ -511,12 +511,12 @@ export function ExtensionEditPage() {
             </Link>
           </Button>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-6  space-y-6">
+    <PageContainer>
       {/* Back Link */}
       <Link
         to="/settings/extensions"
@@ -671,6 +671,6 @@ export function ExtensionEditPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

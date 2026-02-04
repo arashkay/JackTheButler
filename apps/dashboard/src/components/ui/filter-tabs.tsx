@@ -1,3 +1,4 @@
+import { useRef, useState, useLayoutEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,18 +21,56 @@ export function FilterTabs<T extends string>({
   onChange,
   className,
 }: FilterTabsProps<T>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [ready, setReady] = useState(false);
+
+  const updateIndicator = useCallback(() => {
+    if (!containerRef.current) return;
+    const activeButton = containerRef.current.querySelector('[data-active="true"]') as HTMLElement;
+    if (activeButton) {
+      setIndicatorStyle({
+        left: activeButton.offsetLeft,
+        width: activeButton.offsetWidth,
+        opacity: 1,
+      });
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    updateIndicator();
+    if (!ready) {
+      requestAnimationFrame(() => setReady(true));
+    }
+  }, [value, updateIndicator, ready]);
+
   return (
-    <div className={cn('flex gap-1 flex-nowrap', className)}>
+    <div ref={containerRef} className={cn('flex gap-1 flex-nowrap relative', className)}>
+      {/* Sliding indicator */}
+      <div
+        className={cn(
+          'absolute top-0 bottom-0 bg-foreground rounded pointer-events-none',
+          ready && 'transition-all duration-200'
+        )}
+        style={{
+          left: indicatorStyle.left,
+          width: indicatorStyle.width,
+          opacity: indicatorStyle.opacity,
+          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      />
       {options.map((option) => {
         const Icon = option.icon;
+        const isActive = value === option.value;
         return (
           <button
             key={option.value}
+            data-active={isActive || undefined}
             onClick={() => onChange(option.value)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 text-sm rounded whitespace-nowrap',
-              value === option.value
-                ? 'bg-foreground text-background'
+              'flex items-center gap-1.5 px-3 py-1 text-sm rounded whitespace-nowrap relative z-10 transition-colors',
+              isActive
+                ? 'text-background'
                 : 'text-muted-foreground hover:bg-muted'
             )}
           >

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageActions } from '@/contexts/PageActionsContext';
 import {
-  Plus,
   AlertCircle,
   Clock,
   Zap,
@@ -17,6 +16,7 @@ import {
   Pause,
   ChevronRight,
   Search,
+  Sparkles,
 } from 'lucide-react';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
@@ -194,9 +194,9 @@ export function AutomationsPage() {
 
   useEffect(() => {
     setActions(
-      <Link to="/settings/automations/new">
+      <Link to="/settings/automations/generate">
         <Button size="sm">
-          <Plus className="w-4 h-4 me-1.5" />
+          <Sparkles className="w-4 h-4 me-1.5" />
           {t('automations.newRule')}
         </Button>
       </Link>
@@ -283,14 +283,7 @@ export function AutomationsPage() {
             icon={Zap}
             title={t('automations.noRulesYet')}
             description={t('automations.noRulesYetDesc')}
-          >
-            <Link to="/settings/automations/new">
-              <Button >
-                <Plus className="w-4 h-4 me-2" />
-                {t('automations.createRule')}
-              </Button>
-            </Link>
-          </EmptyState>
+          />
         ) : (
           <EmptyState
             icon={Search}

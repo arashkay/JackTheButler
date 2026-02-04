@@ -69,9 +69,14 @@ export default {
           '0%, 100%': { opacity: 1 },
           '50%': { opacity: 0.5 },
         },
+        blink: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0 },
+        },
       },
       animation: {
         'pulse-slow': 'pulse-slow 2s ease-in-out infinite',
+        blink: 'blink 1s step-end infinite',
       },
     },
   },
