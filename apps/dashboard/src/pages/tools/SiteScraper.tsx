@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageContainer } from '@/components';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Sparkles, Download, CheckCircle2, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, Search, Check } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Download, CheckCircle2, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, Search, Check, Globe, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { formatTimeAgo } from '@/lib/formatters';
 
 interface AIExtractedEntry {
   title: string;
@@ -71,8 +72,15 @@ const CATEGORIES = [
   'other',
 ];
 
+interface ImportedSource {
+  url: string;
+  entryCount: number;
+  lastImportedAt: string;
+}
+
 export function SiteScraperPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [urls, setUrls] = useState<string[]>(['']);
   const [step, setStep] = useState<Step>('urls');
   const [entries, setEntries] = useState<ProcessedEntry[]>([]);
@@ -81,6 +89,7 @@ export function SiteScraperPage() {
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [expandedQA, setExpandedQA] = useState<Set<string>>(new Set());
   const [progressLog, setProgressLog] = useState<string[]>([]);
+  const [sources, setSources] = useState<ImportedSource[]>([]);
 
   const PROGRESS_MESSAGES: Record<string, string[]> = {
     fetching: [
@@ -115,6 +124,12 @@ export function SiteScraperPage() {
     return () => timers.forEach(clearTimeout);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  useEffect(() => {
+    api.get<{ sources: ImportedSource[] }>('/tools/site-scraper/sources')
+      .then((data) => setSources(data.sources))
+      .catch(() => {});
+  }, []);
 
   const addUrl = () => {
     setUrls([...urls, '']);
@@ -352,44 +367,90 @@ export function SiteScraperPage() {
 
       {/* Step 1: Enter URLs */}
       {step === 'urls' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('siteScraper.enterUrls')}</CardTitle>
-            <CardDescription>
-              {t('siteScraper.enterUrlsDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {urls.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder={t('siteScraper.urlPlaceholder')}
-                    value={url}
-                    onChange={(e) => updateUrl(index, e.target.value)}
-                  />
-                  {urls.length > 1 && (
-                    <Button variant="ghost" size="icon" onClick={() => removeUrl(index)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('siteScraper.enterUrls')}</CardTitle>
+              <CardDescription>
+                {t('siteScraper.enterUrlsDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                {urls.map((url, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder={t('siteScraper.urlPlaceholder')}
+                      value={url}
+                      onChange={(e) => updateUrl(index, e.target.value)}
+                    />
+                    {urls.length > 1 && (
+                      <Button variant="ghost" size="icon" onClick={() => removeUrl(index)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-            <Button variant="outline" size="sm" onClick={addUrl}>
-              <Plus className="w-4 h-4 me-2" />
-              {t('siteScraper.addAnotherUrl')}
-            </Button>
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button  onClick={fetchAndProcess} disabled={validUrls.length === 0}>
-                <Sparkles className="w-4 h-4 me-2" />
-                {t('siteScraper.fetchAndProcess')}
+              <Button variant="outline" size="sm" onClick={addUrl}>
+                <Plus className="w-4 h-4 me-2" />
+                {t('siteScraper.addAnotherUrl')}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button  onClick={fetchAndProcess} disabled={validUrls.length === 0}>
+                  <Sparkles className="w-4 h-4 me-2" />
+                  {t('siteScraper.fetchAndProcess')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Previously Imported */}
+          {sources.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t('siteScraper.previouslyImported')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y">
+                  {sources.map((source) => (
+                    <div key={source.url} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                      <button
+                        onClick={() => navigate(`/tools/knowledge-base?source=scraped&sourceUrl=${encodeURIComponent(source.url)}`)}
+                        className="flex items-center gap-2 text-sm text-foreground hover:text-primary truncate max-w-[60%] text-left"
+                        title={source.url}
+                      >
+                        <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{source.url.replace(/^https?:\/\//, '')}</span>
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground">
+                          {source.entryCount} {source.entryCount === 1 ? t('siteScraper.entry') : t('siteScraper.entries')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimeAgo(source.lastImportedAt, t)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          title={t('siteScraper.reScrape')}
+                          onClick={() => {
+                            setUrls([source.url]);
+                          }}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Review / Processing / Done */}

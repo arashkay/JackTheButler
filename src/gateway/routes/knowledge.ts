@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and, isNull, isNotNull } from 'drizzle-orm';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -92,32 +92,34 @@ const updateEntrySchema = z.object({
 knowledgeRoutes.get('/', async (c) => {
   const category = c.req.query('category');
   const search = c.req.query('search');
+  const source = c.req.query('source');
   const status = c.req.query('status') || 'active';
   const limit = Math.min(parseInt(c.req.query('limit') || '100', 10), 500);
   const offset = parseInt(c.req.query('offset') || '0', 10);
 
-  let entries;
+  // Build WHERE conditions
+  const conditions = [];
 
-  // Apply category filter
   if (category && CATEGORIES.includes(category as (typeof CATEGORIES)[number])) {
-    entries = await db
-      .select()
-      .from(knowledgeBase)
-      .where(eq(knowledgeBase.category, category))
-      .orderBy(desc(knowledgeBase.updatedAt))
-      .limit(limit)
-      .offset(offset)
-      .all();
+    conditions.push(eq(knowledgeBase.category, category));
   } else {
-    entries = await db
-      .select()
-      .from(knowledgeBase)
-      .where(eq(knowledgeBase.status, status))
-      .orderBy(desc(knowledgeBase.updatedAt))
-      .limit(limit)
-      .offset(offset)
-      .all();
+    conditions.push(eq(knowledgeBase.status, status));
   }
+
+  if (source === 'scraped') {
+    conditions.push(isNotNull(knowledgeBase.sourceUrl));
+  } else if (source === 'manual') {
+    conditions.push(isNull(knowledgeBase.sourceUrl));
+  }
+
+  const entries = await db
+    .select()
+    .from(knowledgeBase)
+    .where(and(...conditions))
+    .orderBy(desc(knowledgeBase.updatedAt))
+    .limit(limit)
+    .offset(offset)
+    .all();
 
   // Apply search filter in JS (SQLite FTS would be better for large datasets)
   let filtered = entries;

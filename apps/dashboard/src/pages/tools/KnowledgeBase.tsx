@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, DataTable, EmptyState } from '@/components';
@@ -27,6 +27,7 @@ import {
   Search,
   Sparkles,
   ChevronDown,
+  Globe,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -46,6 +47,7 @@ interface KnowledgeEntry {
   keywords: string[];
   priority: number;
   status: string;
+  sourceUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +90,7 @@ export function KnowledgeBasePage() {
   const { providers, knowledgeBase: kbStatus } = useSystemStatus();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +98,9 @@ export function KnowledgeBasePage() {
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
+  const [filterSource, setFilterSource] = useState<string>(() => {
+    return searchParams.get('source') || '';
+  });
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -131,6 +137,7 @@ export function KnowledgeBasePage() {
       const params = new URLSearchParams();
       if (filterCategory) params.set('category', filterCategory);
       if (searchQuery) params.set('search', searchQuery);
+      if (filterSource) params.set('source', filterSource);
 
       const data = await api.get<{ entries: KnowledgeEntry[]; total: number }>(
         `/knowledge?${params.toString()}`
@@ -179,7 +186,7 @@ export function KnowledgeBasePage() {
   useEffect(() => {
     fetchEntries();
     fetchCategories();
-  }, [filterCategory, searchQuery]);
+  }, [filterCategory, filterSource, searchQuery]);
 
   const handleSearch = () => {
     setSearchQuery(search);
@@ -253,7 +260,7 @@ export function KnowledgeBasePage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/knowledge/${id}`);
+      await api.delete(`/knowledge/${id}?permanent=true`);
       setDeleteEntryId(null);
       fetchEntries();
       fetchCategories();
@@ -334,7 +341,10 @@ export function KnowledgeBasePage() {
       key: 'title',
       header: t('knowledge.title'),
       render: (entry) => (
-        <div className="font-medium truncate max-w-[200px]" title={entry.title}>
+        <div className="flex items-center gap-1.5 font-medium truncate max-w-[200px]" title={entry.title}>
+          {entry.sourceUrl && (
+            <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" title={entry.sourceUrl} />
+          )}
           {entry.title}
         </div>
       ),
@@ -375,6 +385,12 @@ export function KnowledgeBasePage() {
   const categoryOptions = [
     { value: '', label: t('common.all') },
     ...categories.map((cat) => ({ value: cat.id, label: cat.label })),
+  ];
+
+  const sourceOptions = [
+    { value: '', label: 'All' },
+    { value: 'manual', label: 'Manual' },
+    { value: 'scraped', label: 'Scraped' },
   ];
 
   return (
@@ -725,11 +741,18 @@ export function KnowledgeBasePage() {
         columns={columns}
         keyExtractor={(entry) => entry.id}
         filters={
-          <FilterTabs
-            options={categoryOptions}
-            value={filterCategory}
-            onChange={setFilterCategory}
-          />
+          <div className="flex gap-4">
+            <FilterTabs
+              options={categoryOptions}
+              value={filterCategory}
+              onChange={setFilterCategory}
+            />
+            <FilterTabs
+              options={sourceOptions}
+              value={filterSource}
+              onChange={setFilterSource}
+            />
+          </div>
         }
         search={{
           value: search,

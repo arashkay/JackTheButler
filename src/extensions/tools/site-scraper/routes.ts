@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { validateBody } from '@/gateway/middleware/index.js';
 import { scrapeUrl, scrapeUrls } from './scraper.js';
 import { parseHtml } from './parser.js';
@@ -404,6 +404,34 @@ router.post('/import', validateBody(importSchema), async (c) => {
     skipped: result.skipped,
     updated: result.updated,
     errors: result.errors,
+  });
+});
+
+/**
+ * GET /api/v1/tools/site-scraper/sources
+ * List previously imported source URLs with entry counts
+ */
+router.get('/sources', async (c) => {
+  const sources = await db
+    .select({
+      url: knowledgeBase.sourceUrl,
+      entryCount: sql<number>`count(*)`,
+      lastImportedAt: sql<string>`max(${knowledgeBase.createdAt})`,
+    })
+    .from(knowledgeBase)
+    .where(
+      sql`${knowledgeBase.sourceUrl} IS NOT NULL AND ${knowledgeBase.status} = 'active'`
+    )
+    .groupBy(knowledgeBase.sourceUrl)
+    .orderBy(sql`max(${knowledgeBase.createdAt}) DESC`)
+    .all();
+
+  return c.json({
+    sources: sources.map((s) => ({
+      url: s.url!,
+      entryCount: s.entryCount,
+      lastImportedAt: s.lastImportedAt,
+    })),
   });
 });
 
