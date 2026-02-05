@@ -1,5 +1,8 @@
 {
   "knowledge": {
+    "allCategories": "所有类别",
+    "sourceManual": "手动",
+    "sourceScraped": "抓取",
     "addEntry": "添加条目",
     "reindex": "重新索引",
     "category": "类别",

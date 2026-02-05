@@ -1,5 +1,8 @@
 {
   "knowledge": {
+    "allCategories": "Все категории",
+    "sourceManual": "Вручную",
+    "sourceScraped": "Со сканирования",
     "addEntry": "Добавить запись",
     "reindex": "Переиндексировать",
     "category": "Категория",

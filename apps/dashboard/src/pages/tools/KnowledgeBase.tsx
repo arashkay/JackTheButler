@@ -35,6 +35,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { FilterTabs } from '@/components/ui/filter-tabs';
@@ -383,14 +384,14 @@ export function KnowledgeBasePage() {
   ];
 
   const categoryOptions = [
-    { value: '', label: t('common.all') },
+    { value: '', label: t('knowledge.allCategories') },
     ...categories.map((cat) => ({ value: cat.id, label: cat.label })),
   ];
 
   const sourceOptions = [
-    { value: '', label: 'All' },
-    { value: 'manual', label: 'Manual' },
-    { value: 'scraped', label: 'Scraped' },
+    { value: '', label: t('common.all') },
+    { value: 'manual', label: t('knowledge.sourceManual') },
+    { value: 'scraped', label: t('knowledge.sourceScraped') },
   ];
 
   return (
@@ -741,17 +742,24 @@ export function KnowledgeBasePage() {
         columns={columns}
         keyExtractor={(entry) => entry.id}
         filters={
-          <div className="flex gap-4">
-            <FilterTabs
-              options={categoryOptions}
-              value={filterCategory}
-              onChange={setFilterCategory}
-            />
+          <div className="flex items-center gap-4">
             <FilterTabs
               options={sourceOptions}
               value={filterSource}
               onChange={setFilterSource}
             />
+            <Select value={filterCategory || '_all'} onValueChange={(v) => setFilterCategory(v === '_all' ? '' : v)}>
+              <SelectTrigger className="w-[140px] h-8 text-sm focus:ring-0 focus:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map((opt) => (
+                  <SelectItem key={opt.value || '_all'} value={opt.value || '_all'}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         }
         search={{

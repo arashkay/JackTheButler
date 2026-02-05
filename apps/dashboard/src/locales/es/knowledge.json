@@ -1,5 +1,8 @@
 {
   "knowledge": {
+    "allCategories": "Todas las categorías",
+    "sourceManual": "Manual",
+    "sourceScraped": "Escaneado",
     "addEntry": "Agregar Entrada",
     "reindex": "Reindexar",
     "category": "Categoría",

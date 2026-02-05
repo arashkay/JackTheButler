@@ -1,5 +1,8 @@
 {
   "knowledge": {
+    "allCategories": "सभी श्रेणियां",
+    "sourceManual": "मैनुअल",
+    "sourceScraped": "स्क्रैप किया",
     "addEntry": "प्रविष्टि जोड़ें",
     "reindex": "पुनः अनुक्रमित करें",
     "category": "श्रेणी",

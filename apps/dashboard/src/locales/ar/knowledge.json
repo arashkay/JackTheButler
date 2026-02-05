@@ -1,5 +1,8 @@
 {
   "knowledge": {
+    "allCategories": "جميع الفئات",
+    "sourceManual": "يدوي",
+    "sourceScraped": "مجموع آلياً",
     "addEntry": "إضافة مدخل",
     "reindex": "إعادة الفهرسة",
     "category": "الفئة",
