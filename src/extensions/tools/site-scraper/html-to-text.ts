@@ -74,16 +74,26 @@ export function htmlToCleanText(html: string): CleanTextResult {
     '';
 
   // Determine content root
-  const $content =
-    $('main').length > 0
-      ? $('main')
-      : $('article').length > 0
-        ? $('article')
-        : $('.content').length > 0
-          ? $('.content')
-          : $('#content').length > 0
-            ? $('#content')
-            : $('body');
+  // Pick the most specific container, but fall back to body if the
+  // candidate holds less than 40% of the body text (it's likely a
+  // narrow sidebar/widget rather than the real content area).
+  const bodyText = $('body').text().length;
+  const MIN_RATIO = 0.4;
+
+  const candidates = [
+    $('main'),
+    $('article'),
+    $('.content'),
+    $('#content'),
+  ];
+
+  let $content = $('body');
+  for (const $candidate of candidates) {
+    if ($candidate.length > 0 && $candidate.text().length / bodyText >= MIN_RATIO) {
+      $content = $candidate;
+      break;
+    }
+  }
 
   // Convert headings to markdown-style markers before extracting text
   $content.find('h1').each((_, el) => {

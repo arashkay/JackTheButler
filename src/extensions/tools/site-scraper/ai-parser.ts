@@ -86,7 +86,7 @@ async function extractChunk(
 
   const response = await aiProvider.complete({
     messages: [{ role: 'user', content: prompt }],
-    maxTokens: 3000,
+    maxTokens: 4000,
     temperature: 0.3,
   });
 

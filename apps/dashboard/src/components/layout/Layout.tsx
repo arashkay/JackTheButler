@@ -120,13 +120,13 @@ export function Layout() {
   });
 
   const toggleSection = (sectionId: string, firstItemPath?: string) => {
-    const isOpening = !expandedSections[sectionId];
-    const next = { ...expandedSections, [sectionId]: isOpening };
+    // Once expanded, clicking the header does nothing
+    if (expandedSections[sectionId]) return;
+    const next = { ...expandedSections, [sectionId]: true };
     localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
     setSectionAnimating(true);
     setExpandedSections(next);
-    // Navigate to first item when opening
-    if (isOpening && firstItemPath) {
+    if (firstItemPath) {
       navigate(firstItemPath);
     }
   };

@@ -456,7 +456,7 @@ export function SiteScraperPage() {
       {/* Review / Processing / Done */}
       {(step === 'fetching' || step === 'generatingQA' || step === 'review' || step === 'importing' || step === 'done') && (
         <div className="space-y-6">
-          <Card className="min-h-[200px]">
+          <Card className="min-h-[400px]">
             {/* Progress Stepper */}
             <div className="px-6 pt-6 pb-2">
               <div className="flex items-center justify-between">
