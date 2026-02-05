@@ -4,10 +4,10 @@
     "readyToTest": "Готово к тесту",
     "errors": "Ошибки",
     "total": "Всего",
-    "searchExtensions": "Поиск расширений...",
-    "noExtensions": "Расширения не найдены",
+    "searchExtensions": "Поиск приложений...",
+    "noExtensions": "Приложения не найдены",
     "noExtensionsSearch": "Попробуйте другой запрос",
-    "failedToLoad": "Ошибка загрузки расширений",
+    "failedToLoad": "Ошибка загрузки приложений",
     "noProviderConfigured": "Провайдер не настроен",
     "aiProvider": "AI провайдер",
     "communicationChannels": "Каналы связи",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "Назад к расширениям",
+    "backToExtensions": "Назад к приложениям",
     "selectProvider": "Выберите провайдера",
     "viewDocumentation": "Смотреть документацию",
     "connectionStatus": "Статус подключения",
@@ -104,7 +104,7 @@
     "removeConfig": "Удалить конфигурацию провайдера. Это отключит интеграцию и удалит все сохранённые учётные данные.",
     "removeConfiguration": "Удалить конфигурацию",
     "removeConfirm": "Вы уверены, что хотите удалить эту конфигурацию?",
-    "failedToLoad": "Ошибка загрузки расширения",
+    "failedToLoad": "Ошибка загрузки приложения",
     "tryAgainLater": "Попробуйте позже",
     "select": "Выберите...",
     "status": {

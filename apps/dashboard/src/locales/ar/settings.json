@@ -4,10 +4,10 @@
     "readyToTest": "جاهز للاختبار",
     "errors": "أخطاء",
     "total": "المجموع",
-    "searchExtensions": "البحث عن إضافات...",
-    "noExtensions": "لم يتم العثور على إضافات",
+    "searchExtensions": "البحث عن تطبيقات...",
+    "noExtensions": "لم يتم العثور على تطبيقات",
     "noExtensionsSearch": "جرب مصطلح بحث مختلف",
-    "failedToLoad": "فشل تحميل الإضافات",
+    "failedToLoad": "فشل تحميل التطبيقات",
     "noProviderConfigured": "لا يوجد مزود مُعد",
     "aiProvider": "مزود الذكاء الاصطناعي",
     "communicationChannels": "قنوات الاتصال",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "العودة للإضافات",
+    "backToExtensions": "العودة للتطبيقات",
     "selectProvider": "اختيار المزود",
     "viewDocumentation": "عرض التوثيق",
     "connectionStatus": "حالة الاتصال",
@@ -104,7 +104,7 @@
     "removeConfig": "إزالة إعدادات هذا المزود. سيؤدي هذا إلى تعطيل التكامل وحذف جميع بيانات الاعتماد المخزنة.",
     "removeConfiguration": "إزالة الإعدادات",
     "removeConfirm": "هل أنت متأكد من إزالة هذه الإعدادات؟",
-    "failedToLoad": "فشل تحميل الإضافة",
+    "failedToLoad": "فشل تحميل التطبيق",
     "tryAgainLater": "يرجى المحاولة لاحقاً",
     "select": "اختر...",
     "status": {

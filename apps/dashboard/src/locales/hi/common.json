@@ -45,7 +45,7 @@
     "home": "होम",
     "inbox": "इनबॉक्स",
     "tasks": "कार्य",
-    "approvals": "स्वीकृतियां",
+    "approvals": "समीक्षा केंद्र",
     "operations": "संचालन",
     "guests": "अतिथि",
     "reservations": "आरक्षण",
@@ -53,7 +53,7 @@
     "knowledgeBase": "ज्ञान आधार",
     "siteScraper": "साइट स्क्रैपर",
     "settings": "इंजन",
-    "extensions": "एक्सटेंशन",
+    "extensions": "ऐप्स",
     "automations": "स्वचालन",
     "autonomy": "स्वायत्तता",
     "dangerZone": "खतरनाक क्षेत्र"

@@ -11,7 +11,7 @@ import {
   Home,
   MessageSquare,
   ClipboardList,
-  Bell,
+  ListTodo,
   Puzzle,
   Zap,
   SlidersHorizontal,
@@ -274,7 +274,7 @@ export function Layout() {
         { path: '/', label: t('nav.home'), icon: <Home size={20} /> },
         { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations },
         { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks },
-        { path: '/approvals', label: t('nav.approvals'), icon: <Bell size={20} />, badge: pendingApprovals },
+        { path: '/review-center', label: t('nav.approvals'), icon: <ListTodo size={20} />, badge: pendingApprovals },
       ],
     },
     {

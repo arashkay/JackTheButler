@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LoginPage } from '@/pages/Login';
 import { Layout } from '@/components/layout/Layout';
@@ -12,7 +12,7 @@ import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit'
 import { AutomationGeneratePage } from '@/pages/settings/automations/AutomationGenerate';
 import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
 import { SettingsPage } from '@/pages/settings/Settings';
-import { ApprovalsPage } from '@/pages/approvals/Approvals';
+import { ApprovalsPage } from '@/pages/review-center/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
 import { GuestsPage, GuestProfilePage, GuestFormPage } from '@/pages/guests';
@@ -35,7 +35,7 @@ export function App() {
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/review-center" element={<ApprovalsPage />} />
           <Route path="/guests" element={<GuestsPage />} />
           <Route path="/guests/new" element={<GuestFormPage />} />
           <Route path="/guests/:id" element={<GuestProfilePage />} />
@@ -43,6 +43,7 @@ export function App() {
           <Route path="/reservations/:id" element={<ReservationDetailPage />} />
           <Route path="/tools/knowledge-base" element={<KnowledgeBasePage />} />
           <Route path="/tools/site-scraper" element={<SiteScraperPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
         </Routes>
       </BrowserRouter>

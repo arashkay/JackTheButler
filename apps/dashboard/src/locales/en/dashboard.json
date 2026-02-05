@@ -4,7 +4,7 @@
     "embeddings": "Embeddings",
     "channels": "Channels",
     "knowledge": "Knowledge",
-    "extensions": "Extensions",
+    "extensions": "Apps",
     "gettingStarted": "Getting Started",
     "stepsCompleted": "{{completed}} of {{total}} steps completed",
     "issues": {

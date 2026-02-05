@@ -33,9 +33,9 @@
     "conversation": "المحادثة",
     "jack": "جاك",
     "rejectionReason": "سبب الرفض...",
-    "failedToLoad": "فشل تحميل الموافقات",
+    "failedToLoad": "فشل تحميل العناصر",
     "tryAgainLater": "يرجى المحاولة لاحقاً",
-    "noPending": "لا توجد موافقات معلقة",
+    "noPending": "لا توجد مراجعات معلقة",
     "noItems": "لم يتم العثور على عناصر",
     "allCaughtUp": "كل شيء محدث!"
   }

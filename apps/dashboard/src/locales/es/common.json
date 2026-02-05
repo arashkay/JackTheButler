@@ -45,7 +45,7 @@
     "home": "Inicio",
     "inbox": "Bandeja",
     "tasks": "Tareas",
-    "approvals": "Aprobaciones",
+    "approvals": "Centro de Revisión",
     "operations": "Operaciones",
     "guests": "Huéspedes",
     "reservations": "Reservaciones",
@@ -53,7 +53,7 @@
     "knowledgeBase": "Base de Conocimiento",
     "siteScraper": "Extractor Web",
     "settings": "Motor",
-    "extensions": "Extensiones",
+    "extensions": "Apps",
     "automations": "Automatizaciones",
     "autonomy": "Autonomía",
     "dangerZone": "Zona de Peligro"

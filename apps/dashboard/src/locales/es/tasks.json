@@ -33,9 +33,9 @@
     "conversation": "Conversación",
     "jack": "Jack",
     "rejectionReason": "Motivo del rechazo...",
-    "failedToLoad": "Error al cargar aprobaciones",
+    "failedToLoad": "Error al cargar elementos",
     "tryAgainLater": "Por favor, inténtalo más tarde",
-    "noPending": "No hay aprobaciones pendientes",
+    "noPending": "No hay revisiones pendientes",
     "noItems": "No se encontraron elementos",
     "allCaughtUp": "¡Todo al día!"
   }

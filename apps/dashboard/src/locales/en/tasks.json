@@ -33,9 +33,9 @@
     "conversation": "Conversation",
     "jack": "Jack",
     "rejectionReason": "Rejection reason...",
-    "failedToLoad": "Failed to load approvals",
+    "failedToLoad": "Failed to load items",
     "tryAgainLater": "Please try again later",
-    "noPending": "No pending approvals",
+    "noPending": "No pending reviews",
     "noItems": "No items found",
     "allCaughtUp": "All caught up!"
   }

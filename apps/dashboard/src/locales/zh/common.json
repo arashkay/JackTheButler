@@ -45,7 +45,7 @@
     "home": "首页",
     "inbox": "收件箱",
     "tasks": "任务",
-    "approvals": "审批",
+    "approvals": "审核中心",
     "operations": "运营",
     "guests": "客人",
     "reservations": "预订",
@@ -53,7 +53,7 @@
     "knowledgeBase": "知识库",
     "siteScraper": "网站抓取",
     "settings": "引擎",
-    "extensions": "扩展",
+    "extensions": "应用",
     "automations": "自动化",
     "autonomy": "自主性",
     "dangerZone": "危险区域"

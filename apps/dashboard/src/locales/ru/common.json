@@ -45,7 +45,7 @@
     "home": "Главная",
     "inbox": "Входящие",
     "tasks": "Задачи",
-    "approvals": "Согласования",
+    "approvals": "Центр проверки",
     "operations": "Операции",
     "guests": "Гости",
     "reservations": "Бронирования",
@@ -53,7 +53,7 @@
     "knowledgeBase": "База знаний",
     "siteScraper": "Парсер сайтов",
     "settings": "Движок",
-    "extensions": "Расширения",
+    "extensions": "Приложения",
     "automations": "Автоматизация",
     "autonomy": "Автономность",
     "dangerZone": "Опасная зона"

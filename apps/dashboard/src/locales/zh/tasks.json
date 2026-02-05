@@ -33,9 +33,9 @@
     "conversation": "对话",
     "jack": "杰克",
     "rejectionReason": "拒绝原因...",
-    "failedToLoad": "加载审批失败",
+    "failedToLoad": "加载项目失败",
     "tryAgainLater": "请稍后重试",
-    "noPending": "没有待处理的审批",
+    "noPending": "没有待审核的项目",
     "noItems": "未找到项目",
     "allCaughtUp": "全部处理完毕！"
   }

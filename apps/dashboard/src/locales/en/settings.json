@@ -4,10 +4,10 @@
     "readyToTest": "Ready to Test",
     "errors": "Errors",
     "total": "Total",
-    "searchExtensions": "Search extensions...",
-    "noExtensions": "No extensions found",
+    "searchExtensions": "Search apps...",
+    "noExtensions": "No apps found",
     "noExtensionsSearch": "Try a different search term",
-    "failedToLoad": "Failed to load extensions",
+    "failedToLoad": "Failed to load apps",
     "noProviderConfigured": "No provider configured",
     "aiProvider": "AI Provider",
     "communicationChannels": "Communication Channels",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "Back to Extensions",
+    "backToExtensions": "Back to Apps",
     "selectProvider": "Select Provider",
     "viewDocumentation": "View Documentation",
     "connectionStatus": "Connection Status",
@@ -104,7 +104,7 @@
     "removeConfig": "Remove this provider configuration. This will disable the integration and delete all stored credentials.",
     "removeConfiguration": "Remove Configuration",
     "removeConfirm": "Are you sure you want to remove this configuration?",
-    "failedToLoad": "Failed to load extension",
+    "failedToLoad": "Failed to load app",
     "tryAgainLater": "Please try again later",
     "select": "Select...",
     "status": {

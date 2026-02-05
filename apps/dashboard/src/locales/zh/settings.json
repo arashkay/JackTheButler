@@ -4,10 +4,10 @@
     "readyToTest": "准备测试",
     "errors": "错误",
     "total": "总计",
-    "searchExtensions": "搜索扩展...",
-    "noExtensions": "未找到扩展",
+    "searchExtensions": "搜索应用...",
+    "noExtensions": "未找到应用",
     "noExtensionsSearch": "尝试不同的搜索词",
-    "failedToLoad": "加载扩展失败",
+    "failedToLoad": "加载应用失败",
     "noProviderConfigured": "未配置提供商",
     "aiProvider": "AI 提供商",
     "communicationChannels": "通信渠道",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "返回扩展",
+    "backToExtensions": "返回应用",
     "selectProvider": "选择提供商",
     "viewDocumentation": "查看文档",
     "connectionStatus": "连接状态",
@@ -104,7 +104,7 @@
     "removeConfig": "移除此提供商配置。这将禁用集成并删除所有存储的凭据。",
     "removeConfiguration": "移除配置",
     "removeConfirm": "确定要移除此配置吗？",
-    "failedToLoad": "加载扩展失败",
+    "failedToLoad": "加载应用失败",
     "tryAgainLater": "请稍后重试",
     "select": "选择...",
     "status": {

@@ -4,10 +4,10 @@
     "readyToTest": "Listo para Probar",
     "errors": "Errores",
     "total": "Total",
-    "searchExtensions": "Buscar extensiones...",
-    "noExtensions": "No se encontraron extensiones",
+    "searchExtensions": "Buscar apps...",
+    "noExtensions": "No se encontraron apps",
     "noExtensionsSearch": "Intenta un término diferente",
-    "failedToLoad": "Error al cargar extensiones",
+    "failedToLoad": "Error al cargar apps",
     "noProviderConfigured": "Sin proveedor configurado",
     "aiProvider": "Proveedor de IA",
     "communicationChannels": "Canales de Comunicación",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "Volver a Extensiones",
+    "backToExtensions": "Volver a Apps",
     "selectProvider": "Seleccionar Proveedor",
     "viewDocumentation": "Ver Documentación",
     "connectionStatus": "Estado de Conexión",
@@ -104,7 +104,7 @@
     "removeConfig": "Eliminar la configuración de este proveedor. Esto desactivará la integración y eliminará todas las credenciales almacenadas.",
     "removeConfiguration": "Eliminar Configuración",
     "removeConfirm": "¿Estás seguro de que quieres eliminar esta configuración?",
-    "failedToLoad": "Error al cargar extensión",
+    "failedToLoad": "Error al cargar app",
     "tryAgainLater": "Por favor, inténtalo más tarde",
     "select": "Seleccionar...",
     "status": {

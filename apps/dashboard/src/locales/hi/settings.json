@@ -4,10 +4,10 @@
     "readyToTest": "परीक्षण के लिए तैयार",
     "errors": "त्रुटियां",
     "total": "कुल",
-    "searchExtensions": "एक्सटेंशन खोजें...",
-    "noExtensions": "कोई एक्सटेंशन नहीं मिला",
+    "searchExtensions": "ऐप्स खोजें...",
+    "noExtensions": "कोई ऐप नहीं मिला",
     "noExtensionsSearch": "कोई अलग खोज शब्द आज़माएं",
-    "failedToLoad": "एक्सटेंशन लोड करने में विफल",
+    "failedToLoad": "ऐप्स लोड करने में विफल",
     "noProviderConfigured": "कोई प्रदाता कॉन्फ़िगर नहीं",
     "aiProvider": "AI प्रदाता",
     "communicationChannels": "संचार चैनल",
@@ -86,7 +86,7 @@
     }
   },
   "extensionEdit": {
-    "backToExtensions": "एक्सटेंशन पर वापस जाएं",
+    "backToExtensions": "ऐप्स पर वापस जाएं",
     "selectProvider": "प्रदाता चुनें",
     "viewDocumentation": "दस्तावेज़ देखें",
     "connectionStatus": "कनेक्शन स्थिति",
@@ -104,7 +104,7 @@
     "removeConfig": "इस प्रदाता कॉन्फ़िगरेशन को हटाएं। यह एकीकरण को अक्षम करेगा और सभी संग्रहीत क्रेडेंशियल्स हटा देगा।",
     "removeConfiguration": "कॉन्फ़िगरेशन हटाएं",
     "removeConfirm": "क्या आप वाकई इस कॉन्फ़िगरेशन को हटाना चाहते हैं?",
-    "failedToLoad": "एक्सटेंशन लोड करने में विफल",
+    "failedToLoad": "ऐप्स लोड करने में विफल",
     "tryAgainLater": "कृपया बाद में पुनः प्रयास करें",
     "select": "चुनें...",
     "status": {
