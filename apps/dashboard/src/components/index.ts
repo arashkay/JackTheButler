@@ -18,7 +18,7 @@ export {
   ConversationListSkeleton,
   ApprovalTableSkeleton,
   AutomationCardSkeleton,
-  ExtensionCardSkeleton,
+  AppCardSkeleton,
 } from './Skeletons';
 
 // Form components
@@ -27,4 +27,4 @@ export { SearchInput } from './shared/SearchInput';
 // Domain components
 export { ConversationList } from './conversations/ConversationList';
 export { ConversationView } from './conversations/ConversationView';
-export { ExtensionIcon, CategoryIcon } from './extensions/ExtensionIcon';
+export { AppIcon, CategoryIcon } from './apps/AppIcon';

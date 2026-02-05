@@ -10,7 +10,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
 import { getExtensionRegistry } from '@/extensions/index.js';
-import { extensionConfigService } from '@/services/extension-config.js';
+import { appConfigService } from '@/services/app-config.js';
 import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/core/interfaces/pms.js';
 import { validateBody } from '../../middleware/validator.js';
 
@@ -102,7 +102,7 @@ async function getPMSWebhookSecret(): Promise<string | undefined> {
   const pmsExtensions = ['mock-pms', 'mews', 'cloudbeds', 'opera', 'apaleo'];
 
   for (const extId of pmsExtensions) {
-    const extConfig = await extensionConfigService.getExtensionConfig(extId);
+    const extConfig = await appConfigService.getAppConfig(extId);
     if (extConfig?.config) {
       const config = extConfig.config as { webhookSecret?: string };
       if (config.webhookSecret) {

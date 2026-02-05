@@ -147,7 +147,7 @@
     "startOver": "البدء من جديد",
     "failedToGenerate": "فشل في إنشاء الأتمتة",
     "noAiProvider": "لم يتم تكوين مزود AI. يرجى إعداد مزود AI في التطبيقات.",
-    "goToExtensions": "الذهاب إلى التطبيقات",
+    "goToApps": "الذهاب إلى التطبيقات",
     "preferManual": "تفضل الإعداد يدوياً؟",
     "createManually": "إنشاء قاعدة يدوياً",
     "backToAutomations": "العودة إلى الأتمتة",

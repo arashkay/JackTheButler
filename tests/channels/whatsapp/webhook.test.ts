@@ -8,17 +8,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { app } from '@/gateway/server.js';
 import { createHmac } from 'node:crypto';
-import { extensionConfigService } from '@/services/extension-config.js';
+import { appConfigService } from '@/services/app-config.js';
 
 // Mock the WhatsApp adapter
 vi.mock('@/channels/whatsapp/index.js', () => ({
   getWhatsAppAdapter: () => null,
 }));
 
-// Mock the extension config service
-vi.mock('@/services/extension-config.js', () => ({
-  extensionConfigService: {
-    getExtensionConfig: vi.fn(),
+// Mock the app config service
+vi.mock('@/services/app-config.js', () => ({
+  appConfigService: {
+    getAppConfig: vi.fn(),
   },
 }));
 
@@ -29,7 +29,7 @@ vi.mock('@/extensions/index.js', () => ({
   }),
 }));
 
-const mockGetExtensionConfig = extensionConfigService.getExtensionConfig as ReturnType<typeof vi.fn>;
+const mockGetAppConfig = appConfigService.getAppConfig as ReturnType<typeof vi.fn>;
 
 describe('WhatsApp Webhook', () => {
   beforeEach(() => {
@@ -38,7 +38,7 @@ describe('WhatsApp Webhook', () => {
 
   describe('GET /webhooks/whatsapp (Verification)', () => {
     it('should return challenge when verify token matches', async () => {
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { verifyToken: 'test-verify-token' },
       });
 
@@ -52,7 +52,7 @@ describe('WhatsApp Webhook', () => {
     });
 
     it('should return 403 when verify token does not match', async () => {
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { verifyToken: 'test-verify-token' },
       });
 
@@ -64,7 +64,7 @@ describe('WhatsApp Webhook', () => {
     });
 
     it('should return 403 when mode is not subscribe', async () => {
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { verifyToken: 'test-verify-token' },
       });
 
@@ -76,7 +76,7 @@ describe('WhatsApp Webhook', () => {
     });
 
     it('should return 403 when no config exists', async () => {
-      mockGetExtensionConfig.mockResolvedValue(null);
+      mockGetAppConfig.mockResolvedValue(null);
 
       const res = await app.request(
         '/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=any-token&hub.challenge=test-challenge'
@@ -125,7 +125,7 @@ describe('WhatsApp Webhook', () => {
 
     it('should return 200 for valid webhook with no signature (no app secret configured)', async () => {
       // Without app secret, signature verification is skipped
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { accessToken: 'token' },
       });
 
@@ -142,7 +142,7 @@ describe('WhatsApp Webhook', () => {
     });
 
     it('should return 401 for invalid signature when app secret is set', async () => {
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { accessToken: 'token', appSecret: 'test-app-secret' },
       });
 
@@ -160,7 +160,7 @@ describe('WhatsApp Webhook', () => {
 
     it('should return 200 for valid signature', async () => {
       const appSecret = 'test-app-secret';
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { accessToken: 'token', appSecret },
       });
 
@@ -181,7 +181,7 @@ describe('WhatsApp Webhook', () => {
     });
 
     it('should return 400 for invalid JSON', async () => {
-      mockGetExtensionConfig.mockResolvedValue({
+      mockGetAppConfig.mockResolvedValue({
         config: { accessToken: 'token' },
       });
 

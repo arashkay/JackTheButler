@@ -147,7 +147,7 @@
     "startOver": "फिर से शुरू करें",
     "failedToGenerate": "स्वचालन बनाने में विफल",
     "noAiProvider": "कोई AI प्रदाता कॉन्फ़िगर नहीं है। कृपया ऐप्स में AI प्रदाता सेट करें।",
-    "goToExtensions": "ऐप्स पर जाएं",
+    "goToApps": "ऐप्स पर जाएं",
     "preferManual": "मैन्युअल सेटअप पसंद करते हैं?",
     "createManually": "मैन्युअल नियम बनाएं",
     "backToAutomations": "स्वचालन पर वापस जाएं",

@@ -1,12 +1,12 @@
 {
-  "extensions": {
+  "apps": {
     "connected": "已连接",
     "readyToTest": "准备测试",
     "errors": "错误",
     "total": "总计",
-    "searchExtensions": "搜索应用...",
-    "noExtensions": "未找到应用",
-    "noExtensionsSearch": "尝试不同的搜索词",
+    "searchApps": "搜索应用...",
+    "noApps": "未找到应用",
+    "noAppsSearch": "尝试不同的搜索词",
     "failedToLoad": "加载应用失败",
     "noProviderConfigured": "未配置提供商",
     "aiProvider": "AI 提供商",
@@ -85,8 +85,8 @@
       }
     }
   },
-  "extensionEdit": {
-    "backToExtensions": "返回应用",
+  "appEdit": {
+    "backToApps": "返回应用",
     "selectProvider": "选择提供商",
     "viewDocumentation": "查看文档",
     "connectionStatus": "连接状态",

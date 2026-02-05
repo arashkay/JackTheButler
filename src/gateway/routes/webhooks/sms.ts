@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
 import { getExtensionRegistry } from '@/extensions/index.js';
-import { extensionConfigService } from '@/services/extension-config.js';
+import { appConfigService } from '@/services/app-config.js';
 
 const log = createLogger('webhook:sms');
 
@@ -49,7 +49,7 @@ async function getTwilioConfig(): Promise<{
   authToken?: string;
   phoneNumber?: string;
 } | null> {
-  const extConfig = await extensionConfigService.getExtensionConfig('sms-twilio');
+  const extConfig = await appConfigService.getAppConfig('sms-twilio');
   if (extConfig?.config) {
     return extConfig.config as {
       accountSid?: string;

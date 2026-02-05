@@ -4,7 +4,7 @@
     "embeddings": "Embeddings",
     "channels": "Canales",
     "knowledge": "Conocimiento",
-    "extensions": "Apps",
+    "apps": "Apps",
     "gettingStarted": "Primeros Pasos",
     "stepsCompleted": "{{completed}} de {{total}} pasos completados",
     "issues": {

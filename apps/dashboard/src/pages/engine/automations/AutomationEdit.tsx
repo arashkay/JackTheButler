@@ -184,7 +184,7 @@ export function AutomationEditPage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
       if (isNew && result?.id) {
-        navigate(`/settings/automations/${result.id}`);
+        navigate(`/engine/automations/${result.id}`);
       }
     },
   });
@@ -193,7 +193,7 @@ export function AutomationEditPage() {
     mutationFn: () => api.delete(`/automation/rules/${ruleId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
-      navigate('/settings/automations');
+      navigate('/engine/automations');
     },
   });
 
@@ -287,7 +287,7 @@ export function AutomationEditPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/settings/automations">
+          <Link to="/engine/automations">
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
               {t('automationEdit.back')}

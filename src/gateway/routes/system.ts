@@ -51,7 +51,7 @@ interface SystemStatus {
     completionIsLocal: boolean;
     embeddingIsLocal: boolean;
   };
-  extensions: {
+  apps: {
     ai: number;
     channel: number;
     pms: number;
@@ -85,7 +85,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_completion_provider',
       severity: 'critical',
       message: 'No AI provider configured for conversations',
-      action: { label: 'Configure AI', route: '/settings/extensions/ai' },
+      action: { label: 'Configure AI', route: '/engine/apps/ai' },
     });
   } else if (completionProvider.name !== 'local') {
     completedSteps.push({
@@ -100,7 +100,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_embedding_provider',
       severity: 'critical',
       message: 'Knowledge search disabled. Enable Local AI or OpenAI for embeddings.',
-      action: { label: 'Configure AI', route: '/settings/extensions/ai' },
+      action: { label: 'Configure AI', route: '/engine/apps/ai' },
     });
   } else {
     completedSteps.push({
@@ -115,7 +115,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'using_local_completion',
       severity: 'warning',
       message: 'Using local AI for responses (slower, lower quality than cloud AI)',
-      action: { label: 'Configure Cloud AI', route: '/settings/extensions/ai' },
+      action: { label: 'Configure Cloud AI', route: '/engine/apps/ai' },
     });
   }
 
@@ -143,7 +143,7 @@ systemRoutes.get('/status', async (c) => {
       type: 'no_channels',
       severity: 'warning',
       message: 'No messaging channels configured',
-      action: { label: 'Configure Channels', route: '/settings/extensions' },
+      action: { label: 'Configure Channels', route: '/engine/apps' },
     });
   } else {
     completedSteps.push({
@@ -206,7 +206,7 @@ systemRoutes.get('/status', async (c) => {
       completionIsLocal: completionProvider?.name === 'local',
       embeddingIsLocal: embeddingProvider?.name === 'local',
     },
-    extensions: activeByCategory,
+    apps: activeByCategory,
     knowledgeBase: {
       total: knowledgeBaseTotal,
       withoutEmbeddings: knowledgeBaseWithoutEmbeddings,

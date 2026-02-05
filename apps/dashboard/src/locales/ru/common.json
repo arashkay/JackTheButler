@@ -52,8 +52,8 @@
     "content": "Контент",
     "knowledgeBase": "База знаний",
     "siteScraper": "Парсер сайтов",
-    "settings": "Движок",
-    "extensions": "Приложения",
+    "engine": "Движок",
+    "apps": "Приложения",
     "automations": "Автоматизация",
     "autonomy": "Автономность",
     "dangerZone": "Опасная зона"

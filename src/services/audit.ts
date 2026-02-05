@@ -33,8 +33,8 @@ export type AuditAction =
   | 'delete'
   // Configuration
   | 'config_change'
-  | 'integration_test'
-  | 'integration_toggle'
+  | 'app_test'
+  | 'app_toggle'
   // Automation
   | 'rule_executed'
   | 'rule_failed'
@@ -55,7 +55,7 @@ export type ResourceType =
   | 'conversation'
   | 'message'
   | 'task'
-  | 'integration'
+  | 'app'
   | 'automation'
   | 'knowledge'
   | 'system';

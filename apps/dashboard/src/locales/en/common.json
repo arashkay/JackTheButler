@@ -52,8 +52,8 @@
     "content": "Content",
     "knowledgeBase": "Knowledge Base",
     "siteScraper": "Site Scraper",
-    "settings": "Engine",
-    "extensions": "Apps",
+    "engine": "Engine",
+    "apps": "Apps",
     "automations": "Automations",
     "autonomy": "Autonomy",
     "dangerZone": "Danger Zone"

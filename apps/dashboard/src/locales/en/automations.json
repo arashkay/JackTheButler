@@ -194,7 +194,7 @@
     "startOver": "Start Over",
     "failedToGenerate": "Failed to generate automation",
     "noAiProvider": "No AI provider configured. Please set up an AI provider in Apps.",
-    "goToExtensions": "Go to Apps",
+    "goToApps": "Go to Apps",
     "preferManual": "Prefer to set up manually?",
     "createManually": "Create Rule Manually",
     "backToAutomations": "Back to Automations",

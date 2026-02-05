@@ -402,7 +402,7 @@ export function KnowledgeBasePage() {
           <AlertTitle>{t('knowledge.embeddingRequired')}</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
             <span>{t('knowledge.embeddingRequiredDesc')}</span>
-            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ms-4 whitespace-nowrap">
+            <Link to="/engine/apps/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ms-4 whitespace-nowrap">
               {t('common.configure')} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
             </Link>
           </AlertDescription>
@@ -813,7 +813,7 @@ export function KnowledgeBasePage() {
         confirmLabel={t('knowledge.goToSettings')}
         onConfirm={() => {
           setShowEmbeddingWarning(false);
-          navigate('/settings/extensions/ai?provider=local');
+          navigate('/engine/apps/ai?provider=local');
         }}
       />
 

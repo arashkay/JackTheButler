@@ -11,7 +11,7 @@ import { closeDatabase, isDatabaseHealthy } from '@/db/index.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/services/scheduler.js';
-import { extensionConfigService } from '@/services/extension-config.js';
+import { appConfigService } from '@/services/app-config.js';
 import { resetResponder } from '@/ai/index.js';
 import { getAutomationEngine } from '@/automation/index.js';
 import { subscribeAutomationToEvents } from '@/automation/event-subscriber.js';
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
 
   // Load enabled extensions from database
   try {
-    await extensionConfigService.loadEnabledExtensions();
+    await appConfigService.loadEnabledApps();
     // Reset responder cache so it picks up the newly loaded AI provider
     resetResponder();
     logger.info('Extensions loaded from database');

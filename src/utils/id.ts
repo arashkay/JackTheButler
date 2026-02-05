@@ -21,8 +21,8 @@ export const ID_PREFIXES = {
   knowledge: 'kb',
   rule: 'rule',
   alog: 'alog',
-  integration: 'int',
-  integrationLog: 'ilog',
+  app: 'app',
+  appLog: 'aplog',
   approval: 'apv',
   // Phase 20: Automation
   action: 'act',

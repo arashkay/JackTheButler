@@ -100,6 +100,7 @@ pnpm check                # Run all checks (lint + types + tests)
 5. **AI provider abstraction** - Support Claude, OpenAI, or local Ollama
 6. **Simple operations** - SQLite database, easy backup (copy file)
 7. **Kernel/Extension separation** - Business logic in `src/core/`, adapters in `src/extensions/` (v1.1.0+)
+8. **Internal vs external naming** - Internal architecture uses "extensions" (`src/extensions/`), but all external-facing surfaces (API routes, DB tables, dashboard UI) use "apps". Primary API route: `/api/v1/apps` (with `/extensions` and `/integrations` as legacy aliases). DB tables: `app_configs`, `app_logs`. Service: `appConfigService` in `src/services/app-config.ts`.
 
 ## Code Conventions
 

@@ -52,8 +52,8 @@
     "content": "Contenido",
     "knowledgeBase": "Base de Conocimiento",
     "siteScraper": "Extractor Web",
-    "settings": "Motor",
-    "extensions": "Apps",
+    "engine": "Motor",
+    "apps": "Apps",
     "automations": "Automatizaciones",
     "autonomy": "Autonomía",
     "dangerZone": "Zona de Peligro"

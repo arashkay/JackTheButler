@@ -66,7 +66,7 @@ function CompletedStepRow({ step }: { step: CompletedStep }) {
  * Route overrides for specific issue types
  */
 const routeOverrides: Record<string, string> = {
-  no_embedding_provider: '/settings/extensions/ai?provider=local',
+  no_embedding_provider: '/engine/apps/ai?provider=local',
 };
 
 /**

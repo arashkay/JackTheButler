@@ -1,12 +1,12 @@
 {
-  "extensions": {
+  "apps": {
     "connected": "Conectado",
     "readyToTest": "Listo para Probar",
     "errors": "Errores",
     "total": "Total",
-    "searchExtensions": "Buscar apps...",
-    "noExtensions": "No se encontraron apps",
-    "noExtensionsSearch": "Intenta un término diferente",
+    "searchApps": "Buscar apps...",
+    "noApps": "No se encontraron apps",
+    "noAppsSearch": "Intenta un término diferente",
     "failedToLoad": "Error al cargar apps",
     "noProviderConfigured": "Sin proveedor configurado",
     "aiProvider": "Proveedor de IA",
@@ -85,8 +85,8 @@
       }
     }
   },
-  "extensionEdit": {
-    "backToExtensions": "Volver a Apps",
+  "appEdit": {
+    "backToApps": "Volver a Apps",
     "selectProvider": "Seleccionar Proveedor",
     "viewDocumentation": "Ver Documentación",
     "connectionStatus": "Estado de Conexión",

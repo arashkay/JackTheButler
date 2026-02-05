@@ -23,9 +23,9 @@ const customIcons: Record<string, string> = {
   'chat-round': '/icons/chat-round.svg',
 };
 
-// Mapping extension/provider IDs to icons
+// Mapping app/provider IDs to icons
 const iconMapping: Record<string, LucideIcon | string> = {
-  // Extensions
+  // Apps
   ai: 'brain',
   whatsapp: 'whatsapp',
   sms: 'smartphone',
@@ -62,7 +62,7 @@ const categoryIcons: Record<string, LucideIcon> = {
   operations: Settings,
 };
 
-interface ExtensionIconProps {
+interface AppIconProps {
   id: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
@@ -75,7 +75,7 @@ const sizeClasses = {
   xl: 'w-12 h-12',
 };
 
-export function ExtensionIcon({ id, size = 'md', className }: ExtensionIconProps) {
+export function AppIcon({ id, size = 'md', className }: AppIconProps) {
   const icon = iconMapping[id];
   const sizeClass = sizeClasses[size];
 

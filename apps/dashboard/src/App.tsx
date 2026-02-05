@@ -5,13 +5,13 @@ import { Layout } from '@/components/layout/Layout';
 import { HomePage } from '@/pages/home/Home';
 import { ConversationsPage } from '@/pages/inbox/Conversations';
 import { TasksPage } from '@/pages/tasks/Tasks';
-import { ExtensionsPage } from '@/pages/settings/extensions/Extensions';
-import { ExtensionEditPage } from '@/pages/settings/extensions/ExtensionEdit';
-import { AutomationsPage } from '@/pages/settings/automations/Automations';
-import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit';
-import { AutomationGeneratePage } from '@/pages/settings/automations/AutomationGenerate';
-import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
-import { SettingsPage } from '@/pages/settings/Settings';
+import { AppsPage } from '@/pages/engine/apps/Apps';
+import { AppEditPage } from '@/pages/engine/apps/AppEdit';
+import { AutomationsPage } from '@/pages/engine/automations/Automations';
+import { AutomationEditPage } from '@/pages/engine/automations/AutomationEdit';
+import { AutomationGeneratePage } from '@/pages/engine/automations/AutomationGenerate';
+import { AutonomyPage } from '@/pages/engine/autonomy/Autonomy';
+import { SettingsPage } from '@/pages/engine/Settings';
 import { ApprovalsPage } from '@/pages/review-center/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
@@ -28,13 +28,13 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/inbox" element={<ConversationsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/settings/extensions" element={<ExtensionsPage />} />
-          <Route path="/settings/extensions/:extensionId" element={<ExtensionEditPage />} />
-          <Route path="/settings/automations" element={<AutomationsPage />} />
-          <Route path="/settings/automations/generate" element={<AutomationGeneratePage />} />
-          <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
-          <Route path="/settings/autonomy" element={<AutonomyPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/engine/apps" element={<AppsPage />} />
+          <Route path="/engine/apps/:appId" element={<AppEditPage />} />
+          <Route path="/engine/automations" element={<AutomationsPage />} />
+          <Route path="/engine/automations/generate" element={<AutomationGeneratePage />} />
+          <Route path="/engine/automations/:ruleId" element={<AutomationEditPage />} />
+          <Route path="/engine/autonomy" element={<AutonomyPage />} />
+          <Route path="/engine" element={<SettingsPage />} />
           <Route path="/review-center" element={<ApprovalsPage />} />
           <Route path="/guests" element={<GuestsPage />} />
           <Route path="/guests/new" element={<GuestFormPage />} />

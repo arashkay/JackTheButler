@@ -117,7 +117,7 @@ function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enab
     <Card className={cn('card-hover group', !rule.enabled && 'opacity-60')}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
-          <Link to={`/settings/automations/${rule.id}`} className="flex-1 min-w-0">
+          <Link to={`/engine/automations/${rule.id}`} className="flex-1 min-w-0">
             <div className="flex items-start gap-4">
               <div className={cn(
                 'p-2.5 rounded-xl transition-colors',
@@ -129,7 +129,7 @@ function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enab
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-foreground truncate">{rule.name}</h3>
                   {rule.lastError && (
-                    <Badge variant="error" className="shrink-0">{t('extensions.error')}</Badge>
+                    <Badge variant="error" className="shrink-0">{t('apps.error')}</Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground truncate">
@@ -162,7 +162,7 @@ function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enab
               onCheckedChange={onToggle}
               aria-label={rule.enabled ? t('automations.disableRule') : t('automations.enableRule')}
             />
-            <Link to={`/settings/automations/${rule.id}`}>
+            <Link to={`/engine/automations/${rule.id}`}>
               <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors rtl:rotate-180" />
             </Link>
           </div>
@@ -194,7 +194,7 @@ export function AutomationsPage() {
 
   useEffect(() => {
     setActions(
-      <Link to="/settings/automations/generate">
+      <Link to="/engine/automations/generate">
         <Button size="sm">
           <Sparkles className="w-4 h-4 me-1.5" />
           {t('automations.newRule')}

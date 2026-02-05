@@ -5,7 +5,7 @@ import { useSystemStatus } from '@/hooks/useSystemStatus';
 
 export function HomePage() {
   const { t } = useTranslation();
-  const { providers, extensions, knowledgeBase, isLoading } = useSystemStatus();
+  const { providers, apps, knowledgeBase, isLoading } = useSystemStatus();
 
   const kbIndexed = (knowledgeBase?.total ?? 0) - (knowledgeBase?.withoutEmbeddings ?? 0);
   const kbTotal = knowledgeBase?.total ?? 0;
@@ -25,9 +25,9 @@ export function HomePage() {
     },
     {
       label: t('home.channels'),
-      value: extensions?.channel ?? 0,
+      value: apps?.channel ?? 0,
       icon: MessageSquare,
-      variant: (extensions?.channel ?? 0) > 0 ? 'success' : 'warning',
+      variant: (apps?.channel ?? 0) > 0 ? 'success' : 'warning',
     },
     {
       label: t('home.knowledge'),
@@ -36,8 +36,8 @@ export function HomePage() {
       variant: kbTotal === 0 ? 'warning' : knowledgeBase?.needsReindex ? 'warning' : 'success',
     },
     {
-      label: t('home.extensions'),
-      value: (extensions?.ai ?? 0) + (extensions?.channel ?? 0) + (extensions?.pms ?? 0) + (extensions?.tool ?? 0),
+      label: t('home.apps'),
+      value: (apps?.ai ?? 0) + (apps?.channel ?? 0) + (apps?.pms ?? 0) + (apps?.tool ?? 0),
       icon: Plug,
       variant: 'default',
     },

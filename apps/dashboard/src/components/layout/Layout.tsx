@@ -64,7 +64,7 @@ export function Layout() {
   });
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('sidebar-expanded-sections');
-    return saved ? JSON.parse(saved) : { content: false, settings: false };
+    return saved ? JSON.parse(saved) : { content: false, engine: false };
   });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -223,7 +223,7 @@ export function Layout() {
   useEffect(() => {
     const collapsibleSections = [
       { id: 'content', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
-      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy'] },
+      { id: 'engine', paths: ['/engine/apps', '/engine/automations', '/engine/autonomy'] },
     ];
 
     const newExpandedState: Record<string, boolean> = {};
@@ -295,14 +295,14 @@ export function Layout() {
       ],
     },
     {
-      id: 'settings',
-      title: t('nav.settings'),
+      id: 'engine',
+      title: t('nav.engine'),
       icon: <Network size={20} />,
       collapsible: true,
       items: [
-        { path: '/settings/extensions', label: t('nav.extensions'), icon: <Puzzle size={20} /> },
-        { path: '/settings/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
-        { path: '/settings/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
+        { path: '/engine/apps', label: t('nav.apps'), icon: <Puzzle size={20} /> },
+        { path: '/engine/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
+        { path: '/engine/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
       ],
     },
   ];
@@ -526,7 +526,7 @@ export function Layout() {
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
-                  navigate('/settings');
+                  navigate('/engine');
                 }}
                 className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
@@ -602,7 +602,7 @@ function HeaderBar({
   const { actions } = usePageActions();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const isSettingsPage = location.pathname === '/settings';
+  const isSettingsPage = location.pathname === '/engine';
   const activeItem = navSections
     .flatMap((s) => s.items)
     .find((item) => isActive(item.path));

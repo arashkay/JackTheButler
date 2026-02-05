@@ -8,7 +8,7 @@
 import { Hono } from 'hono';
 import { createLogger } from '@/utils/logger.js';
 import { getExtensionRegistry } from '@/extensions/index.js';
-import { extensionConfigService } from '@/services/extension-config.js';
+import { appConfigService } from '@/services/app-config.js';
 import { createHmac } from 'node:crypto';
 
 const log = createLogger('webhook:whatsapp');
@@ -24,7 +24,7 @@ async function getWhatsAppConfig(): Promise<{
   verifyToken?: string;
   appSecret?: string;
 } | null> {
-  const extConfig = await extensionConfigService.getExtensionConfig('whatsapp-meta');
+  const extConfig = await appConfigService.getAppConfig('whatsapp-meta');
   if (extConfig?.config) {
     return extConfig.config as {
       accessToken?: string;
@@ -292,7 +292,7 @@ async function handleIncomingMessage(
       );
     }
   } else {
-    log.warn('WhatsApp not configured. Enable it in Settings > Integrations.');
+    log.warn('WhatsApp not configured. Enable it in Engine > Apps.');
   }
 }
 

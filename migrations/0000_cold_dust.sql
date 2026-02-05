@@ -140,9 +140,9 @@ CREATE TABLE `guests` (
 CREATE UNIQUE INDEX `idx_guests_email` ON `guests` (`email`);--> statement-breakpoint
 CREATE UNIQUE INDEX `idx_guests_phone` ON `guests` (`phone`);--> statement-breakpoint
 CREATE INDEX `idx_guests_name` ON `guests` (`last_name`,`first_name`);--> statement-breakpoint
-CREATE TABLE `integration_configs` (
+CREATE TABLE `app_configs` (
 	`id` text PRIMARY KEY NOT NULL,
-	`integration_id` text NOT NULL,
+	`app_id` text NOT NULL,
 	`provider_id` text NOT NULL,
 	`enabled` integer DEFAULT false NOT NULL,
 	`status` text DEFAULT 'not_configured' NOT NULL,
@@ -153,12 +153,12 @@ CREATE TABLE `integration_configs` (
 	`updated_at` text DEFAULT (datetime('now')) NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `idx_integration_configs_unique` ON `integration_configs` (`integration_id`,`provider_id`);--> statement-breakpoint
-CREATE INDEX `idx_integration_configs_integration` ON `integration_configs` (`integration_id`);--> statement-breakpoint
-CREATE INDEX `idx_integration_configs_status` ON `integration_configs` (`status`);--> statement-breakpoint
-CREATE TABLE `integration_logs` (
+CREATE UNIQUE INDEX `idx_app_configs_unique` ON `app_configs` (`app_id`,`provider_id`);--> statement-breakpoint
+CREATE INDEX `idx_app_configs_app` ON `app_configs` (`app_id`);--> statement-breakpoint
+CREATE INDEX `idx_app_configs_status` ON `app_configs` (`status`);--> statement-breakpoint
+CREATE TABLE `app_logs` (
 	`id` text PRIMARY KEY NOT NULL,
-	`integration_id` text NOT NULL,
+	`app_id` text NOT NULL,
 	`provider_id` text NOT NULL,
 	`event_type` text NOT NULL,
 	`status` text NOT NULL,
@@ -168,9 +168,9 @@ CREATE TABLE `integration_logs` (
 	`created_at` text DEFAULT (datetime('now')) NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `idx_integration_logs_integration` ON `integration_logs` (`integration_id`,`provider_id`);--> statement-breakpoint
-CREATE INDEX `idx_integration_logs_event_type` ON `integration_logs` (`event_type`);--> statement-breakpoint
-CREATE INDEX `idx_integration_logs_created` ON `integration_logs` (`created_at`);--> statement-breakpoint
+CREATE INDEX `idx_app_logs_app` ON `app_logs` (`app_id`,`provider_id`);--> statement-breakpoint
+CREATE INDEX `idx_app_logs_event_type` ON `app_logs` (`event_type`);--> statement-breakpoint
+CREATE INDEX `idx_app_logs_created` ON `app_logs` (`created_at`);--> statement-breakpoint
 CREATE TABLE `knowledge_base` (
 	`id` text PRIMARY KEY NOT NULL,
 	`category` text NOT NULL,

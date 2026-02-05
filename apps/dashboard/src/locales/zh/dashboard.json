@@ -4,7 +4,7 @@
     "embeddings": "嵌入向量",
     "channels": "渠道",
     "knowledge": "知识库",
-    "extensions": "应用",
+    "apps": "应用",
     "gettingStarted": "开始使用",
     "stepsCompleted": "已完成 {{completed}}/{{total}} 步",
     "issues": {

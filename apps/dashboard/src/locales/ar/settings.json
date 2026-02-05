@@ -1,12 +1,12 @@
 {
-  "extensions": {
+  "apps": {
     "connected": "متصل",
     "readyToTest": "جاهز للاختبار",
     "errors": "أخطاء",
     "total": "المجموع",
-    "searchExtensions": "البحث عن تطبيقات...",
-    "noExtensions": "لم يتم العثور على تطبيقات",
-    "noExtensionsSearch": "جرب مصطلح بحث مختلف",
+    "searchApps": "البحث عن تطبيقات...",
+    "noApps": "لم يتم العثور على تطبيقات",
+    "noAppsSearch": "جرب مصطلح بحث مختلف",
     "failedToLoad": "فشل تحميل التطبيقات",
     "noProviderConfigured": "لا يوجد مزود مُعد",
     "aiProvider": "مزود الذكاء الاصطناعي",
@@ -85,8 +85,8 @@
       }
     }
   },
-  "extensionEdit": {
-    "backToExtensions": "العودة للتطبيقات",
+  "appEdit": {
+    "backToApps": "العودة للتطبيقات",
     "selectProvider": "اختيار المزود",
     "viewDocumentation": "عرض التوثيق",
     "connectionStatus": "حالة الاتصال",

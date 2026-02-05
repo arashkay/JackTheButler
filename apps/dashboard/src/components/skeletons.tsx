@@ -73,9 +73,9 @@ export function AutomationCardSkeleton({ count = 3 }: { count?: number }) {
 }
 
 /**
- * Skeleton for extension cards in a grid.
+ * Skeleton for app cards in a grid.
  */
-export function ExtensionCardSkeleton({ count = 4 }: { count?: number }) {
+export function AppCardSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-10">
       {/* Fake category section */}

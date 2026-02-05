@@ -52,8 +52,8 @@
     "content": "内容",
     "knowledgeBase": "知识库",
     "siteScraper": "网站抓取",
-    "settings": "引擎",
-    "extensions": "应用",
+    "engine": "引擎",
+    "apps": "应用",
     "automations": "自动化",
     "autonomy": "自主性",
     "dangerZone": "危险区域"

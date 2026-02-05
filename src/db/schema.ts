@@ -588,20 +588,20 @@ export type AutomationExecution = typeof automationExecutions.$inferSelect;
 export type NewAutomationExecution = typeof automationExecutions.$inferInsert;
 
 // ===================
-// Integration Configs
+// App Configs
 // ===================
 
 /**
- * Integration configuration storage
+ * App configuration storage
  * Stores provider credentials and settings (encrypted)
  */
-export const integrationConfigs = sqliteTable(
-  'integration_configs',
+export const appConfigs = sqliteTable(
+  'app_configs',
   {
     id: text('id').primaryKey(),
 
     // Identity
-    integrationId: text('integration_id').notNull(), // e.g., 'sms', 'email', 'ai'
+    appId: text('app_id').notNull(), // e.g., 'sms', 'email', 'ai'
     providerId: text('provider_id').notNull(), // e.g., 'twilio', 'mailgun', 'anthropic'
 
     // Status
@@ -624,21 +624,21 @@ export const integrationConfigs = sqliteTable(
       .default(sql`(datetime('now'))`),
   },
   (table) => [
-    uniqueIndex('idx_integration_configs_unique').on(table.integrationId, table.providerId),
-    index('idx_integration_configs_integration').on(table.integrationId),
-    index('idx_integration_configs_status').on(table.status),
+    uniqueIndex('idx_app_configs_unique').on(table.appId, table.providerId),
+    index('idx_app_configs_app').on(table.appId),
+    index('idx_app_configs_status').on(table.status),
   ]
 );
 
 /**
- * Integration event logs
+ * App event logs
  * Tracks connection tests, syncs, webhooks, and errors
  */
-export const integrationLogs = sqliteTable(
-  'integration_logs',
+export const appLogs = sqliteTable(
+  'app_logs',
   {
     id: text('id').primaryKey(),
-    integrationId: text('integration_id').notNull(),
+    appId: text('app_id').notNull(),
     providerId: text('provider_id').notNull(),
 
     // Event details
@@ -655,17 +655,17 @@ export const integrationLogs = sqliteTable(
       .default(sql`(datetime('now'))`),
   },
   (table) => [
-    index('idx_integration_logs_integration').on(table.integrationId, table.providerId),
-    index('idx_integration_logs_event_type').on(table.eventType),
-    index('idx_integration_logs_created').on(table.createdAt),
+    index('idx_app_logs_app').on(table.appId, table.providerId),
+    index('idx_app_logs_event_type').on(table.eventType),
+    index('idx_app_logs_created').on(table.createdAt),
   ]
 );
 
-export type IntegrationConfig = typeof integrationConfigs.$inferSelect;
-export type NewIntegrationConfig = typeof integrationConfigs.$inferInsert;
+export type AppConfig = typeof appConfigs.$inferSelect;
+export type NewAppConfig = typeof appConfigs.$inferInsert;
 
-export type IntegrationLog = typeof integrationLogs.$inferSelect;
-export type NewIntegrationLog = typeof integrationLogs.$inferInsert;
+export type AppLog = typeof appLogs.$inferSelect;
+export type NewAppLog = typeof appLogs.$inferInsert;
 
 // ===================
 // Audit Log

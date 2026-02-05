@@ -101,9 +101,9 @@ export function AutomationGeneratePage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
       if (result?.id) {
-        navigate(`/settings/automations/${result.id}`);
+        navigate(`/engine/automations/${result.id}`);
       } else {
-        navigate('/settings/automations');
+        navigate('/engine/automations');
       }
     },
   });
@@ -149,7 +149,7 @@ export function AutomationGeneratePage() {
     if (generatedRule) {
       // Store in session storage for the edit page to pick up
       sessionStorage.setItem('generated-automation', JSON.stringify(generatedRule));
-      navigate('/settings/automations/new');
+      navigate('/engine/automations/new');
     }
   };
 
@@ -169,7 +169,7 @@ export function AutomationGeneratePage() {
     <PageContainer>
       {/* Back Link */}
       <Link
-        to="/settings/automations"
+        to="/engine/automations"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
@@ -191,7 +191,7 @@ export function AutomationGeneratePage() {
             <p className="text-sm text-muted-foreground">
               {t('automationGenerate.preferManual')}{' '}
               <Link
-                to="/settings/automations/new"
+                to="/engine/automations/new"
                 className="text-primary hover:underline"
               >
                 {t('automationGenerate.createManually')}

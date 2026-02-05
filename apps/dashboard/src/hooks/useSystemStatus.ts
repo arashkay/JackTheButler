@@ -35,7 +35,7 @@ export interface SystemStatus {
     completionIsLocal: boolean;
     embeddingIsLocal: boolean;
   };
-  extensions: {
+  apps: {
     ai: number;
     channel: number;
     pms: number;
@@ -69,7 +69,7 @@ export function useSystemStatus() {
     warningIssues: query.data?.issues?.filter((i) => i.severity === 'warning') ?? [],
     infoIssues: query.data?.issues?.filter((i) => i.severity === 'info') ?? [],
     providers: query.data?.providers ?? null,
-    extensions: query.data?.extensions ?? null,
+    apps: query.data?.apps ?? null,
     knowledgeBase: query.data?.knowledgeBase ?? null,
   };
 }

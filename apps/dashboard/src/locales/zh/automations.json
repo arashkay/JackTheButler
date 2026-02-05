@@ -147,7 +147,7 @@
     "startOver": "重新开始",
     "failedToGenerate": "生成自动化失败",
     "noAiProvider": "未配置 AI 提供商。请在应用中设置 AI 提供商。",
-    "goToExtensions": "前往应用",
+    "goToApps": "前往应用",
     "preferManual": "更喜欢手动设置？",
     "createManually": "手动创建规则",
     "backToAutomations": "返回自动化",

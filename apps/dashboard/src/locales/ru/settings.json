@@ -1,12 +1,12 @@
 {
-  "extensions": {
+  "apps": {
     "connected": "Подключено",
     "readyToTest": "Готово к тесту",
     "errors": "Ошибки",
     "total": "Всего",
-    "searchExtensions": "Поиск приложений...",
-    "noExtensions": "Приложения не найдены",
-    "noExtensionsSearch": "Попробуйте другой запрос",
+    "searchApps": "Поиск приложений...",
+    "noApps": "Приложения не найдены",
+    "noAppsSearch": "Попробуйте другой запрос",
     "failedToLoad": "Ошибка загрузки приложений",
     "noProviderConfigured": "Провайдер не настроен",
     "aiProvider": "AI провайдер",
@@ -85,8 +85,8 @@
       }
     }
   },
-  "extensionEdit": {
-    "backToExtensions": "Назад к приложениям",
+  "appEdit": {
+    "backToApps": "Назад к приложениям",
     "selectProvider": "Выберите провайдера",
     "viewDocumentation": "Смотреть документацию",
     "connectionStatus": "Статус подключения",

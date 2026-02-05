@@ -47,8 +47,8 @@ export function LoginPage() {
           <img src="/jack-the-butler-inverted.png" alt={t('app.name')} className="w-40 h-40 md:w-48 md:h-48 object-contain dark:hidden" />
           <img src="/jack-the-butler.png" alt={t('app.name')} className="w-40 h-40 md:w-48 md:h-48 object-contain hidden dark:block" />
           <h1 className="text-xl md:text-2xl font-semibold text-primary-foreground mt-3 md:mt-4 text-center">{t('app.name')}</h1>
+          <p className="text-primary-foreground text-xs mb-2 text-center"><span className="text-red-500 font-bold">/</span><span className="text-primary-foreground font-bold">JACK</span><span className="text-red-500 font-bold">/</span> <span className="text-primary-foreground font-bold">J</span>oint <span className="text-primary-foreground font-bold">A</span>I <span className="text-primary-foreground font-bold">C</span>ontrol <span className="text-primary-foreground font-bold">K</span>ernel</p>
           <p className="text-primary-foreground/60 text-sm md:text-base mt-1 text-center">{t('app.tagline')}</p>
-          <p className="text-primary-foreground/60 text-xs mt-3 text-center"><span className="text-red-500 font-bold">/</span><span className="text-primary-foreground font-bold">JACK</span><span className="text-red-500 font-bold">/</span> <span className="text-primary-foreground font-bold">J</span>oint <span className="text-primary-foreground font-bold">A</span>I <span className="text-primary-foreground font-bold">C</span>ontrol <span className="text-primary-foreground font-bold">K</span>ernel</p>
         </div>
 
         {/* Login form - Bottom on mobile, Right on desktop */}

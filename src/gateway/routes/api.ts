@@ -10,7 +10,7 @@ import { authRoutes } from './auth.js';
 import { conversationsRouter } from './conversations.js';
 import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
-import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
+import { appRoutes } from './apps.js';
 import { automationRoutes } from './automation.js';
 import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
 import { hotelProfileRoutes } from './hotel-profile.js';
@@ -35,11 +35,8 @@ api.route('/tasks', tasksRouter);
 // Admin routes
 api.route('/admin', adminRouter);
 
-// Extension management routes (new)
-api.route('/extensions', extensionRoutes);
-
-// Integration management routes (legacy - maps to extensions)
-api.route('/integrations', legacyIntegrationRoutes);
+// App management routes
+api.route('/apps', appRoutes);
 
 // Automation management routes
 api.route('/automation', automationRoutes);

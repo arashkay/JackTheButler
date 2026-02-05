@@ -429,8 +429,7 @@ export const manifest: AIExtensionManifest = {
   name: 'Local AI',
   category: 'ai',
   version: '2.0.0',
-  description:
-    'Built-in local AI using Transformers.js v3. Provides semantic embeddings and completion without external APIs. Choose from Llama 3.2, SmolLM2, or Phi-3 models.',
+  description: 'Run AI locally with Transformers.js - embeddings and completion without external APIs',
   icon: '🏠',
   configSchema: [
     {

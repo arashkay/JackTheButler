@@ -145,15 +145,15 @@ describe('System Status API', () => {
       expect(data.issues.some((i: { type: string }) => i.type === 'using_local_completion')).toBe(true);
     });
 
-    it('should include extension counts', async () => {
+    it('should include app counts', async () => {
       const res = await app.request('/system/status');
       const data = await res.json();
 
-      expect(data.extensions).toBeDefined();
-      expect(typeof data.extensions.ai).toBe('number');
-      expect(typeof data.extensions.channel).toBe('number');
-      expect(typeof data.extensions.pms).toBe('number');
-      expect(typeof data.extensions.tool).toBe('number');
+      expect(data.apps).toBeDefined();
+      expect(typeof data.apps.ai).toBe('number');
+      expect(typeof data.apps.channel).toBe('number');
+      expect(typeof data.apps.pms).toBe('number');
+      expect(typeof data.apps.tool).toBe('number');
     });
   });
 

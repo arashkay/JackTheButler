@@ -1,12 +1,12 @@
 {
-  "extensions": {
+  "apps": {
     "connected": "कनेक्टेड",
     "readyToTest": "परीक्षण के लिए तैयार",
     "errors": "त्रुटियां",
     "total": "कुल",
-    "searchExtensions": "ऐप्स खोजें...",
-    "noExtensions": "कोई ऐप नहीं मिला",
-    "noExtensionsSearch": "कोई अलग खोज शब्द आज़माएं",
+    "searchApps": "ऐप्स खोजें...",
+    "noApps": "कोई ऐप नहीं मिला",
+    "noAppsSearch": "कोई अलग खोज शब्द आज़माएं",
     "failedToLoad": "ऐप्स लोड करने में विफल",
     "noProviderConfigured": "कोई प्रदाता कॉन्फ़िगर नहीं",
     "aiProvider": "AI प्रदाता",
@@ -85,8 +85,8 @@
       }
     }
   },
-  "extensionEdit": {
-    "backToExtensions": "ऐप्स पर वापस जाएं",
+  "appEdit": {
+    "backToApps": "ऐप्स पर वापस जाएं",
     "selectProvider": "प्रदाता चुनें",
     "viewDocumentation": "दस्तावेज़ देखें",
     "connectionStatus": "कनेक्शन स्थिति",

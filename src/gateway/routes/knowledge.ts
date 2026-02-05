@@ -199,7 +199,7 @@ knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
 
   if (!embeddingProvider) {
     return c.json(
-      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Engine > Apps.' },
       400
     );
   }
@@ -239,14 +239,14 @@ knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
 
   if (!completionProvider) {
     return c.json(
-      { error: 'No AI provider configured. Please configure an AI provider in Settings > Integrations.' },
+      { error: 'No AI provider configured. Please configure an AI provider in Engine > Apps.' },
       400
     );
   }
 
   if (!embeddingProvider) {
     return c.json(
-      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Engine > Apps.' },
       400
     );
   }
@@ -306,7 +306,7 @@ knowledgeRoutes.post('/reindex', async (c) => {
 
   if (!provider) {
     return c.json(
-      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Settings > Integrations.' },
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Engine > Apps.' },
       400
     );
   }

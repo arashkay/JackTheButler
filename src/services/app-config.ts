@@ -1,14 +1,14 @@
 /**
- * Extension Config Service
+ * App Config Service
  *
- * Manages extension configurations stored in the database.
+ * Manages app configurations stored in the database.
  * Bridges the dashboard UI with the ExtensionRegistry for runtime activation.
  *
- * @module services/extension-config
+ * @module services/app-config
  */
 
 import { eq, and, desc } from 'drizzle-orm';
-import { db, integrationConfigs, integrationLogs } from '@/db/index.js';
+import { db, appConfigs, appLogs } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { encryptObject, decryptObject, maskConfig } from '@/utils/crypto.js';
@@ -22,12 +22,12 @@ import {
 import type { ConnectionTestResult } from '@/extensions/types.js';
 import { resetResponder } from '@/ai/index.js';
 
-const log = createLogger('service:extension-config');
+const log = createLogger('service:app-config');
 
 /**
- * Extension status (matches database status column)
+ * App status (matches database status column)
  */
-export type ExtensionStatus =
+export type AppStatus =
   | 'not_configured'
   | 'configured'
   | 'connected'
@@ -42,14 +42,14 @@ export interface ProviderConfig {
 }
 
 /**
- * Extension config record from database
+ * App config record from database
  */
-export interface ExtensionConfigRecord {
+export interface AppConfigRecord {
   id: string;
   extensionId: string;
-  providerId: string; // Legacy field, same as extensionId for new extensions
+  providerId: string;
   enabled: boolean;
-  status: ExtensionStatus;
+  status: AppStatus;
   config: ProviderConfig;
   lastCheckedAt: Date | null;
   lastError: string | null;
@@ -58,29 +58,29 @@ export interface ExtensionConfigRecord {
 }
 
 /**
- * Extension with status for API responses
+ * App with status for API responses
  */
-export interface ExtensionWithStatus {
+export interface AppWithStatus {
   manifest: AnyExtensionManifest;
-  config?: ExtensionConfigRecord;
-  status: ExtensionStatus;
+  config?: AppConfigRecord;
+  status: AppStatus;
   isActive: boolean;
 }
 
 /**
- * Extension group (for UI categories)
+ * App group (for UI categories)
  */
-export interface ExtensionGroup {
+export interface AppGroup {
   category: ExtensionCategory;
   categoryLabel: string;
-  extensions: ExtensionWithStatus[];
+  apps: AppWithStatus[];
 }
 
 /**
  * Category labels for UI
  *
  * Note: 'tool' category is excluded as tools are built-in features
- * accessed via the sidebar menu, not configurable extensions.
+ * accessed via the sidebar menu, not configurable apps.
  */
 const categoryLabels: Record<Exclude<ExtensionCategory, 'tool'>, string> = {
   ai: 'AI Providers',
@@ -89,44 +89,42 @@ const categoryLabels: Record<Exclude<ExtensionCategory, 'tool'>, string> = {
 };
 
 /**
- * Extension Config Service
+ * App Config Service
  *
- * Manages extension configuration lifecycle:
- * - Lists available extensions from manifests
+ * Manages app configuration lifecycle:
+ * - Lists available apps from manifests
  * - Stores/retrieves config from database
  * - Activates/deactivates extensions in registry
  */
-export class ExtensionConfigService {
+export class AppConfigService {
   /**
-   * Get all extensions with their status
+   * Get all apps with their status
    */
-  async listExtensions(): Promise<ExtensionWithStatus[]> {
+  async listApps(): Promise<AppWithStatus[]> {
     const manifests = getAllManifests();
-    const configs = await db.select().from(integrationConfigs).all();
+    const configs = await db.select().from(appConfigs).all();
     const registry = getExtensionRegistry();
 
     // Build config map for quick lookup
     const configMap = new Map<string, (typeof configs)[0]>();
     for (const config of configs) {
-      // Support both old format (integrationId:providerId) and new (extensionId)
-      configMap.set(`${config.integrationId}:${config.providerId}`, config);
+      configMap.set(`${config.appId}:${config.providerId}`, config);
       configMap.set(config.providerId, config);
     }
 
     return manifests.map((manifest) => {
-      // Try to find config by extension ID or legacy format
       const config =
         configMap.get(manifest.id) ||
-        configMap.get(`${this.getLegacyIntegrationId(manifest)}:${manifest.id}`);
+        configMap.get(`${this.getAppId(manifest)}:${manifest.id}`);
 
       const registeredExt = registry.get(manifest.id);
       const isActive = registeredExt?.status === 'active';
 
-      let status: ExtensionStatus = 'not_configured';
-      let configRecord: ExtensionConfigRecord | undefined;
+      let status: AppStatus = 'not_configured';
+      let configRecord: AppConfigRecord | undefined;
 
       if (config) {
-        status = config.status as ExtensionStatus;
+        status = config.status as AppStatus;
         configRecord = this.dbToRecord(config);
       }
 
@@ -140,48 +138,48 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Get extensions grouped by category
+   * Get apps grouped by category
    */
-  async listExtensionsByCategory(): Promise<ExtensionGroup[]> {
-    const extensions = await this.listExtensions();
+  async listAppsByCategory(): Promise<AppGroup[]> {
+    const apps = await this.listApps();
 
-    // Only include configurable extension categories (not tools)
-    const groups: Record<Exclude<ExtensionCategory, 'tool'>, ExtensionWithStatus[]> = {
+    // Only include configurable app categories (not tools)
+    const groups: Record<Exclude<ExtensionCategory, 'tool'>, AppWithStatus[]> = {
       ai: [],
       channel: [],
       pms: [],
     };
 
-    for (const ext of extensions) {
-      // Skip tools - they're accessed via sidebar menu, not Extensions page
-      if (ext.manifest.category === 'tool') continue;
-      groups[ext.manifest.category as Exclude<ExtensionCategory, 'tool'>].push(ext);
+    for (const app of apps) {
+      // Skip tools - they're accessed via sidebar menu, not Apps page
+      if (app.manifest.category === 'tool') continue;
+      groups[app.manifest.category as Exclude<ExtensionCategory, 'tool'>].push(app);
     }
 
     return Object.entries(groups)
-      .filter(([, exts]) => exts.length > 0)
-      .map(([category, extensions]) => ({
+      .filter(([, apps]) => apps.length > 0)
+      .map(([category, apps]) => ({
         category: category as ExtensionCategory,
         categoryLabel: categoryLabels[category as Exclude<ExtensionCategory, 'tool'>],
-        extensions,
+        apps,
       }));
   }
 
   /**
-   * Get a specific extension with full details
+   * Get a specific app with full details
    */
-  async getExtension(extensionId: string): Promise<ExtensionWithStatus | null> {
+  async getApp(extensionId: string): Promise<AppWithStatus | null> {
     const manifest = getManifest(extensionId);
     if (!manifest) {
       return null;
     }
 
-    const config = await this.getExtensionConfig(extensionId);
+    const config = await this.getAppConfig(extensionId);
     const registry = getExtensionRegistry();
     const registeredExt = registry.get(extensionId);
     const isActive = registeredExt?.status === 'active';
 
-    let status: ExtensionStatus = 'not_configured';
+    let status: AppStatus = 'not_configured';
     if (config) {
       status = config.status;
     }
@@ -195,28 +193,27 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Get extension config (with credentials decrypted)
+   * Get app config (with credentials decrypted)
    */
-  async getExtensionConfig(extensionId: string): Promise<ExtensionConfigRecord | null> {
-    // Try new format first, then legacy
+  async getAppConfig(extensionId: string): Promise<AppConfigRecord | null> {
+    // Try by providerId first
     let config = await db
       .select()
-      .from(integrationConfigs)
-      .where(eq(integrationConfigs.providerId, extensionId))
+      .from(appConfigs)
+      .where(eq(appConfigs.providerId, extensionId))
       .get();
 
     if (!config) {
-      // Try legacy format
       const manifest = getManifest(extensionId);
       if (manifest) {
-        const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+        const appId = this.getAppId(manifest);
         config = await db
           .select()
-          .from(integrationConfigs)
+          .from(appConfigs)
           .where(
             and(
-              eq(integrationConfigs.integrationId, legacyIntegrationId),
-              eq(integrationConfigs.providerId, extensionId)
+              eq(appConfigs.appId, appId),
+              eq(appConfigs.providerId, extensionId)
             )
           )
           .get();
@@ -231,10 +228,10 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Get extension config with masked credentials (for API responses)
+   * Get app config with masked credentials (for API responses)
    */
-  async getExtensionConfigMasked(extensionId: string): Promise<ExtensionConfigRecord | null> {
-    const config = await this.getExtensionConfig(extensionId);
+  async getAppConfigMasked(extensionId: string): Promise<AppConfigRecord | null> {
+    const config = await this.getAppConfig(extensionId);
     if (!config) {
       return null;
     }
@@ -246,29 +243,28 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Save extension config and optionally activate it
+   * Save app config and optionally activate it
    */
-  async saveExtensionConfig(
+  async saveAppConfig(
     extensionId: string,
     config: ProviderConfig,
     enabled: boolean = false
-  ): Promise<ExtensionConfigRecord> {
+  ): Promise<AppConfigRecord> {
     const manifest = getManifest(extensionId);
     if (!manifest) {
       throw new Error(`Unknown extension: ${extensionId}`);
     }
 
-    // Use legacy integration ID for database storage (backward compatibility)
-    const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+    const appId = this.getAppId(manifest);
 
     // Check if config already exists
     const existing = await db
       .select()
-      .from(integrationConfigs)
+      .from(appConfigs)
       .where(
         and(
-          eq(integrationConfigs.integrationId, legacyIntegrationId),
-          eq(integrationConfigs.providerId, extensionId)
+          eq(appConfigs.appId, appId),
+          eq(appConfigs.providerId, extensionId)
         )
       )
       .get();
@@ -276,21 +272,21 @@ export class ExtensionConfigService {
     const encryptedConfig = encryptObject(config);
     const now = new Date().toISOString();
 
-    let record: ExtensionConfigRecord;
+    let record: AppConfigRecord;
 
     if (existing) {
       await db
-        .update(integrationConfigs)
+        .update(appConfigs)
         .set({
           config: encryptedConfig,
           enabled,
           status: 'configured',
           updatedAt: now,
         })
-        .where(eq(integrationConfigs.id, existing.id))
+        .where(eq(appConfigs.id, existing.id))
         .run();
 
-      log.info({ extensionId }, 'Extension config updated');
+      log.info({ extensionId }, 'App config updated');
 
       await this.logEvent(extensionId, 'config_changed', 'success', { enabled });
 
@@ -302,10 +298,10 @@ export class ExtensionConfigService {
         updatedAt: now,
       });
     } else {
-      const id = generateId('integration');
+      const id = generateId('app');
       const newConfig = {
         id,
-        integrationId: legacyIntegrationId,
+        appId,
         providerId: extensionId,
         enabled,
         status: 'configured' as const,
@@ -314,9 +310,9 @@ export class ExtensionConfigService {
         updatedAt: now,
       };
 
-      await db.insert(integrationConfigs).values(newConfig).run();
+      await db.insert(appConfigs).values(newConfig).run();
 
-      log.info({ extensionId, id }, 'Extension config created');
+      log.info({ extensionId, id }, 'App config created');
 
       await this.logEvent(extensionId, 'config_changed', 'success', {
         action: 'created',
@@ -335,13 +331,13 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Enable or disable an extension
+   * Enable or disable an app
    */
-  async setExtensionEnabled(
+  async setAppEnabled(
     extensionId: string,
     enabled: boolean
-  ): Promise<ExtensionConfigRecord | null> {
-    const configRecord = await this.getExtensionConfig(extensionId);
+  ): Promise<AppConfigRecord | null> {
+    const configRecord = await this.getAppConfig(extensionId);
     if (!configRecord) {
       return null;
     }
@@ -351,12 +347,12 @@ export class ExtensionConfigService {
       return null;
     }
 
-    const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+    const appId = this.getAppId(manifest);
     const now = new Date().toISOString();
-    const newStatus: ExtensionStatus = enabled ? 'configured' : 'disabled';
+    const newStatus: AppStatus = enabled ? 'configured' : 'disabled';
 
     await db
-      .update(integrationConfigs)
+      .update(appConfigs)
       .set({
         enabled,
         status: newStatus,
@@ -364,13 +360,13 @@ export class ExtensionConfigService {
       })
       .where(
         and(
-          eq(integrationConfigs.integrationId, legacyIntegrationId),
-          eq(integrationConfigs.providerId, extensionId)
+          eq(appConfigs.appId, appId),
+          eq(appConfigs.providerId, extensionId)
         )
       )
       .run();
 
-    log.info({ extensionId, enabled }, 'Extension enabled state changed');
+    log.info({ extensionId, enabled }, 'App enabled state changed');
 
     // Activate or deactivate in registry
     const registry = getExtensionRegistry();
@@ -393,14 +389,14 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Test extension connection
+   * Test app connection
    */
-  async testExtensionConnection(extensionId: string): Promise<ConnectionTestResult> {
-    const configRecord = await this.getExtensionConfig(extensionId);
+  async testAppConnection(extensionId: string): Promise<ConnectionTestResult> {
+    const configRecord = await this.getAppConfig(extensionId);
     if (!configRecord) {
       return {
         success: false,
-        message: 'Extension not configured',
+        message: 'App not configured',
       };
     }
 
@@ -430,31 +426,31 @@ export class ExtensionConfigService {
     const result = await registry.healthCheck(extensionId);
 
     // Update status in database
-    await this.updateExtensionStatus(extensionId, result);
+    await this.updateAppStatus(extensionId, result);
 
     return result;
   }
 
   /**
-   * Update extension status after connection test
+   * Update app status after connection test
    */
-  async updateExtensionStatus(
+  async updateAppStatus(
     extensionId: string,
     result: ConnectionTestResult
-  ): Promise<ExtensionConfigRecord | null> {
+  ): Promise<AppConfigRecord | null> {
     const manifest = getManifest(extensionId);
     if (!manifest) {
       return null;
     }
 
-    const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+    const appId = this.getAppId(manifest);
     const config = await db
       .select()
-      .from(integrationConfigs)
+      .from(appConfigs)
       .where(
         and(
-          eq(integrationConfigs.integrationId, legacyIntegrationId),
-          eq(integrationConfigs.providerId, extensionId)
+          eq(appConfigs.appId, appId),
+          eq(appConfigs.providerId, extensionId)
         )
       )
       .get();
@@ -464,17 +460,17 @@ export class ExtensionConfigService {
     }
 
     const now = new Date().toISOString();
-    const status: ExtensionStatus = result.success ? 'connected' : 'error';
+    const status: AppStatus = result.success ? 'connected' : 'error';
 
     await db
-      .update(integrationConfigs)
+      .update(appConfigs)
       .set({
         status,
         lastCheckedAt: now,
         ...(result.success ? {} : { lastError: result.message }),
         updatedAt: now,
       })
-      .where(eq(integrationConfigs.id, config.id))
+      .where(eq(appConfigs.id, config.id))
       .run();
 
     await this.logEvent(
@@ -488,7 +484,7 @@ export class ExtensionConfigService {
 
     log.info(
       { extensionId, success: result.success, latencyMs: result.latencyMs },
-      'Extension status updated'
+      'App status updated'
     );
 
     return this.dbToRecord({
@@ -501,15 +497,15 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Delete extension config
+   * Delete app config
    */
-  async deleteExtensionConfig(extensionId: string): Promise<boolean> {
+  async deleteAppConfig(extensionId: string): Promise<boolean> {
     const manifest = getManifest(extensionId);
     if (!manifest) {
       return false;
     }
 
-    const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+    const appId = this.getAppId(manifest);
 
     // Disable in registry first
     const registry = getExtensionRegistry();
@@ -520,17 +516,17 @@ export class ExtensionConfigService {
     }
 
     const result = await db
-      .delete(integrationConfigs)
+      .delete(appConfigs)
       .where(
         and(
-          eq(integrationConfigs.integrationId, legacyIntegrationId),
-          eq(integrationConfigs.providerId, extensionId)
+          eq(appConfigs.appId, appId),
+          eq(appConfigs.providerId, extensionId)
         )
       )
       .run();
 
     if (result.changes > 0) {
-      log.info({ extensionId }, 'Extension config deleted');
+      log.info({ extensionId }, 'App config deleted');
       return true;
     }
 
@@ -538,15 +534,15 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Get extension logs
+   * Get app logs
    */
-  async getExtensionLogs(
+  async getAppLogs(
     extensionId: string,
     limit: number = 50
   ): Promise<
     Array<{
       id: string;
-      extensionId: string;
+      appId: string;
       eventType: string;
       status: string;
       details: Record<string, unknown> | null;
@@ -560,24 +556,24 @@ export class ExtensionConfigService {
       return [];
     }
 
-    const legacyIntegrationId = this.getLegacyIntegrationId(manifest);
+    const resolvedAppId = this.getAppId(manifest);
 
     const logs = await db
       .select()
-      .from(integrationLogs)
+      .from(appLogs)
       .where(
         and(
-          eq(integrationLogs.integrationId, legacyIntegrationId),
-          eq(integrationLogs.providerId, extensionId)
+          eq(appLogs.appId, resolvedAppId),
+          eq(appLogs.providerId, extensionId)
         )
       )
-      .orderBy(desc(integrationLogs.createdAt))
+      .orderBy(desc(appLogs.createdAt))
       .limit(Math.min(limit, 100))
       .all();
 
     return logs.map((log) => ({
       id: log.id,
-      extensionId: log.providerId,
+      appId: log.providerId,
       eventType: log.eventType,
       status: log.status,
       details: log.details ? JSON.parse(log.details) : null,
@@ -588,9 +584,9 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Load all enabled extensions from database into registry
+   * Load all enabled apps from database into registry
    */
-  async loadEnabledExtensions(): Promise<void> {
+  async loadEnabledApps(): Promise<void> {
     const registry = getExtensionRegistry();
 
     // First, register all manifests
@@ -600,8 +596,8 @@ export class ExtensionConfigService {
     // Load enabled configs from database
     const configs = await db
       .select()
-      .from(integrationConfigs)
-      .where(eq(integrationConfigs.enabled, true))
+      .from(appConfigs)
+      .where(eq(appConfigs.enabled, true))
       .all();
 
     for (const config of configs) {
@@ -609,17 +605,17 @@ export class ExtensionConfigService {
       const manifest = getManifest(extensionId);
 
       if (!manifest) {
-        log.warn({ extensionId }, 'Enabled extension not found in manifests');
+        log.warn({ extensionId }, 'Enabled app not found in manifests');
         continue;
       }
 
       try {
         const decryptedConfig = this.dbToRecord(config).config;
         await registry.activate(extensionId, decryptedConfig);
-        log.info({ extensionId }, 'Extension loaded from database');
+        log.info({ extensionId }, 'App loaded from database');
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        log.error({ extensionId, error: message }, 'Failed to load extension');
+        log.error({ extensionId, error: message }, 'Failed to load app');
       }
     }
   }
@@ -669,7 +665,7 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Log an extension event
+   * Log an app event
    */
   private async logEvent(
     extensionId: string,
@@ -680,18 +676,18 @@ export class ExtensionConfigService {
     latencyMs?: number
   ): Promise<void> {
     const manifest = getManifest(extensionId);
-    const legacyIntegrationId = manifest
-      ? this.getLegacyIntegrationId(manifest)
+    const appId = manifest
+      ? this.getAppId(manifest)
       : extensionId;
 
-    const id = generateId('integrationLog');
+    const id = generateId('appLog');
     const now = new Date().toISOString();
 
     await db
-      .insert(integrationLogs)
+      .insert(appLogs)
       .values({
         id,
-        integrationId: legacyIntegrationId,
+        appId,
         providerId: extensionId,
         eventType,
         status,
@@ -704,15 +700,13 @@ export class ExtensionConfigService {
   }
 
   /**
-   * Get legacy integration ID for backward compatibility
+   * Get app ID from manifest category
    */
-  private getLegacyIntegrationId(manifest: AnyExtensionManifest): string {
-    // Map extension category to legacy integration IDs
+  private getAppId(manifest: AnyExtensionManifest): string {
     switch (manifest.category) {
       case 'ai':
         return 'ai';
       case 'channel':
-        // Map specific channels
         if (manifest.id.startsWith('whatsapp')) return 'whatsapp';
         if (manifest.id.startsWith('sms')) return 'sms';
         if (manifest.id.startsWith('email')) return 'email';
@@ -720,7 +714,6 @@ export class ExtensionConfigService {
       case 'pms':
         return 'pms';
       case 'tool':
-        // Tools shouldn't be in the extension config system, but handle for safety
         return 'tool';
     }
   }
@@ -730,7 +723,7 @@ export class ExtensionConfigService {
    */
   private dbToRecord(config: {
     id: string;
-    integrationId: string;
+    appId: string;
     providerId: string;
     enabled: boolean;
     status: string;
@@ -739,7 +732,7 @@ export class ExtensionConfigService {
     lastError?: string | null;
     createdAt: string;
     updatedAt: string;
-  }): ExtensionConfigRecord {
+  }): AppConfigRecord {
     let decryptedConfig: ProviderConfig = {};
     try {
       if (config.config && config.config !== '{}') {
@@ -759,7 +752,7 @@ export class ExtensionConfigService {
       extensionId: config.providerId,
       providerId: config.providerId,
       enabled: config.enabled,
-      status: config.status as ExtensionStatus,
+      status: config.status as AppStatus,
       config: decryptedConfig,
       lastCheckedAt: config.lastCheckedAt ? new Date(config.lastCheckedAt) : null,
       lastError: config.lastError ?? null,
@@ -772,4 +765,4 @@ export class ExtensionConfigService {
 /**
  * Default service instance
  */
-export const extensionConfigService = new ExtensionConfigService();
+export const appConfigService = new AppConfigService();

@@ -52,8 +52,8 @@
     "content": "المحتوى",
     "knowledgeBase": "قاعدة المعرفة",
     "siteScraper": "مستخرج المواقع",
-    "settings": "المحرك",
-    "extensions": "التطبيقات",
+    "engine": "المحرك",
+    "apps": "التطبيقات",
     "automations": "الأتمتة",
     "autonomy": "الاستقلالية",
     "dangerZone": "منطقة الخطر"
