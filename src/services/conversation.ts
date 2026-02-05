@@ -42,11 +42,12 @@ export interface GetMessagesOptions {
 
 export class ConversationService {
   /**
-   * Find an open conversation or create a new one
-   * Matches 'active' or 'escalated' states - only 'resolved'/'closed' start new conversations
+   * Find an existing conversation or create a new one
+   * Matches the most recent conversation for this channel, regardless of state.
+   * Reactivates resolved/closed conversations when the guest sends a new message.
    */
   async findOrCreate(channelType: ChannelType, channelId: string, guestId?: string): Promise<Conversation> {
-    // Find existing open conversation (active or escalated)
+    // Find the most recent conversation for this channel
     const [existing] = await db
       .select()
       .from(conversations)
@@ -54,21 +55,34 @@ export class ConversationService {
         and(
           eq(conversations.channelType, channelType),
           eq(conversations.channelId, channelId),
-          sql`${conversations.state} IN ('active', 'escalated')`
         )
       )
+      .orderBy(desc(conversations.updatedAt))
       .limit(1);
 
     if (existing) {
-      // Update guest if not already linked
+      const updates: Record<string, string> = { updatedAt: new Date().toISOString() };
+
+      // Reactivate if resolved or closed
+      if (existing.state === 'resolved' || existing.state === 'closed') {
+        updates.state = 'active';
+        log.info({ conversationId: existing.id, previousState: existing.state }, 'Reactivated conversation');
+      }
+
+      // Link guest if not already linked
       if (guestId && !existing.guestId) {
+        updates.guestId = guestId;
+        log.debug({ conversationId: existing.id, guestId }, 'Linked guest to conversation');
+      }
+
+      if (Object.keys(updates).length > 1 || updates.guestId) {
         await db
           .update(conversations)
-          .set({ guestId, updatedAt: new Date().toISOString() })
+          .set(updates)
           .where(eq(conversations.id, existing.id));
-        log.debug({ conversationId: existing.id, guestId }, 'Linked guest to conversation');
         return this.findById(existing.id) as Promise<Conversation>;
       }
+
       log.debug({ conversationId: existing.id, state: existing.state }, 'Found existing conversation');
       return existing;
     }
