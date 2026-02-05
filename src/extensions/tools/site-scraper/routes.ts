@@ -14,6 +14,11 @@ import { scrapeUrl, scrapeUrls } from './scraper.js';
 import { parseHtml } from './parser.js';
 import { processContent } from './processor.js';
 import type { ProcessedEntry } from './processor.js';
+import { htmlToCleanText } from './html-to-text.js';
+import { extractContentWithAI } from './ai-parser.js';
+import type { AIExtractedEntry } from './ai-parser.js';
+import { generateQAPairs } from './qa-generator.js';
+import { deduplicateEntries as semanticDedup } from './deduplicator.js';
 import { logger } from '@/utils/logger.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
@@ -38,6 +43,7 @@ const fetchSchema = z.object({
       selector: z.string().optional(),
       excludeSelectors: z.array(z.string()).optional(),
       timeout: z.number().min(1000).max(30000).optional(),
+      hotelName: z.string().optional(),
     })
     .optional(),
 });
@@ -75,12 +81,34 @@ const importSchema = z.object({
       sourceUrl: z.string(),
     })
   ),
+  qaPairs: z.array(
+    z.object({
+      question: z.string(),
+      answer: z.string(),
+      entryIndex: z.number(),
+    })
+  ).optional(),
   options: z
     .object({
       skipDuplicates: z.boolean().optional(),
       updateExisting: z.boolean().optional(),
     })
     .optional(),
+});
+
+/**
+ * Q&A generation schema
+ */
+const qaSchema = z.object({
+  entries: z.array(
+    z.object({
+      title: z.string(),
+      content: z.string(),
+      category: z.string(),
+      keywords: z.array(z.string()),
+      confidence: z.number(),
+    })
+  ),
 });
 
 /**
@@ -115,7 +143,7 @@ router.post('/fetch', validateBody(fetchSchema), async (c) => {
 
 /**
  * POST /api/v1/tools/site-scraper/parse
- * Parse HTML content from previously fetched URLs
+ * Parse HTML content from previously fetched URLs (AI-powered)
  */
 router.post('/parse', validateBody(fetchSchema), async (c) => {
   // Check if embedding provider is available before starting
@@ -136,53 +164,95 @@ router.post('/parse', validateBody(fetchSchema), async (c) => {
 
   const { urls, options } = c.get('validatedBody') as z.infer<typeof fetchSchema>;
 
-  logger.info({ urlCount: urls.length }, 'Site scraper parse request');
+  logger.info({ urlCount: urls.length }, 'Site scraper parse request (AI-powered)');
 
   // Fetch URLs
   const fetchResults = await scrapeUrls(urls, options || {});
 
   // Parse each successful result
-  const parseResults = fetchResults.map((result) => {
-    if (result.status === 'error') {
-      return {
-        url: result.url,
-        status: 'error' as const,
-        error: result.error,
-        sections: [],
-      };
-    }
+  const parseResults = await Promise.all(
+    fetchResults.map(async (result) => {
+      if (result.status === 'error') {
+        return {
+          url: result.url,
+          status: 'error' as const,
+          error: result.error,
+          entries: [] as AIExtractedEntry[],
+        };
+      }
 
-    try {
-      const parsed = parseHtml(result.html, {
-        selector: options?.selector,
-        excludeSelectors: options?.excludeSelectors,
-      });
+      try {
+        // Try AI-powered extraction first
+        const cleanText = htmlToCleanText(result.html);
+        const aiEntries = await extractContentWithAI(cleanText, {
+          hotelName: options?.hotelName,
+          url: result.url,
+        });
 
-      return {
-        url: result.url,
-        status: 'success' as const,
-        title: parsed.title || result.title,
-        metadata: parsed.metadata,
-        sections: parsed.sections,
-        sectionCount: parsed.sections.length,
-      };
-    } catch (error) {
-      return {
-        url: result.url,
-        status: 'error' as const,
-        error: error instanceof Error ? error.message : 'Parse error',
-        sections: [],
-      };
-    }
-  });
+        if (aiEntries && aiEntries.length > 0) {
+          return {
+            url: result.url,
+            status: 'success' as const,
+            title: cleanText.title || result.title,
+            entries: aiEntries,
+            entryCount: aiEntries.length,
+            method: 'ai' as const,
+          };
+        }
+
+        // Fallback to CSS-selector parsing + AI categorization
+        logger.info({ url: result.url }, 'AI extraction returned no results, falling back to CSS parsing');
+        const parsed = parseHtml(result.html, {
+          selector: options?.selector,
+          excludeSelectors: options?.excludeSelectors,
+        });
+
+        const processed = await processContent(parsed.sections, {
+          sourceUrl: result.url,
+          hotelName: options?.hotelName,
+          metadata: parsed.metadata,
+        });
+
+        const fallbackEntries: AIExtractedEntry[] = processed.map((p) => ({
+          title: p.title,
+          content: p.content,
+          category: p.category,
+          keywords: p.keywords,
+          confidence: p.confidence,
+        }));
+
+        return {
+          url: result.url,
+          status: 'success' as const,
+          title: parsed.title || result.title,
+          entries: fallbackEntries,
+          entryCount: fallbackEntries.length,
+          method: 'fallback' as const,
+        };
+      } catch (error) {
+        return {
+          url: result.url,
+          status: 'error' as const,
+          error: error instanceof Error ? error.message : 'Parse error',
+          entries: [] as AIExtractedEntry[],
+        };
+      }
+    })
+  );
+
+  // Collect all entries for deduplication
+  const allEntries = parseResults.flatMap((r) => r.entries || []);
+  const dedupResult = await semanticDedup(allEntries);
 
   return c.json({
     results: parseResults,
+    entries: dedupResult.entries,
+    duplicates: dedupResult.duplicates,
     summary: {
       total: parseResults.length,
       success: parseResults.filter((r) => r.status === 'success').length,
       failed: parseResults.filter((r) => r.status === 'error').length,
-      totalSections: parseResults.reduce((sum, r) => sum + (r.sectionCount || 0), 0),
+      totalEntries: allEntries.length,
     },
   });
 });
@@ -204,10 +274,32 @@ router.post('/process', validateBody(processSchema), async (c) => {
     }
 
     try {
-      // Parse HTML
-      const parsed = parseHtml(result.html);
+      // Try AI-powered extraction first
+      const cleanText = htmlToCleanText(result.html);
+      const aiEntries = await extractContentWithAI(cleanText, {
+        hotelName: options?.hotelName,
+        url: result.url,
+      });
 
-      // Process with AI
+      if (aiEntries && aiEntries.length > 0) {
+        // Convert AIExtractedEntry to ProcessedEntry
+        allEntries.push(
+          ...aiEntries.map((e) => ({
+            category: e.category,
+            title: e.title,
+            content: e.content,
+            keywords: e.keywords,
+            priority: 5,
+            sourceUrl: result.url,
+            confidence: e.confidence,
+            originalType: 'paragraph' as const,
+          }))
+        );
+        continue;
+      }
+
+      // Fallback to old path
+      const parsed = parseHtml(result.html);
       const entries = await processContent(parsed.sections, {
         sourceUrl: result.url,
         hotelName: options?.hotelName,
@@ -220,17 +312,46 @@ router.post('/process', validateBody(processSchema), async (c) => {
     }
   }
 
-  // Deduplicate by title similarity
-  const deduplicated = deduplicateEntries(allEntries);
+  // Semantic dedup on converted entries
+  const aiEntries: AIExtractedEntry[] = allEntries.map((e) => ({
+    title: e.title,
+    content: e.content,
+    category: e.category,
+    keywords: e.keywords,
+    confidence: e.confidence,
+  }));
+  const dedupResult = await semanticDedup(aiEntries);
 
   return c.json({
-    entries: deduplicated,
+    entries: allEntries,
+    duplicates: dedupResult.duplicates,
     summary: {
-      total: deduplicated.length,
-      byCategory: countByCategory(deduplicated),
-      duplicatesRemoved: allEntries.length - deduplicated.length,
+      total: allEntries.length,
+      byCategory: countByCategory(allEntries),
     },
   });
+});
+
+/**
+ * POST /api/v1/tools/site-scraper/generate-qa
+ * Generate Q&A pairs from extracted entries
+ */
+router.post('/generate-qa', validateBody(qaSchema), async (c) => {
+  const { entries } = c.get('validatedBody') as z.infer<typeof qaSchema>;
+
+  logger.info({ entryCount: entries.length }, 'Generating Q&A pairs');
+
+  const aiEntries: AIExtractedEntry[] = entries.map((e) => ({
+    title: e.title,
+    content: e.content,
+    category: e.category as AIExtractedEntry['category'],
+    keywords: e.keywords,
+    confidence: e.confidence,
+  }));
+
+  const qaPairs = await generateQAPairs(aiEntries);
+
+  return c.json({ qaPairs });
 });
 
 /**
@@ -254,12 +375,29 @@ router.post('/import', validateBody(importSchema), async (c) => {
     );
   }
 
-  const { entries, options } = c.get('validatedBody') as z.infer<typeof importSchema>;
+  const { entries, qaPairs, options } = c.get('validatedBody') as z.infer<typeof importSchema>;
 
-  logger.info({ entryCount: entries.length }, 'Site scraper import request');
+  logger.info({ entryCount: entries.length, qaPairCount: qaPairs?.length ?? 0 }, 'Site scraper import request');
 
-  // Import to knowledge base with embeddings
+  // Import main entries
   const result = await importToKnowledgeBase(entries, options || {}, embeddingProvider);
+
+  // Import Q&A pairs as additional faq entries
+  if (qaPairs && qaPairs.length > 0) {
+    const qaEntries = qaPairs.map((qa) => ({
+      category: 'faq',
+      title: qa.question,
+      content: `Q: ${qa.question}\nA: ${qa.answer}`,
+      keywords: [],
+      priority: 8,
+      sourceUrl: entries[qa.entryIndex]?.sourceUrl || '',
+    }));
+
+    const qaResult = await importToKnowledgeBase(qaEntries, options || {}, embeddingProvider);
+    result.imported += qaResult.imported;
+    result.skipped += qaResult.skipped;
+    result.errors.push(...qaResult.errors);
+  }
 
   return c.json({
     imported: result.imported,
@@ -321,35 +459,6 @@ router.get('/preview', async (c) => {
 });
 
 /**
- * Deduplicate entries by title similarity
- */
-function deduplicateEntries(entries: ProcessedEntry[]): ProcessedEntry[] {
-  const seen = new Map<string, ProcessedEntry>();
-
-  for (const entry of entries) {
-    const normalizedTitle = entry.title.toLowerCase().replace(/\s+/g, ' ').trim();
-
-    // Check for exact or near match
-    let isDuplicate = false;
-    for (const [existingTitle] of seen) {
-      if (
-        existingTitle === normalizedTitle ||
-        levenshteinSimilarity(existingTitle, normalizedTitle) > 0.8
-      ) {
-        isDuplicate = true;
-        break;
-      }
-    }
-
-    if (!isDuplicate) {
-      seen.set(normalizedTitle, entry);
-    }
-  }
-
-  return Array.from(seen.values());
-}
-
-/**
  * Count entries by category
  */
 function countByCategory(entries: ProcessedEntry[]): Record<string, number> {
@@ -369,43 +478,6 @@ function countSectionTypes(sections: Array<{ type: string }>): Record<string, nu
     counts[section.type] = (counts[section.type] || 0) + 1;
   }
   return counts;
-}
-
-/**
- * Calculate Levenshtein similarity between two strings
- */
-function levenshteinSimilarity(a: string, b: string): number {
-  if (a === b) return 1;
-  if (a.length === 0 || b.length === 0) return 0;
-
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= a.length; i++) {
-    matrix[i] = [i];
-  }
-  for (let j = 0; j <= b.length; j++) {
-    matrix[0]![j] = j;
-  }
-
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      const row = matrix[i];
-      const prevRow = matrix[i - 1];
-      if (row && prevRow) {
-        row[j] = Math.min(
-          (prevRow[j] ?? 0) + 1,
-          (row[j - 1] ?? 0) + 1,
-          (prevRow[j - 1] ?? 0) + cost
-        );
-      }
-    }
-  }
-
-  const lastRow = matrix[a.length];
-  const distance = lastRow?.[b.length] ?? 0;
-  const maxLength = Math.max(a.length, b.length);
-  return 1 - distance / maxLength;
 }
 
 /**
@@ -460,6 +532,7 @@ async function importToKnowledgeBase(
               content: entry.content,
               keywords: JSON.stringify(entry.keywords),
               priority: entry.priority,
+              sourceUrl: entry.sourceUrl || null,
               updatedAt: new Date().toISOString(),
             })
             .where(eq(knowledgeBase.id, existing.id))
@@ -487,6 +560,8 @@ async function importToKnowledgeBase(
           keywords: JSON.stringify(entry.keywords),
           priority: entry.priority,
           status: 'active',
+          sourceUrl: entry.sourceUrl || null,
+          sourceEntryId: id,
           createdAt: now,
           updatedAt: now,
         })

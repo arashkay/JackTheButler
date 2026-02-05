@@ -70,6 +70,7 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **19** | **1.10.0** | **Sandbox** | Demo data & database reset | **Test & reset** |
 | **20** | **1.11.0** | **Smart Auto** | AI-generated automation rules | **Natural language rules** |
 | **21** | **1.12.0** | **Namespace** | i18n namespace splitting | **Smaller locale files** |
+| **22** | **1.13.0** | **Smart Scrape** | AI-enhanced site scraper | **Intelligent content import** |
 
 ---
 
@@ -102,6 +103,7 @@ Phase 18 (Polyglot)    → Dashboard displays in user's language
 Phase 19 (Sandbox)     → Demo data loads, database can be reset
 Phase 20 (Smart Auto)  → AI generates automation rules from natural language
 Phase 21 (Namespace)   → Locale files split, translations load on demand
+Phase 22 (Smart Scrape) → AI extracts content, generates Q&A, discovers pages
 ```
 
 ### Implementation Rules
@@ -139,6 +141,7 @@ Phase 21 (Namespace)   → Locale files split, translations load on demand
 | [Phase 19: Demo Data & Reset](phase-19-demo-data.md) | Sample data and database reset |
 | [Phase 20: Smart Automation](phase-20-smart-automation.md) | AI-generated automation rules |
 | [Phase 21: i18n Namespaces](phase-21-i18n-namespaces.md) | Locale file splitting |
+| [Phase 22: Smart Scrape](phase-22-smart-scrape.md) | AI-powered content extraction & discovery |
 
 ### Phase 15 Sub-Phases
 
@@ -279,6 +282,11 @@ Phase 21 (Namespace)   → Locale files split, translations load on demand
                     ┌────────────────▼──────────────┐
                     │     Phase 21: Namespace       │
                     │   i18n namespace splitting    │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │    Phase 22: Smart Scrape     │
+                    │  AI content extraction & Q&A  │
                     └───────────────────────────────┘
 ```
 
@@ -312,6 +320,7 @@ Phase 21 (Namespace)   → Locale files split, translations load on demand
 | 1.10.0 | "Load sample data, reset for production" | **Easy testing & cleanup** |
 | 1.11.0 | "AI generates automation from natural language" | **Smart automation** |
 | 1.12.0 | "Translations load on demand, smaller files" | **Developer efficiency** |
+| 1.13.0 | "AI extracts hotel content, generates Q&A pairs" | **Smart knowledge import** |
 
 ---
 

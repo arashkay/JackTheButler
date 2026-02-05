@@ -16,7 +16,7 @@ import {
   Zap,
   SlidersHorizontal,
   ChevronUp,
-  LogOut,
+  Power,
   User,
   Users,
   CalendarDays,
@@ -25,6 +25,7 @@ import {
   FileText,
   BookOpen,
   PanelLeft,
+  Network,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -296,7 +297,7 @@ export function Layout() {
     {
       id: 'settings',
       title: t('nav.settings'),
-      icon: <Settings size={20} />,
+      icon: <Network size={20} />,
       collapsible: true,
       items: [
         { path: '/settings/extensions', label: t('nav.extensions'), icon: <Puzzle size={20} /> },
@@ -541,7 +542,7 @@ export function Layout() {
                 }}
                 className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
-                <LogOut size={20} />
+                <Power size={20} />
                 {!collapsed && <span className="text-sm font-medium">{t('common.logout')}</span>}
               </button>
             </Tooltip>

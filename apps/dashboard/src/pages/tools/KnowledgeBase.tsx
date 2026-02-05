@@ -491,10 +491,12 @@ export function KnowledgeBasePage() {
                 </div>
 
                 {/* Connector */}
-                <div className={cn(
-                  'flex-1 h-0.5 mx-3 transition-all',
-                  askStep !== 'searching' ? 'bg-primary' : 'bg-muted'
-                )} />
+                <div className="flex-1 h-0.5 mx-3 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                    style={{ width: askStep !== 'searching' ? '100%' : '0%' }}
+                  />
+                </div>
 
                 {/* Step 2: Found */}
                 <div className="flex items-center gap-2">
@@ -521,10 +523,12 @@ export function KnowledgeBasePage() {
                 </div>
 
                 {/* Connector */}
-                <div className={cn(
-                  'flex-1 h-0.5 mx-3 transition-all',
-                  (askStep === 'generating' || askStep === 'complete') ? 'bg-primary' : 'bg-muted'
-                )} />
+                <div className="flex-1 h-0.5 mx-3 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                    style={{ width: (askStep === 'generating' || askStep === 'complete') ? '100%' : '0%' }}
+                  />
+                </div>
 
                 {/* Step 3: Generating */}
                 <div className="flex items-center gap-2">

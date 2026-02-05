@@ -383,6 +383,10 @@ export const knowledgeBase = sqliteTable(
     priority: integer('priority').notNull().default(0),
     language: text('language').notNull().default('en'),
 
+    // Source tracking (Phase 22)
+    sourceUrl: text('source_url'),
+    sourceEntryId: text('source_entry_id'),
+
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),
