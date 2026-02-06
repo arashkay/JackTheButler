@@ -344,7 +344,9 @@ export function KnowledgeBasePage() {
       render: (entry) => (
         <div className="flex items-center gap-1.5 font-medium truncate max-w-[200px]" title={entry.title}>
           {entry.sourceUrl && (
-            <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" title={entry.sourceUrl} />
+            <span title={entry.sourceUrl}>
+              <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            </span>
           )}
           {entry.title}
         </div>
