@@ -25,6 +25,7 @@ RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
 # Copy source code
 COPY tsconfig.json ./
 COPY src ./src
+COPY migrations ./migrations
 COPY apps/dashboard ./apps/dashboard
 
 # Build backend TypeScript
@@ -54,6 +55,9 @@ RUN pnpm install --prod --frozen-lockfile && npm rebuild better-sqlite3
 
 # Copy built backend
 COPY --from=builder /app/dist ./dist
+
+# Copy migrations folder
+COPY --from=builder /app/migrations ./migrations
 
 # Copy built dashboard
 COPY --from=builder /app/apps/dashboard/dist ./dashboard

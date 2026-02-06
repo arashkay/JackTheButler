@@ -3,14 +3,17 @@
  *
  * SQLite database connection with Drizzle ORM.
  * Configured with WAL mode for better concurrency.
+ * Automatically runs migrations on startup.
  *
  * @see docs/03-architecture/data-model.md
  */
 
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
@@ -54,6 +57,26 @@ export const sqlite: DatabaseType = createSqliteConnection(config.database.path)
 export const db = drizzle(sqlite, { schema });
 
 log.info({ path: config.database.path }, 'Database connected');
+
+/**
+ * Run database migrations automatically on startup
+ */
+function runMigrations(): void {
+  try {
+    // Get migrations folder path (relative to project root)
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const migrationsFolder = resolve(__dirname, '../../migrations');
+
+    migrate(db, { migrationsFolder });
+    log.info('Database migrations applied');
+  } catch (error) {
+    log.error({ error }, 'Failed to run migrations');
+    throw error;
+  }
+}
+
+// Run migrations on module load
+runMigrations();
 
 /**
  * Close the database connection (for graceful shutdown)
